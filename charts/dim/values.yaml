@@ -1,0 +1,273 @@
+###############################################################
+# Copyright (c) 2024 BMW Group AG
+# Copyright 2024 SAP SE or an SAP affiliate company and ssi-dim-middle-layer contributors.
+#
+# See the NOTICE file(s) distributed with this work for additional
+# information regarding copyright ownership.
+#
+# This program and the accompanying materials are made available under the
+# terms of the Apache License, Version 2.0 which is available at
+# https://www.apache.org/licenses/LICENSE-2.0.
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+###############################################################
+
+dim:
+  image:
+    name: "ghcr.io/sap/dim-client_dim-service"
+    tag: ""
+  imagePullPolicy: "IfNotPresent"
+  # -- We recommend to review the default resource limits as this should a conscious choice.
+  resources:
+    requests:
+      cpu: 15m
+      memory: 300M
+    limits:
+      cpu: 45m
+      memory: 300M
+  healthChecks:
+    startup:
+      path: "/health/startup"
+      tags:
+      - name: "HEALTHCHECKS__0__TAGS__1"
+        value: "dimdb"
+    liveness:
+      path: "/healthz"
+    readyness:
+      path: "/ready"
+  swaggerEnabled: false
+  rootDirectoryId: "00000000-0000-0000-0000-000000000000"
+  operatorId: "00000000-0000-0000-0000-000000000000"
+
+migrations:
+  name: "migrations"
+  image:
+    name: "ghcr.io/sap/dim-client_dim-migrations"
+    tag: ""
+  imagePullPolicy: "IfNotPresent"
+  # -- We recommend to review the default resource limits as this should a conscious choice.
+  resources:
+    requests:
+      cpu: 15m
+      memory: 200M
+    limits:
+      cpu: 45m
+      memory: 200M
+  seeding:
+    testDataEnvironments: ""
+    testDataPaths: "Seeder/Data"
+  logging:
+    default: "Information"
+
+processesworker:
+  name: "processesworker"
+  image:
+    name: "ghcr.io/sap/dim-client_dim-processes-worker"
+    tag: ""
+  imagePullPolicy: "IfNotPresent"
+  # -- We recommend to review the default resource limits as this should a conscious choice.
+  resources:
+    requests:
+      cpu: 15m
+      memory: 300M
+    limits:
+      cpu: 45m
+      memory: 300M
+  dim:
+    adminMail: "mail@example.org"
+    clientIdCisCentral: ""
+    clientSecretCisCentral: ""
+    authUrl: ""
+  subaccount:
+    # -- Url to the subaccount service api
+    baseUrl: ""
+  entitlement:
+    # -- Url to the entitlement service api
+    baseUrl: ""
+  cf:
+    clientId: ""
+    clientSecret: ""
+    tokenAddress: ""
+    # -- Url to the cf service api
+    baseUrl: ""
+    grantType: "client_credentials"
+  callback:
+    scope: "openid"
+    grantType: "client_credentials"
+    # -- Provide client-id for callback.
+    clientId: ""
+    # -- Client-secret for callback client-id. Secret-key 'callback-client-secret'.
+    clientSecret: ""
+    tokenAddress: ""
+    # -- Url to the cf service api
+    baseAddress: ""
+
+# -- Secret containing "client-secret-cis-central", "client-secret-cf" and "client-secret-callback"
+existingSecret: ""
+
+dotnetEnvironment: "Production"
+
+dbConnection:
+  schema: "dim"
+  sslMode: "Disable"
+
+postgresql:
+  # -- PostgreSQL chart configuration;
+  # default configurations:
+  # host: "dim-postgresql-primary",
+  # port: 5432;
+  # Switch to enable or disable the PostgreSQL helm chart.
+  enabled: true
+  # -- Setting image tag to major to get latest minor updates
+  image:
+    tag: "15-debian-12"
+  commonLabels:
+    app.kubernetes.io/version: "15"
+  auth:
+    # -- Non-root username.
+    username: dim
+    # -- Database name.
+    database: dim
+    # -- Secret containing the passwords for root usernames postgres and non-root username dim.
+    # Should not be changed without changing the "dim-postgresSecretName" template as well.
+    existingSecret: "{{ .Release.Name }}-dim-postgres"
+    # -- Password for the root username 'postgres'. Secret-key 'postgres-password'.
+    postgrespassword: ""
+    # -- Password for the non-root username 'dim'. Secret-key 'password'.
+    password: ""
+    # -- Password for the non-root username 'repl_user'. Secret-key 'replication-password'.
+    replicationPassword: ""
+  architecture: replication
+  audit:
+    pgAuditLog: "write, ddl"
+    logLinePrefix: "%m %u %d "
+  primary:
+    # -- Extended PostgreSQL Primary configuration (increase of max_connections recommended - default is 100)
+    extendedConfiguration: ""
+    initdb:
+      scriptsConfigMap: "{{ .Release.Name }}-dim-cm-postgres"
+  readReplicas:
+  # -- Extended PostgreSQL read only replicas configuration (increase of max_connections recommended - default is 100)
+    extendedConfiguration: ""
+
+externalDatabase:
+  # -- External PostgreSQL configuration
+  # IMPORTANT: non-root db user needs to be created beforehand on external database.
+  # And the init script (02-init-db.sql) available in templates/configmap-postgres-init.yaml
+  # needs to be executed beforehand.
+  # Database host ('-primary' is added as postfix).
+  host: "dim-postgres-ext"
+  # -- Database port number.
+  port: 5432
+  # -- Non-root username for dim.
+  username: "dim"
+  # -- Database name.
+  database: "dim"
+  # -- Password for the non-root username (default 'dim'). Secret-key 'password'.
+  password: ""
+  # -- Secret containing the password non-root username, (default 'dim').
+  existingSecret: "dim-external-db"
+
+# -- Provide details about idp instance.
+idp:
+  # -- Provide idp base address, without trailing '/auth'.
+  address: "https://centralidp.example.org"
+  authRealm: "CX-Central"
+  jwtBearerOptions:
+    requireHttpsMetadata: "true"
+    metadataPath: "/auth/realms/CX-Central/.well-known/openid-configuration"
+    tokenValidationParameters:
+      validIssuerPath: "/auth/realms/CX-Central"
+      validAudience: "DIM-Middle-Layer"
+    refreshInterval: "00:00:30"
+  tokenPath: "/auth/realms/CX-Central/protocol/openid-connect/token"
+  # -- Flag if the api should be used with an leading /auth path
+  useAuthTrail: true
+
+ingress:
+  # -- DIM ingress parameters,
+  # enable ingress record generation for dim.
+  enabled: false
+  # className: "nginx"
+  ## Optional annotations when using the nginx ingress class
+  # annotations:
+  #   nginx.ingress.kubernetes.io/use-regex: "true"
+  #   nginx.ingress.kubernetes.io/enable-cors: "true"
+  #   nginx.ingress.kubernetes.io/proxy-body-size: "8m"
+  #   # -- Provide CORS allowed origin.
+  #   nginx.ingress.kubernetes.io/cors-allow-origin: "https://*.example.org"
+  tls:
+    # -- Provide tls secret.
+    - secretName: ""
+      # -- Provide host for tls secret.
+      hosts:
+        - ""
+  hosts:
+    # -- Provide default path for the ingress record.
+    - host: ""
+      paths:
+        - path: "/api/dim"
+          pathType: "Prefix"
+          backend:
+            port: 8080
+
+portContainer: 8080
+
+portService: 8080
+
+replicaCount: 3
+
+# -- Node labels for pod assignment
+nodeSelector: {}
+
+# -- Tolerations for pod assignment
+tolerations: []
+
+affinity:
+# -- Following Catena-X Helm Best Practices,
+# [reference](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity).
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: DoesNotExist
+          topologyKey: kubernetes.io/hostname
+
+updateStrategy:
+# -- Update strategy type,
+# rolling update configuration parameters,
+# [reference](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#update-strategies).
+  type: RollingUpdate
+  rollingUpdate:
+    maxSurge: 1
+    maxUnavailable: 0
+
+# -- Following Catena-X Helm Best Practices,
+# [reference](https://github.com/helm/charts/blob/master/stable/nginx-ingress/values.yaml#L210).
+startupProbe:
+  failureThreshold: 30
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  successThreshold: 1
+  timeoutSeconds: 1
+livenessProbe:
+  failureThreshold: 3
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  successThreshold: 1
+  timeoutSeconds: 10
+readinessProbe:
+  failureThreshold: 3
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  successThreshold: 1
+  timeoutSeconds: 1
