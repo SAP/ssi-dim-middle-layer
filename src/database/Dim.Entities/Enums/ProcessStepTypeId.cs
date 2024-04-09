@@ -1,5 +1,5 @@
 /********************************************************************************
- * Copyright (c) 2024 Contributors to the Eclipse Foundation
+ * Copyright (c) 2024 BMW Group AG
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -38,5 +38,6 @@ public enum ProcessStepTypeId
     CREATE_APPLICATION = 14,
     CREATE_COMPANY_IDENTITY = 15,
     ASSIGN_COMPANY_APPLICATION = 16,
-    SEND_CALLBACK = 17
+    CREATE_STATUS_LIST = 17,
+    SEND_CALLBACK = 18
 }

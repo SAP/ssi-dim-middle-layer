@@ -1,5 +1,5 @@
 /********************************************************************************
- * Copyright (c) 2024 Contributors to the Eclipse Foundation
+ * Copyright (c) 2024 BMW Group AG
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -17,9 +17,14 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using Dim.Clients.Api.Cf.DependencyInjection;
+using Dim.Clients.Api.Dim.DependencyInjection;
+using Dim.Clients.Token;
 using Dim.DbAccess.DependencyInjection;
+using Dim.Web.Authentication;
 using Dim.Web.Controllers;
 using Dim.Web.Extensions;
+using Microsoft.AspNetCore.Authentication;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Web;
 using System.Text.Json.Serialization;
 
@@ -30,6 +35,10 @@ WebApplicationBuildRunner
         builder =>
         {
             builder.Services
+                .AddTransient<IBasicAuthTokenService, BasicAuthTokenService>()
+                .AddTransient<IClaimsTransformation, KeycloakClaimsTransformation>()
+                .AddDimClient()
+                .AddCfClient(builder.Configuration.GetSection("Cf"))
                 .AddDim(builder.Configuration.GetSection("Dim"))
                 .AddEndpointsApiExplorer()
                 .AddDatabase(builder.Configuration)

@@ -1,5 +1,5 @@
 /********************************************************************************
- * Copyright (c) 2024 Contributors to the Eclipse Foundation
+ * Copyright (c) 2024 BMW Group AG
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -24,6 +24,7 @@ public interface ICfClient
     Task<Guid> CreateCloudFoundrySpace(string tenantName, CancellationToken cancellationToken);
     Task AddSpaceRoleToUser(string type, string user, Guid spaceId, CancellationToken cancellationToken);
     Task<Guid> GetServicePlan(string servicePlanName, string servicePlanType, CancellationToken cancellationToken);
+    Task<Guid> GetSpace(string tenantName, CancellationToken cancellationToken);
     Task CreateDimServiceInstance(string tenantName, Guid spaceId, Guid servicePlanId, CancellationToken cancellationToken);
     Task CreateServiceInstanceBindings(string tenantName, Guid spaceId, CancellationToken cancellationToken);
     Task<Guid> GetServiceBinding(string tenantName, Guid spaceId, string bindingName, CancellationToken cancellationToken);

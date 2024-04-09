@@ -1,5 +1,5 @@
 /********************************************************************************
- * Copyright (c) 2024 Contributors to the Eclipse Foundation
+ * Copyright (c) 2024 BMW Group AG
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -23,5 +23,5 @@ namespace DimProcess.Library.Callback.DependencyInjection;
 
 public class CallbackSettings : KeyVaultAuthSettings
 {
-    public string BaseAddress { get; set; }
+    public string BaseAddress { get; set; } = null!;
 }

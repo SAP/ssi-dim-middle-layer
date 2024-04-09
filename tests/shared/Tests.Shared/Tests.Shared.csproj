@@ -1,5 +1,5 @@
 <!--
-- Copyright (c) 2024 Contributors to the Eclipse Foundation
+- Copyright (c) 2024 BMW Group AG
 -
 - See the NOTICE file(s) distributed with this work for additional
 - information regarding copyright ownership.
@@ -22,7 +22,7 @@
   <PropertyGroup>
     <AssemblyName>Dim.Tests.Shared</AssemblyName>
     <RootNamespace>Dim.Tests.Shared</RootNamespace>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>

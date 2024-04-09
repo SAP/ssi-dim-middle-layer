@@ -1,5 +1,5 @@
 /********************************************************************************
- * Copyright (c) 2024 Contributors to the Eclipse Foundation
+ * Copyright (c) 2024 BMW Group AG
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -335,14 +335,9 @@ public class DimProcessHandler : IDimProcessHandler
 
     public async Task<(IEnumerable<ProcessStepTypeId>? nextStepTypeIds, ProcessStepStatusId stepStatusId, bool modified, string? processMessage)> CreateDimServiceInstance(string tenantName, Guid tenantId, CancellationToken cancellationToken)
     {
-        var spaceId = await _dimRepositories.GetInstance<ITenantRepository>().GetSpaceId(tenantId).ConfigureAwait(false);
-        if (spaceId == null)
-        {
-            throw new ConflictException("SpaceId must not be null.");
-        }
-
         var servicePlanId = await _cfClient.GetServicePlan("decentralized-identity-management", "standard", cancellationToken).ConfigureAwait(false);
-        await _cfClient.CreateDimServiceInstance(tenantName, spaceId.Value, servicePlanId, cancellationToken).ConfigureAwait(false);
+        var spaceId = await _cfClient.GetSpace(tenantName, cancellationToken).ConfigureAwait(false);
+        await _cfClient.CreateDimServiceInstance(tenantName, spaceId, servicePlanId, cancellationToken).ConfigureAwait(false);
 
         return new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(
             Enumerable.Repeat(ProcessStepTypeId.CREATE_SERVICE_INSTANCE_BINDING, 1),
@@ -464,9 +459,9 @@ public class DimProcessHandler : IDimProcessHandler
             null);
     }
 
-    public async Task<(IEnumerable<ProcessStepTypeId>? nextStepTypeIds, ProcessStepStatusId stepStatusId, bool modified, string? processMessage)> AssignCompanyApplication(Guid tenantId, string tenantName, CancellationToken cancellationToken)
+    public async Task<(IEnumerable<ProcessStepTypeId>? nextStepTypeIds, ProcessStepStatusId stepStatusId, bool modified, string? processMessage)> AssignCompanyApplication(Guid tenantId, CancellationToken cancellationToken)
     {
-        var (applicationId, companyId, dimInstanceId) = await _dimRepositories.GetInstance<ITenantRepository>().GetApplicationAndCompanyId(tenantId).ConfigureAwait(false);
+        var (applicationId, companyId, dimInstanceId, isIssuer) = await _dimRepositories.GetInstance<ITenantRepository>().GetApplicationAndCompanyId(tenantId).ConfigureAwait(false);
         if (applicationId == null)
         {
             throw new ConflictException("ApplicationId must always be set here");
@@ -502,13 +497,43 @@ public class DimProcessHandler : IDimProcessHandler
                 tenant.ApplicationKey = applicationKey;
             });
         return new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(
+            Enumerable.Repeat(isIssuer ? ProcessStepTypeId.CREATE_STATUS_LIST : ProcessStepTypeId.SEND_CALLBACK, 1),
+            ProcessStepStatusId.DONE,
+            false,
+            null);
+    }
+
+    public async Task<(IEnumerable<ProcessStepTypeId>? nextStepTypeIds, ProcessStepStatusId stepStatusId, bool modified, string? processMessage)> CreateStatusList(Guid tenantId, CancellationToken cancellationToken)
+    {
+        var (_, companyId, dimInstanceId, _) = await _dimRepositories.GetInstance<ITenantRepository>().GetApplicationAndCompanyId(tenantId).ConfigureAwait(false);
+        if (companyId == null)
+        {
+            throw new ConflictException("CompanyId must always be set here");
+        }
+
+        if (dimInstanceId == null)
+        {
+            throw new ConflictException("DimInstanceId must not be null.");
+        }
+
+        var dimDetails = await _cfClient.GetServiceBindingDetails(dimInstanceId.Value, cancellationToken).ConfigureAwait(false);
+        var dimAuth = new BasicAuthSettings
+        {
+            TokenAddress = $"{dimDetails.Credentials.Uaa.Url}/oauth/token",
+            ClientId = dimDetails.Credentials.Uaa.ClientId,
+            ClientSecret = dimDetails.Credentials.Uaa.ClientSecret
+        };
+        var dimBaseUrl = dimDetails.Credentials.Url;
+        await _dimClient.CreateStatusList(dimAuth, dimBaseUrl, companyId.Value, cancellationToken).ConfigureAwait(false);
+
+        return new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(
             Enumerable.Repeat(ProcessStepTypeId.SEND_CALLBACK, 1),
             ProcessStepStatusId.DONE,
             false,
             null);
     }
 
-    public async Task<(IEnumerable<ProcessStepTypeId>? nextStepTypeIds, ProcessStepStatusId stepStatusId, bool modified, string? processMessage)> SendCallback(Guid tenantId, string tenantName, CancellationToken cancellationToken)
+    public async Task<(IEnumerable<ProcessStepTypeId>? nextStepTypeIds, ProcessStepStatusId stepStatusId, bool modified, string? processMessage)> SendCallback(Guid tenantId, CancellationToken cancellationToken)
     {
         var (bpn, downloadUrl, did, dimInstanceId) = await _dimRepositories.GetInstance<ITenantRepository>().GetCallbackData(tenantId).ConfigureAwait(false);
         if (downloadUrl == null)

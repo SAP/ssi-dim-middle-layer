@@ -1,5 +1,5 @@
 /********************************************************************************
- * Copyright (c) 2024 Contributors to the Eclipse Foundation
+ * Copyright (c) 2024 BMW Group AG
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -48,11 +48,12 @@ public class DimProcessTypeExecutor : IProcessTypeExecutor
         ProcessStepTypeId.GET_DIM_DETAILS,
         ProcessStepTypeId.CREATE_APPLICATION,
         ProcessStepTypeId.CREATE_COMPANY_IDENTITY,
+        ProcessStepTypeId.CREATE_STATUS_LIST,
         ProcessStepTypeId.ASSIGN_COMPANY_APPLICATION,
         ProcessStepTypeId.SEND_CALLBACK);
 
     private Guid _tenantId;
-    private string _tenantName;
+    private string? _tenantName;
 
     public DimProcessTypeExecutor(
         IDimRepositories dimRepositories,
@@ -82,7 +83,7 @@ public class DimProcessTypeExecutor : IProcessTypeExecutor
 
     public async ValueTask<IProcessTypeExecutor.StepExecutionResult> ExecuteProcessStep(ProcessStepTypeId processStepTypeId, IEnumerable<ProcessStepTypeId> processStepTypeIds, CancellationToken cancellationToken)
     {
-        if (_tenantId == Guid.Empty || _tenantName == default)
+        if (_tenantId == Guid.Empty || _tenantName is null)
         {
             throw new UnexpectedConditionException("tenantId and tenantName should never be empty here");
         }
@@ -126,23 +127,25 @@ public class DimProcessTypeExecutor : IProcessTypeExecutor
                     .ConfigureAwait(false),
                 ProcessStepTypeId.CREATE_COMPANY_IDENTITY => await _dimProcessHandler.CreateCompanyIdentity(_tenantId, _tenantName, cancellationToken)
                     .ConfigureAwait(false),
-                ProcessStepTypeId.ASSIGN_COMPANY_APPLICATION => await _dimProcessHandler.AssignCompanyApplication(_tenantId, _tenantName, cancellationToken)
+                ProcessStepTypeId.ASSIGN_COMPANY_APPLICATION => await _dimProcessHandler.AssignCompanyApplication(_tenantId, cancellationToken)
                     .ConfigureAwait(false),
-                ProcessStepTypeId.SEND_CALLBACK => await _dimProcessHandler.SendCallback(_tenantId, _tenantName, cancellationToken)
+                ProcessStepTypeId.CREATE_STATUS_LIST => await _dimProcessHandler.CreateStatusList(_tenantId, cancellationToken)
+                    .ConfigureAwait(false),
+                ProcessStepTypeId.SEND_CALLBACK => await _dimProcessHandler.SendCallback(_tenantId, cancellationToken)
                     .ConfigureAwait(false),
                 _ => (null, ProcessStepStatusId.TODO, false, null)
             };
         }
         catch (Exception ex) when (ex is not SystemException)
         {
-            (stepStatusId, processMessage, nextStepTypeIds) = ProcessError(ex, processStepTypeId);
+            (stepStatusId, processMessage, nextStepTypeIds) = ProcessError(ex);
             modified = true;
         }
 
         return new IProcessTypeExecutor.StepExecutionResult(modified, stepStatusId, nextStepTypeIds, null, processMessage);
     }
 
-    private static (ProcessStepStatusId StatusId, string? ProcessMessage, IEnumerable<ProcessStepTypeId>? nextSteps) ProcessError(Exception ex, ProcessStepTypeId processStepTypeId)
+    private static (ProcessStepStatusId StatusId, string? ProcessMessage, IEnumerable<ProcessStepTypeId>? nextSteps) ProcessError(Exception ex)
     {
         return ex switch
         {

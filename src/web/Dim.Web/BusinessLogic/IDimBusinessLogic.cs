@@ -1,5 +1,5 @@
 /********************************************************************************
- * Copyright (c) 2024 Contributors to the Eclipse Foundation
+ * Copyright (c) 2024 BMW Group AG
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -24,4 +24,6 @@ namespace Dim.Web.BusinessLogic;
 public interface IDimBusinessLogic : ITransient
 {
     Task StartSetupDim(string companyName, string bpn, string didDocumentLocation, bool isIssuer);
+    Task<string> GetStatusList(string bpn, CancellationToken cancellationToken);
+    Task<string> CreateStatusList(string bpn, CancellationToken cancellationToken);
 }

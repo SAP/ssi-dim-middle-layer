@@ -1,5 +1,5 @@
 /********************************************************************************
- * Copyright (c) 2024 Contributors to the Eclipse Foundation
+ * Copyright (c) 2024 BMW Group AG
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -91,12 +91,18 @@ public class TenantRepository : ITenantRepository
             .Select(x => new ValueTuple<Guid?, string, bool>(x.DimInstanceId, x.DidDocumentLocation, x.IsIssuer))
             .SingleOrDefaultAsync();
 
-    public Task<(string? ApplicationId, Guid? CompanyId, Guid? DimInstanceId)> GetApplicationAndCompanyId(Guid tenantId) =>
+    public Task<(string? ApplicationId, Guid? CompanyId, Guid? DimInstanceId, bool IsIssuer)> GetApplicationAndCompanyId(Guid tenantId) =>
         _context.Tenants
             .Where(x => x.Id == tenantId)
-            .Select(x => new ValueTuple<string?, Guid?, Guid?>(
+            .Select(x => new ValueTuple<string?, Guid?, Guid?, bool>(
                 x.ApplicationId,
                 x.CompanyId,
-                x.DimInstanceId))
+                x.DimInstanceId,
+                x.IsIssuer))
+            .SingleOrDefaultAsync();
+
+    public Task<(bool Exists, Guid? CompanyId, Guid? InstanceId)> GetCompanyAndInstanceIdForBpn(string bpn) =>
+        _context.Tenants.Where(x => x.Bpn == bpn)
+            .Select(x => new ValueTuple<bool, Guid?, Guid?>(true, x.CompanyId, x.DimInstanceId))
             .SingleOrDefaultAsync();
 }

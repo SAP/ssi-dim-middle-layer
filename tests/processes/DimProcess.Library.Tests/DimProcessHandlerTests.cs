@@ -1,5 +1,5 @@
 /********************************************************************************
- * Copyright (c) 2024 Contributors to the Eclipse Foundation
+ * Copyright (c) 2024 BMW Group AG
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -33,6 +33,7 @@ using DimProcess.Library.Callback;
 using DimProcess.Library.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 
 namespace DimProcess.Library.Tests;
@@ -572,27 +573,12 @@ public class DimProcessHandlerTests
     #region CreateDimServiceInstance
 
     [Fact]
-    public async Task CreateDimServiceInstance_WithNotExisting_ReturnsExpected()
-    {
-        // Arrange
-        A.CallTo(() => _tenantRepositories.GetSpaceId(_tenantId))
-            .Returns((Guid?)null);
-        async Task Act() => await _sut.CreateDimServiceInstance(_tenantName, _tenantId, CancellationToken.None).ConfigureAwait(false);
-
-        // Act
-        var ex = await Assert.ThrowsAsync<ConflictException>(Act);
-
-        // Assert
-        ex.Message.Should().Be("SpaceId must not be null.");
-    }
-
-    [Fact]
     public async Task CreateDimServiceInstance_WithValidData_ReturnsExpected()
     {
         // Arrange
         var spaceId = Guid.NewGuid();
         var servicePlanId = Guid.NewGuid();
-        A.CallTo(() => _tenantRepositories.GetSpaceId(_tenantId))
+        A.CallTo(() => _cfClient.GetSpace(_tenantName, A<CancellationToken>._))
             .Returns(spaceId);
         A.CallTo(() => _cfClient.GetServicePlan("decentralized-identity-management", "standard", A<CancellationToken>._))
             .Returns(servicePlanId);
@@ -774,16 +760,18 @@ public class DimProcessHandlerTests
         ex.Message.Should().Be("DimInstanceId must not be null.");
     }
 
-    [Fact]
-    public async Task CreateCompanyIdentity_WithValidData_ReturnsExpected()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task CreateCompanyIdentity_WithValidData_ReturnsExpected(bool isIssuer)
     {
         // Arrange
         var serviceCrenentialBinding = _fixture.Create<ServiceCredentialBindingDetailResponse>();
         var identityResponse = _fixture.Create<CreateCompanyIdentityResponse>();
         var dimInstanceId = Guid.NewGuid();
-        var tenant = new Tenant(_tenantId, "test", "Corp", "https://example.org/did", false, _processId, _operatorId);
+        var tenant = new Tenant(_tenantId, "test", "Corp", "https://example.org/did", isIssuer, _processId, _operatorId);
         A.CallTo(() => _tenantRepositories.GetDimInstanceIdAndHostingUrl(_tenantId))
-            .Returns((dimInstanceId, "https://example.org/hosting", false));
+            .Returns((dimInstanceId, "https://example.org/hosting", tenant.IsIssuer));
         A.CallTo(() => _cfClient.GetServiceBindingDetails(dimInstanceId, A<CancellationToken>._))
             .Returns(serviceCrenentialBinding);
         A.CallTo(() => _tenantRepositories.AttachAndModifyTenant(_tenantId, A<Action<Tenant>>._, A<Action<Tenant>>._))
@@ -792,14 +780,14 @@ public class DimProcessHandlerTests
                 initialize?.Invoke(tenant);
                 modify(tenant);
             });
-        A.CallTo(() => _dimClient.CreateCompanyIdentity(A<BasicAuthSettings>._, "https://example.org/hosting", A<string>._, _tenantName, false, A<CancellationToken>._))
+        A.CallTo(() => _dimClient.CreateCompanyIdentity(A<BasicAuthSettings>._, "https://example.org/hosting", A<string>._, _tenantName, tenant.IsIssuer, A<CancellationToken>._))
             .Returns(identityResponse);
 
         // Act
         var result = await _sut.CreateCompanyIdentity(_tenantId, _tenantName, CancellationToken.None);
 
         // Assert
-        A.CallTo(() => _dimClient.CreateCompanyIdentity(A<BasicAuthSettings>._, A<string>._, A<string>._, _tenantName, false, A<CancellationToken>._))
+        A.CallTo(() => _dimClient.CreateCompanyIdentity(A<BasicAuthSettings>._, A<string>._, A<string>._, _tenantName, tenant.IsIssuer, A<CancellationToken>._))
             .MustHaveHappenedOnceExactly();
 
         result.modified.Should().BeFalse();
@@ -820,8 +808,8 @@ public class DimProcessHandlerTests
     {
         // Arrange
         A.CallTo(() => _tenantRepositories.GetApplicationAndCompanyId(_tenantId))
-            .Returns(((string?)null, (Guid?)null, (Guid?)null));
-        async Task Act() => await _sut.AssignCompanyApplication(_tenantId, _tenantName, CancellationToken.None).ConfigureAwait(false);
+            .Returns(((string?)null, (Guid?)null, (Guid?)null, false));
+        async Task Act() => await _sut.AssignCompanyApplication(_tenantId, CancellationToken.None).ConfigureAwait(false);
 
         // Act
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
@@ -835,8 +823,8 @@ public class DimProcessHandlerTests
     {
         // Arrange
         A.CallTo(() => _tenantRepositories.GetApplicationAndCompanyId(_tenantId))
-            .Returns((Guid.NewGuid().ToString(), (Guid?)null, (Guid?)null));
-        async Task Act() => await _sut.AssignCompanyApplication(_tenantId, _tenantName, CancellationToken.None).ConfigureAwait(false);
+            .Returns((Guid.NewGuid().ToString(), (Guid?)null, (Guid?)null, false));
+        async Task Act() => await _sut.AssignCompanyApplication(_tenantId, CancellationToken.None).ConfigureAwait(false);
 
         // Act
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
@@ -850,8 +838,8 @@ public class DimProcessHandlerTests
     {
         // Arrange
         A.CallTo(() => _tenantRepositories.GetApplicationAndCompanyId(_tenantId))
-            .Returns((Guid.NewGuid().ToString(), Guid.NewGuid(), null));
-        async Task Act() => await _sut.AssignCompanyApplication(_tenantId, _tenantName, CancellationToken.None).ConfigureAwait(false);
+            .Returns((Guid.NewGuid().ToString(), Guid.NewGuid(), null, false));
+        async Task Act() => await _sut.AssignCompanyApplication(_tenantId, CancellationToken.None).ConfigureAwait(false);
 
         // Act
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
@@ -860,8 +848,10 @@ public class DimProcessHandlerTests
         ex.Message.Should().Be("DimInstanceId must not be null.");
     }
 
-    [Fact]
-    public async Task AssignCompanyApplication_WithValidData_ReturnsExpected()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task AssignCompanyApplication_WithValidData_ReturnsExpected(bool isIssuer)
     {
         // Arrange
         var serviceCrenentialBinding = _fixture.Create<ServiceCredentialBindingDetailResponse>();
@@ -872,7 +862,7 @@ public class DimProcessHandlerTests
         var dimInstanceId = Guid.NewGuid();
         var tenant = new Tenant(_tenantId, "test", "Corp", "https://example.org/did", false, _processId, _operatorId);
         A.CallTo(() => _tenantRepositories.GetApplicationAndCompanyId(_tenantId))
-            .Returns((applicationId, companyId, dimInstanceId));
+            .Returns((applicationId, companyId, dimInstanceId, isIssuer));
         A.CallTo(() => _cfClient.GetServiceBindingDetails(dimInstanceId, A<CancellationToken>._))
             .Returns(serviceCrenentialBinding);
         A.CallTo(() => _dimClient.GetApplication(A<BasicAuthSettings>._, A<string>._, applicationId, A<CancellationToken>._))
@@ -887,7 +877,7 @@ public class DimProcessHandlerTests
             .Returns(identityResponse);
 
         // Act
-        var result = await _sut.AssignCompanyApplication(_tenantId, _tenantName, CancellationToken.None);
+        var result = await _sut.AssignCompanyApplication(_tenantId, CancellationToken.None);
 
         // Assert
         A.CallTo(() => _dimClient.AssignApplicationToCompany(A<BasicAuthSettings>._, A<string>._, applicationKey, companyId, A<CancellationToken>._))
@@ -896,8 +886,68 @@ public class DimProcessHandlerTests
         result.modified.Should().BeFalse();
         result.processMessage.Should().BeNull();
         result.stepStatusId.Should().Be(ProcessStepStatusId.DONE);
-        result.nextStepTypeIds.Should().ContainSingle().Which.Should().Be(ProcessStepTypeId.SEND_CALLBACK);
+        result.nextStepTypeIds.Should().ContainSingle().Which.Should().Be(isIssuer ? ProcessStepTypeId.CREATE_STATUS_LIST : ProcessStepTypeId.SEND_CALLBACK);
         tenant.ApplicationKey.Should().Be(applicationKey);
+    }
+
+    #endregion
+
+    #region CreateStatusList
+
+    [Fact]
+    public async Task CreateStatusList_WithNoCompanyId_ReturnsExpected()
+    {
+        // Arrange
+        A.CallTo(() => _tenantRepositories.GetApplicationAndCompanyId(_tenantId))
+            .Returns((Guid.NewGuid().ToString(), (Guid?)null, (Guid?)null, false));
+        async Task Act() => await _sut.CreateStatusList(_tenantId, CancellationToken.None).ConfigureAwait(false);
+
+        // Act
+        var ex = await Assert.ThrowsAsync<ConflictException>(Act);
+
+        // Assert
+        ex.Message.Should().Be("CompanyId must always be set here");
+    }
+
+    [Fact]
+    public async Task CreateStatusList_WithNoDimInstanceId_ReturnsExpected()
+    {
+        // Arrange
+        A.CallTo(() => _tenantRepositories.GetApplicationAndCompanyId(_tenantId))
+            .Returns((Guid.NewGuid().ToString(), Guid.NewGuid(), null, false));
+        async Task Act() => await _sut.CreateStatusList(_tenantId, CancellationToken.None).ConfigureAwait(false);
+
+        // Act
+        var ex = await Assert.ThrowsAsync<ConflictException>(Act);
+
+        // Assert
+        ex.Message.Should().Be("DimInstanceId must not be null.");
+    }
+
+    [Fact]
+    public async Task CreateStatusList_WithValidData_ReturnsExpected()
+    {
+        // Arrange
+        var serviceCrenentialBinding = _fixture.Create<ServiceCredentialBindingDetailResponse>();
+        var applicationId = Guid.NewGuid().ToString();
+        var companyId = Guid.NewGuid();
+        var dimInstanceId = Guid.NewGuid();
+        A.CallTo(() => _tenantRepositories.GetApplicationAndCompanyId(_tenantId))
+            .Returns((applicationId, companyId, dimInstanceId, false));
+        A.CallTo(() => _cfClient.GetServiceBindingDetails(dimInstanceId, A<CancellationToken>._))
+            .Returns(serviceCrenentialBinding);
+
+        // Act
+        var result = await _sut.CreateStatusList(_tenantId, CancellationToken.None);
+
+        // Assert
+        A.CallTo(() => _dimClient.CreateStatusList(A<BasicAuthSettings>._, A<string>._, companyId, A<CancellationToken>._))
+            .MustHaveHappenedOnceExactly();
+
+        result.modified.Should().BeFalse();
+        result.processMessage.Should().BeNull();
+        result.stepStatusId.Should().Be(ProcessStepStatusId.DONE);
+        result.nextStepTypeIds.Should().ContainSingle().Which.Should().Be(ProcessStepTypeId.SEND_CALLBACK);
     }
 
     #endregion
@@ -910,7 +960,7 @@ public class DimProcessHandlerTests
         // Arrange
         A.CallTo(() => _tenantRepositories.GetCallbackData(_tenantId))
             .Returns(("bpn123", (string?)null, (string?)null, (Guid?)null));
-        async Task Act() => await _sut.SendCallback(_tenantId, _tenantName, CancellationToken.None).ConfigureAwait(false);
+        async Task Act() => await _sut.SendCallback(_tenantId, CancellationToken.None).ConfigureAwait(false);
 
         // Act
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
@@ -925,7 +975,7 @@ public class DimProcessHandlerTests
         // Arrange
         A.CallTo(() => _tenantRepositories.GetCallbackData(_tenantId))
             .Returns(("bpn123", "https://example.org/did", (string?)null, (Guid?)null));
-        async Task Act() => await _sut.SendCallback(_tenantId, _tenantName, CancellationToken.None).ConfigureAwait(false);
+        async Task Act() => await _sut.SendCallback(_tenantId, CancellationToken.None).ConfigureAwait(false);
 
         // Act
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
@@ -940,7 +990,7 @@ public class DimProcessHandlerTests
         // Arrange
         A.CallTo(() => _tenantRepositories.GetCallbackData(_tenantId))
             .Returns(("bpn123", "https://example.org/did", Guid.NewGuid().ToString(), (Guid?)null));
-        async Task Act() => await _sut.SendCallback(_tenantId, _tenantName, CancellationToken.None).ConfigureAwait(false);
+        async Task Act() => await _sut.SendCallback(_tenantId, CancellationToken.None).ConfigureAwait(false);
 
         // Act
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
@@ -974,7 +1024,7 @@ public class DimProcessHandlerTests
             .Returns(identityResponse);
 
         // Act
-        var result = await _sut.SendCallback(_tenantId, _tenantName, CancellationToken.None);
+        var result = await _sut.SendCallback(_tenantId, CancellationToken.None);
 
         // Assert
         A.CallTo(() => _callbackService.SendCallback("bpn123", A<ServiceCredentialBindingDetailResponse>._, A<JsonDocument>._, did, A<CancellationToken>._))
