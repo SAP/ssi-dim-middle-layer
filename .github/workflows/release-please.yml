@@ -22,7 +22,7 @@ name: Release Please
 on:
   push:
     branches:
-      - 'v*.*.*'
+      - 'changelog/v*.*.*'
   workflow_dispatch:
 
 permissions:

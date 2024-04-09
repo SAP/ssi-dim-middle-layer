@@ -27,8 +27,8 @@ spec:
     server: 'https://kubernetes.default.svc'
   source:
     path: charts/dim
-    repoURL: 'https://github.com/phil91/dim-client.git'
-    targetRevision: dim-0.0.2
+    repoURL: 'https://github.com/sap/dim-client.git'
+    targetRevision: dim-1.0.0
     plugin:
       env:
         - name: AVP_SECRET

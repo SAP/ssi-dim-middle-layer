@@ -11,14 +11,14 @@ The referenced container images are for demonstration purposes only.
 To install the chart with the release name `{{ template "chart.name" . }}`:
 
 ```shell
-$ helm repo add dim-repo https://phil91.github.io/dim-client
-$ helm install {{ template "chart.name" . }} dim-repo/{{ template "chart.name" . }}
+$ helm repo add ssi-dim-middle-layer https://sap.github.io/ssi-dim-middle-layer
+$ helm install {{ template "chart.name" . }} ssi-dim-middle-layer/{{ template "chart.name" . }}
 ```
 
 To install the helm chart into your cluster with your values:
 
 ```shell
-$ helm install -f your-values.yaml {{ template "chart.name" . }} dim-repo/{{ template "chart.name" . }}
+$ helm install -f your-values.yaml {{ template "chart.name" . }} ssi-dim-middle-layer/{{ template "chart.name" . }}
 ```
 
 To use the helm chart as a dependency:
@@ -26,7 +26,7 @@ To use the helm chart as a dependency:
 ```yaml
 dependencies:
   - name: {{ template "chart.name" . }}
-    repository: https://phil91.github.io/dim-client
+    repository: https://sap.github.io/ssi-dim-middle-layer
     version: {{ template "chart.version" . }}
 ```
 

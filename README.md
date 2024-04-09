@@ -4,7 +4,7 @@
 
 ## About this project
 
-This repository contains the backend code for the Integration layer between DIM solution and Tractus-X Portal written in C#. It's used to create a wallet and configure all needed information.
+This repository contains the code for the Integration layer between Digital Identity Management (DIM) solution and Tractus-X Portal written in C#. It's used to create a wallet and configure all needed information.
 
 For **installation** details and further information, please refer to the chart specific [README](./charts/dim/README.md).
 

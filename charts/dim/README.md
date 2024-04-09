@@ -11,14 +11,14 @@ The referenced container images are for demonstration purposes only.
 To install the chart with the release name `dim`:
 
 ```shell
-$ helm repo add dim-repo https://phil91.github.io/dim-client
-$ helm install dim dim-repo/dim
+$ helm repo add ssi-dim-middle-layer https://sap.github.io/ssi-dim-middle-layer
+$ helm install dim ssi-dim-middle-layer/dim
 ```
 
 To install the helm chart into your cluster with your values:
 
 ```shell
-$ helm install -f your-values.yaml dim dim-repo/dim
+$ helm install -f your-values.yaml dim ssi-dim-middle-layer/dim
 ```
 
 To use the helm chart as a dependency:
@@ -26,8 +26,8 @@ To use the helm chart as a dependency:
 ```yaml
 dependencies:
   - name: dim
-    repository: https://phil91.github.io/dim-client
-    version: 0.0.2
+    repository: https://sap.github.io/ssi-dim-middle-layer
+    version: 1.0.0
 ```
 
 ## Requirements
@@ -40,7 +40,7 @@ dependencies:
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| dim.image.name | string | `"ghcr.io/phil91/dim-client_dim-service"` |  |
+| dim.image.name | string | `"ghcr.io/sap/dim-client_dim-service"` |  |
 | dim.image.tag | string | `""` |  |
 | dim.imagePullPolicy | string | `"IfNotPresent"` |  |
 | dim.resources | object | `{"limits":{"cpu":"45m","memory":"300M"},"requests":{"cpu":"15m","memory":"300M"}}` | We recommend to review the default resource limits as this should a conscious choice. |
@@ -53,7 +53,7 @@ dependencies:
 | dim.rootDirectoryId | string | `"00000000-0000-0000-0000-000000000000"` |  |
 | dim.operatorId | string | `"00000000-0000-0000-0000-000000000000"` |  |
 | migrations.name | string | `"migrations"` |  |
-| migrations.image.name | string | `"ghcr.io/phil91/dim-client_dim-migrations"` |  |
+| migrations.image.name | string | `"ghcr.io/sap/dim-client_dim-migrations"` |  |
 | migrations.image.tag | string | `""` |  |
 | migrations.imagePullPolicy | string | `"IfNotPresent"` |  |
 | migrations.resources | object | `{"limits":{"cpu":"45m","memory":"200M"},"requests":{"cpu":"15m","memory":"200M"}}` | We recommend to review the default resource limits as this should a conscious choice. |
@@ -61,7 +61,7 @@ dependencies:
 | migrations.seeding.testDataPaths | string | `"Seeder/Data"` |  |
 | migrations.logging.default | string | `"Information"` |  |
 | processesworker.name | string | `"processesworker"` |  |
-| processesworker.image.name | string | `"ghcr.io/phil91/dim-client_dim-processes-worker"` |  |
+| processesworker.image.name | string | `"ghcr.io/sap/dim-client_dim-processes-worker"` |  |
 | processesworker.image.tag | string | `""` |  |
 | processesworker.imagePullPolicy | string | `"IfNotPresent"` |  |
 | processesworker.resources | object | `{"limits":{"cpu":"45m","memory":"300M"},"requests":{"cpu":"15m","memory":"300M"}}` | We recommend to review the default resource limits as this should a conscious choice. |
