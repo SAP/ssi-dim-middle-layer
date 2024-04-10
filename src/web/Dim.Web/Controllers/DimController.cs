@@ -66,6 +66,13 @@ public static class DimController
             .RequireAuthorization(r => r.RequireRole("create_status_list"))
             .Produces(StatusCodes.Status200OK, responseType: typeof(string), contentType: Constants.JsonContentType);
 
+        policyHub.MapPost("technical-user/{bpn}", ([FromRoute] string bpn, [FromBody] TechnicalUserData technicalUserData, CancellationToken cancellationToken, [FromServices] IDimBusinessLogic dimBusinessLogic) => dimBusinessLogic.CreateTechnicalUser(bpn, technicalUserData, cancellationToken))
+            .WithSwaggerDescription("Creates a technical user for the dim of the given bpn",
+                "Example: Post: api/dim/technical-user/{bpn}",
+                "bpn of the company")
+            .RequireAuthorization(r => r.RequireRole("create_technical_user"))
+            .Produces(StatusCodes.Status200OK, contentType: Constants.JsonContentType);
+
         return group;
     }
 }

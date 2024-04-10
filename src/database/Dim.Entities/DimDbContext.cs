@@ -41,6 +41,7 @@ public class DimDbContext : DbContext
     public virtual DbSet<ProcessStepType> ProcessStepTypes { get; set; } = default!;
     public virtual DbSet<ProcessType> ProcessTypes { get; set; } = default!;
     public virtual DbSet<Tenant> Tenants { get; set; } = default!;
+    public virtual DbSet<TechnicalUser> TechnicalUsers { get; set; } = default!;
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -85,10 +86,25 @@ public class DimDbContext : DbContext
                     .Select(e => new ProcessStepType(e))
             );
 
-        modelBuilder.Entity<Tenant>()
-            .HasOne(d => d.Process)
-            .WithMany(p => p.Tenants)
-            .HasForeignKey(d => d.ProcessId)
-            .OnDelete(DeleteBehavior.ClientSetNull);
+        modelBuilder.Entity<Tenant>(t =>
+            {
+                t.HasOne(d => d.Process)
+                    .WithMany(p => p.Tenants)
+                    .HasForeignKey(d => d.ProcessId)
+                    .OnDelete(DeleteBehavior.ClientSetNull);
+            });
+
+        modelBuilder.Entity<TechnicalUser>(tu =>
+        {
+            tu.HasOne(d => d.Process)
+                .WithMany(p => p.TechnicalUsers)
+                .HasForeignKey(d => d.ProcessId)
+                .OnDelete(DeleteBehavior.ClientSetNull);
+
+            tu.HasOne(t => t.Tenant)
+                .WithMany(t => t.TechnicalUsers)
+                .HasForeignKey(t => t.TenantId)
+                .OnDelete(DeleteBehavior.ClientSetNull);
+        });
     }
 }

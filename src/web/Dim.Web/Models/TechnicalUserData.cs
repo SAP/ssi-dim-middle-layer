@@ -18,16 +18,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-namespace Dim.Clients.Api.Cf;
+namespace Dim.Web.Models;
 
-public interface ICfClient
-{
-    Task<Guid> CreateCloudFoundrySpace(string tenantName, CancellationToken cancellationToken);
-    Task AddSpaceRoleToUser(string type, string user, Guid spaceId, CancellationToken cancellationToken);
-    Task<Guid> GetServicePlan(string servicePlanName, string servicePlanType, CancellationToken cancellationToken);
-    Task<Guid> GetSpace(string tenantName, CancellationToken cancellationToken);
-    Task CreateDimServiceInstance(string tenantName, Guid spaceId, Guid servicePlanId, CancellationToken cancellationToken);
-    Task CreateServiceInstanceBindings(string tenantName, string? keyName, Guid spaceId, CancellationToken cancellationToken);
-    Task<Guid> GetServiceBinding(string tenantName, Guid spaceId, string bindingName, CancellationToken cancellationToken);
-    Task<ServiceCredentialBindingDetailResponse> GetServiceBindingDetails(Guid id, CancellationToken cancellationToken);
-}
+public record TechnicalUserData(
+    Guid ExternalId,
+    string Name
+);

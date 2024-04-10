@@ -86,7 +86,11 @@ processesworker:
     clientSecret: "<path:portal/data/dim/dev/callback#clientSecret>"
     tokenAddress: "http://centralidp.dev.demo.catena-x.net/auth/realms/CX-Central/protocol/openid-connect/token"
     # -- Url to the cf service api
-    baseAddress: "https://portal-backend.dev.demo.catena-x.net/api/administration/registration/dim/"
+    baseAddress: "https://portal-backend.dev.demo.catena-x.net"
+  technicalUserCreation:
+    encryptionConfigs:
+      index0:
+        encryptionKey: "<<path:portal/data/dim/dev/technicaluser#technicalusercreation-encryption-key0>"
 
 idp:
   address: "https://centralidp.dev.demo.catena-x.net"

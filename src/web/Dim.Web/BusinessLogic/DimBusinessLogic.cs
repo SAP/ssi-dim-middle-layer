@@ -25,6 +25,7 @@ using Dim.DbAccess;
 using Dim.DbAccess.Repositories;
 using Dim.Entities.Enums;
 using Dim.Web.ErrorHandling;
+using Dim.Web.Models;
 using Microsoft.Extensions.Options;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 
@@ -112,5 +113,23 @@ public class DimBusinessLogic : IDimBusinessLogic
         };
         var dimBaseUrl = dimDetails.Credentials.Url;
         return await _dimClient.CreateStatusList(dimAuth, dimBaseUrl, companyId.Value, cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task CreateTechnicalUser(string bpn, TechnicalUserData technicalUserData, CancellationToken cancellationToken)
+    {
+        var (exists, tenantId) = await _dimRepositories.GetInstance<ITenantRepository>().GetTenantForBpn(bpn).ConfigureAwait(false);
+
+        if (!exists)
+        {
+            throw NotFoundException.Create(DimErrors.NO_COMPANY_FOR_BPN, new ErrorParameter[] { new("bpn", bpn) });
+        }
+
+        var processStepRepository = _dimRepositories.GetInstance<IProcessStepRepository>();
+        var processId = processStepRepository.CreateProcess(ProcessTypeId.CREATE_TECHNICAL_USER).Id;
+        processStepRepository.CreateProcessStep(ProcessStepTypeId.CREATE_TECHNICAL_USER, ProcessStepStatusId.TODO, processId);
+
+        _dimRepositories.GetInstance<ITenantRepository>().CreateTenantTechnicalUser(tenantId, technicalUserData.Name, technicalUserData.ExternalId, processId);
+
+        await _dimRepositories.SaveAsync().ConfigureAwait(false);
     }
 }

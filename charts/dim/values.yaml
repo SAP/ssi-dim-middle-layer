@@ -107,6 +107,16 @@ processesworker:
     tokenAddress: ""
     # -- Url to the cf service api
     baseAddress: ""
+  technicalUserCreation:
+    encryptionConfigIndex: 0
+    encryptionConfigs:
+      index0:
+        index: 0
+        cipherMode: "CBC"
+        paddingMode: "PKCS7"
+        # -- EncryptionKey to encrypt the technical user client-secret. Secret-key 'technicalusercreation-encryption-key0'.
+        # Expected format is 256 bit (64 digits) hex.
+        encryptionKey: ""
 
 # -- Secret containing "client-secret-cis-central", "client-secret-cf" and "client-secret-callback"
 existingSecret: ""

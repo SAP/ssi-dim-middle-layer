@@ -631,7 +631,7 @@ public class DimProcessHandlerTests
         var result = await _sut.CreateServiceInstanceBindings(_tenantName, _tenantId, CancellationToken.None);
 
         // Assert
-        A.CallTo(() => _cfClient.CreateServiceInstanceBindings(_tenantName, spaceId, A<CancellationToken>._))
+        A.CallTo(() => _cfClient.CreateServiceInstanceBindings(_tenantName, null, spaceId, A<CancellationToken>._))
             .MustHaveHappenedOnceExactly();
 
         result.modified.Should().BeFalse();

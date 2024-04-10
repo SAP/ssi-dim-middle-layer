@@ -18,6 +18,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using Dim.Web.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.DependencyInjection;
 
 namespace Dim.Web.BusinessLogic;
@@ -27,4 +28,5 @@ public interface IDimBusinessLogic : ITransient
     Task StartSetupDim(string companyName, string bpn, string didDocumentLocation, bool isIssuer);
     Task<string> GetStatusList(string bpn, CancellationToken cancellationToken);
     Task<string> CreateStatusList(string bpn, CancellationToken cancellationToken);
+    Task CreateTechnicalUser(string bpn, TechnicalUserData technicalUserData, CancellationToken cancellationToken);
 }

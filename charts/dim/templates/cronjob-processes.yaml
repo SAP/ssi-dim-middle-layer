@@ -116,6 +116,19 @@ spec:
               value: "{{ .Values.processesworker.callback.tokenAddress }}"
             - name: "CALLBACK__BASEADDRESS"
               value: "{{ .Values.processesworker.callback.baseAddress }}"
+            - name: "TECHNICALUSERCREATION__ENCRYPTIONCONFIGINDEX"
+              value: "{{ .Values.processesworker.technicalUserCreation.encryptionConfigIndex }}"
+            - name: "TECHNICALUSERCREATION__ENCRYPTIONCONFIGS__0__INDEX"
+              value: "{{ .Values.processesworker.technicalUserCreation.encryptionConfigs.index0.index }}"
+            - name: "TECHNICALUSERCREATION__ENCRYPTIONCONFIGS__0__ENCRYPTIONKEY"
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ template "dim.secretName" . }}"
+                  key: "technicalusercreation-encryption-key0"
+            - name: "TECHNICALUSERCREATION__ENCRYPTIONCONFIGS__0__CIPHERMODE"
+              value: "{{ .Values.processesworker.technicalUserCreation.encryptionConfigs.index0.cipherMode }}"
+            - name: "TECHNICALUSERCREATION__ENCRYPTIONCONFIGS__0__PADDINGMODE"
+              value: "{{ .Values.processesworker.technicalUserCreation.encryptionConfigs.index0.paddingMode }}"
             ports:
             - name: http
               containerPort: {{ .Values.portContainer }}

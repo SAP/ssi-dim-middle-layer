@@ -18,16 +18,18 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-namespace Dim.Clients.Api.Cf;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.Models.Configuration;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.Models.Validation;
+using System.ComponentModel.DataAnnotations;
 
-public interface ICfClient
+namespace DimProcess.Library.DependencyInjection;
+
+public class TechnicalUserSettings
 {
-    Task<Guid> CreateCloudFoundrySpace(string tenantName, CancellationToken cancellationToken);
-    Task AddSpaceRoleToUser(string type, string user, Guid spaceId, CancellationToken cancellationToken);
-    Task<Guid> GetServicePlan(string servicePlanName, string servicePlanType, CancellationToken cancellationToken);
-    Task<Guid> GetSpace(string tenantName, CancellationToken cancellationToken);
-    Task CreateDimServiceInstance(string tenantName, Guid spaceId, Guid servicePlanId, CancellationToken cancellationToken);
-    Task CreateServiceInstanceBindings(string tenantName, string? keyName, Guid spaceId, CancellationToken cancellationToken);
-    Task<Guid> GetServiceBinding(string tenantName, Guid spaceId, string bindingName, CancellationToken cancellationToken);
-    Task<ServiceCredentialBindingDetailResponse> GetServiceBindingDetails(Guid id, CancellationToken cancellationToken);
+    [Required]
+    public int EncryptionConfigIndex { get; set; }
+
+    [Required]
+    [DistinctValues("x => x.Index")]
+    public IEnumerable<EncryptionModeConfig> EncryptionConfigs { get; set; } = null!;
 }

@@ -39,7 +39,8 @@ try
                 .AddTransient<ITokenService, TokenService>()
                 .AddDatabase(hostContext.Configuration)
                 .AddProcessExecutionService(hostContext.Configuration.GetSection("Processes"))
-                .AddDimProcessExecutor(hostContext.Configuration);
+                .AddDimProcessExecutor(hostContext.Configuration)
+                .AddTechnicalUserProcessExecutor(hostContext.Configuration);
         })
         .AddLogging()
         .Build();
