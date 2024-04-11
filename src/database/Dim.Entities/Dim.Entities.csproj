@@ -1,5 +1,5 @@
-<!--
-- Copyright (c) 2024 Contributors to the Eclipse Foundation
+  <!--
+- Copyright 2024 SAP SE or an SAP affiliate company and ssi-dim-middle-layer contributors.
 -
 - See the NOTICE file(s) distributed with this work for additional
 - information regarding copyright ownership.
@@ -20,19 +20,19 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net7.0</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <RootNamespace>Dim.Entities</RootNamespace>
         <AssemblyName>Dim.Entities</AssemblyName>
     </PropertyGroup>
     <ItemGroup>
-      <PackageReference Include="EFCore.NamingConventions" Version="7.0.2" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.10">
+      <PackageReference Include="EFCore.NamingConventions" Version="8.0.3" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.3">
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         <PrivateAssets>all</PrivateAssets>
       </PackageReference>
-      <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="7.0.4" />
-      <PackageReference Include="Org.Eclipse.TractusX.Portal.Backend.Framework.DBAccess" Version="1.1.0" />
+      <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.2" />
+      <PackageReference Include="Org.Eclipse.TractusX.Portal.Backend.Framework.DBAccess" Version="2.0.0" />
     </ItemGroup>
 </Project>

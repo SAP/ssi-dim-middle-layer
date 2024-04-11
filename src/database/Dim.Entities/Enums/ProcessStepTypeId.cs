@@ -1,5 +1,5 @@
 /********************************************************************************
- * Copyright (c) 2024 Contributors to the Eclipse Foundation
+ * Copyright 2024 SAP SE or an SAP affiliate company and ssi-dim-middle-layer contributors.
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -38,5 +38,11 @@ public enum ProcessStepTypeId
     CREATE_APPLICATION = 14,
     CREATE_COMPANY_IDENTITY = 15,
     ASSIGN_COMPANY_APPLICATION = 16,
-    SEND_CALLBACK = 17
+    CREATE_STATUS_LIST = 17,
+    SEND_CALLBACK = 18,
+
+    // Create Technical User
+    CREATE_TECHNICAL_USER = 100,
+    GET_TECHNICAL_USER_DATA = 101,
+    SEND_TECHNICAL_USER_CALLBACK = 102,
 }

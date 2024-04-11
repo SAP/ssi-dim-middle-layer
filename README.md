@@ -4,11 +4,26 @@
 
 ## About this project
 
-Integration layer between DIM solution and Tractus-X Portal.
+This repository contains the code for the Integration layer between Digital Identity Management (DIM) solution and Tractus-X Portal written in C#. It's used to create a wallet and configure all needed information.
+
+For **installation** details and further information, please refer to the chart specific [README](./charts/dim/README.md).
 
 ## Requirements and Setup
 
-*Insert a short description what is required to get your project running...*
+Install the [.NET 8.0 SDK](https://www.microsoft.com/net/download).
+
+Run the following command from the CLI:
+
+```console
+dotnet build src
+```
+
+Make sure the necessary config is added to the settings of the service you want to run.
+Run the following command from the CLI in the directory of the service you want to run:
+
+```console
+dotnet run
+```
 
 ## Support, Feedback, Contributing
 

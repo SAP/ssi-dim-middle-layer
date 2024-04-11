@@ -1,5 +1,5 @@
 /********************************************************************************
- * Copyright (c) 2024 Contributors to the Eclipse Foundation
+ * Copyright 2024 SAP SE or an SAP affiliate company and ssi-dim-middle-layer contributors.
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -66,7 +66,7 @@ public class CredentialProcessTypeExecutorTests
     public void GetExecutableStepTypeIds_ReturnsExpected()
     {
         // Assert
-        _sut.GetExecutableStepTypeIds().Should().HaveCount(17).And.Satisfy(
+        _sut.GetExecutableStepTypeIds().Should().HaveCount(18).And.Satisfy(
             x => x == ProcessStepTypeId.CREATE_SUBACCOUNT,
             x => x == ProcessStepTypeId.CREATE_SERVICEMANAGER_BINDINGS,
             x => x == ProcessStepTypeId.ASSIGN_ENTITLEMENTS,
@@ -82,6 +82,7 @@ public class CredentialProcessTypeExecutorTests
             x => x == ProcessStepTypeId.GET_DIM_DETAILS,
             x => x == ProcessStepTypeId.CREATE_APPLICATION,
             x => x == ProcessStepTypeId.CREATE_COMPANY_IDENTITY,
+            x => x == ProcessStepTypeId.CREATE_STATUS_LIST,
             x => x == ProcessStepTypeId.ASSIGN_COMPANY_APPLICATION,
             x => x == ProcessStepTypeId.SEND_CALLBACK);
     }
@@ -161,6 +162,7 @@ public class CredentialProcessTypeExecutorTests
     [InlineData(ProcessStepTypeId.GET_DIM_DETAILS)]
     [InlineData(ProcessStepTypeId.CREATE_APPLICATION)]
     [InlineData(ProcessStepTypeId.CREATE_COMPANY_IDENTITY)]
+    [InlineData(ProcessStepTypeId.CREATE_STATUS_LIST)]
     [InlineData(ProcessStepTypeId.ASSIGN_COMPANY_APPLICATION)]
     [InlineData(ProcessStepTypeId.SEND_CALLBACK)]
     public async Task ExecuteProcessStep_WithValidData_CallsExpected(ProcessStepTypeId processStepTypeId)
@@ -311,10 +313,13 @@ public class CredentialProcessTypeExecutorTests
         A.CallTo(() => _dimProcessHandler.CreateCompanyIdentity(tenantId, tenantName, A<CancellationToken>._))
             .Returns(new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(null, ProcessStepStatusId.DONE, false, null));
 
-        A.CallTo(() => _dimProcessHandler.AssignCompanyApplication(tenantId, tenantName, A<CancellationToken>._))
+        A.CallTo(() => _dimProcessHandler.CreateStatusList(tenantId, A<CancellationToken>._))
             .Returns(new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(null, ProcessStepStatusId.DONE, false, null));
 
-        A.CallTo(() => _dimProcessHandler.SendCallback(tenantId, tenantName, A<CancellationToken>._))
+        A.CallTo(() => _dimProcessHandler.AssignCompanyApplication(tenantId, A<CancellationToken>._))
+            .Returns(new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(null, ProcessStepStatusId.DONE, false, null));
+
+        A.CallTo(() => _dimProcessHandler.SendCallback(tenantId, A<CancellationToken>._))
             .Returns(new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(null, ProcessStepStatusId.DONE, false, null));
     }
 

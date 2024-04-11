@@ -1,0 +1,136 @@
+###############################################################
+# Copyright 2024 SAP SE or an SAP affiliate company and ssi-dim-middle-layer contributors.
+#
+# See the NOTICE file(s) distributed with this work for additional
+# information regarding copyright ownership.
+#
+# This program and the accompanying materials are made available under the
+# terms of the Apache License, Version 2.0 which is available at
+# https://www.apache.org/licenses/LICENSE-2.0.
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+###############################################################
+
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "dim.fullname" . }}-{{ .Values.processesworker.name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "dim.labels" . | nindent 4 }}
+spec:
+  schedule: "*/5 * * * *"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    metadata:
+      name: {{ include "dim.fullname" . }}-{{ .Values.processesworker.name }}
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: {{ include "dim.fullname" . }}-{{ .Values.processesworker.name }}
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                - ALL
+              readOnlyRootFilesystem: true
+              runAsNonRoot: true
+            image: "{{ .Values.processesworker.image.name }}:{{ .Values.processesworker.image.tag | default .Chart.AppVersion }}"
+            imagePullPolicy: "{{ .Values.processesworker.imagePullPolicy }}"
+            env:
+            - name: DOTNET_ENVIRONMENT
+              value: "{{ .Values.dotnetEnvironment }}"
+            {{- if .Values.postgresql.enabled }}
+            - name: "DIM_PASSWORD"
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ template "dim.postgresSecretName" . }}"
+                  key: "password"
+            - name: "CONNECTIONSTRINGS__DIMDB"
+              value: "Server={{ template "dim.postgresql.primary.fullname" . }};Database={{ .Values.postgresql.auth.database }};Port={{ .Values.postgresql.auth.port }};User Id={{ .Values.postgresql.auth.username }};Password=$(DIM_PASSWORD);Ssl Mode={{ .Values.dbConnection.sslMode }};"
+            {{- end }}
+            {{- if not .Values.postgresql.enabled }}
+            - name: "DIM_PASSWORD"
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Values.externalDatabase.secret }}"
+                  key: "password"
+            - name: "CONNECTIONSTRINGS__DIMDB"
+              value: "Server={{ .Values.externalDatabase.host }};Database={{ .Values.externalDatabase.database }};Port={{ .Values.externalDatabase.port }};User Id={{ .Values.externalDatabase.username }};Password=$(DIM_PASSWORD);Ssl Mode={{ .Values.dbConnection.sslMode }};"
+            {{- end }}
+            - name: "DIM__ADMINMAIL"
+              value: "{{ .Values.processesworker.dim.adminMail }}"
+            - name: "DIM__ROOTDIRECTORYID"
+              value: "{{ .Values.dim.rootDirectoryId }}"
+            - name: "DIM__CLIENTIDCISCENTRAL"
+              value: "{{ .Values.processesworker.dim.clientIdCisCentral }}"
+            - name: "DIM__CLIENTSECRETCISCENTRAL"
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ template "dim.secretName" . }}"
+                  key: "client-secret-cis-central"
+            - name: "DIM__AUTHURL"
+              value: "{{ .Values.processesworker.dim.authUrl }}"
+            - name: "SUBACCOUNT__BASEURL"
+              value: "{{ .Values.processesworker.subaccount.baseUrl }}"
+            - name: "ENTITLEMENT__BASEURL"
+              value: "{{ .Values.processesworker.entitlement.baseUrl }}"
+            - name: "CF__CLIENTID"
+              value: "{{ .Values.processesworker.cf.clientId }}"
+            - name: "CF__CLIENTSECRET"
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ template "dim.secretName" . }}"
+                  key: "client-secret-cf"
+            - name: "CF__TOKENADDRESS"
+              value: "{{ .Values.processesworker.cf.tokenAddress }}"
+            - name: "CF__BASEURL"
+              value: "{{ .Values.processesworker.cf.baseUrl }}"
+            - name: "CF__GRANTTYPE"
+              value: "{{ .Values.processesworker.cf.grantType }}"
+            - name: "CALLBACK__USERNAME"
+              value: "empty"
+            - name: "CALLBACK__PASSWORD"
+              value: "empty"
+            - name: "CALLBACK__CLIENTID"
+              value: "{{ .Values.processesworker.callback.clientId }}"
+            - name: "CALLBACK__CLIENTSECRET"
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ template "dim.secretName" . }}"
+                  key: "client-secret-callback"
+            - name: "CALLBACK__GRANTTYPE"
+              value: "{{ .Values.processesworker.callback.grantType }}"
+            - name: "CALLBACK__SCOPE"
+              value: "{{ .Values.processesworker.callback.scope }}"
+            - name: "CALLBACK__TOKENADDRESS"
+              value: "{{ .Values.processesworker.callback.tokenAddress }}"
+            - name: "CALLBACK__BASEADDRESS"
+              value: "{{ .Values.processesworker.callback.baseAddress }}"
+            - name: "TECHNICALUSERCREATION__ENCRYPTIONCONFIGINDEX"
+              value: "{{ .Values.processesworker.technicalUserCreation.encryptionConfigIndex }}"
+            - name: "TECHNICALUSERCREATION__ENCRYPTIONCONFIGS__0__INDEX"
+              value: "{{ .Values.processesworker.technicalUserCreation.encryptionConfigs.index0.index }}"
+            - name: "TECHNICALUSERCREATION__ENCRYPTIONCONFIGS__0__ENCRYPTIONKEY"
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ template "dim.secretName" . }}"
+                  key: "technicalusercreation-encryption-key0"
+            - name: "TECHNICALUSERCREATION__ENCRYPTIONCONFIGS__0__CIPHERMODE"
+              value: "{{ .Values.processesworker.technicalUserCreation.encryptionConfigs.index0.cipherMode }}"
+            - name: "TECHNICALUSERCREATION__ENCRYPTIONCONFIGS__0__PADDINGMODE"
+              value: "{{ .Values.processesworker.technicalUserCreation.encryptionConfigs.index0.paddingMode }}"
+            ports:
+            - name: http
+              containerPort: {{ .Values.portContainer }}
+              protocol: TCP
+            resources:
+              {{- toYaml .Values.processesworker.resources | nindent 14 }}

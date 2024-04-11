@@ -1,5 +1,5 @@
 /********************************************************************************
- * Copyright (c) 2024 Contributors to the Eclipse Foundation
+ * Copyright 2024 SAP SE or an SAP affiliate company and ssi-dim-middle-layer contributors.
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -27,11 +27,11 @@ using System.Collections.Immutable;
 
 namespace DimProcess.Executor;
 
-public class DimProcessTypeExecutor : IProcessTypeExecutor
+public class DimProcessTypeExecutor(
+    IDimRepositories dimRepositories,
+    IDimProcessHandler dimProcessHandler)
+    : IProcessTypeExecutor
 {
-    private readonly IDimRepositories _dimRepositories;
-    private readonly IDimProcessHandler _dimProcessHandler;
-
     private readonly IEnumerable<ProcessStepTypeId> _executableProcessSteps = ImmutableArray.Create(
         ProcessStepTypeId.CREATE_SUBACCOUNT,
         ProcessStepTypeId.CREATE_SERVICEMANAGER_BINDINGS,
@@ -48,19 +48,12 @@ public class DimProcessTypeExecutor : IProcessTypeExecutor
         ProcessStepTypeId.GET_DIM_DETAILS,
         ProcessStepTypeId.CREATE_APPLICATION,
         ProcessStepTypeId.CREATE_COMPANY_IDENTITY,
+        ProcessStepTypeId.CREATE_STATUS_LIST,
         ProcessStepTypeId.ASSIGN_COMPANY_APPLICATION,
         ProcessStepTypeId.SEND_CALLBACK);
 
     private Guid _tenantId;
-    private string _tenantName;
-
-    public DimProcessTypeExecutor(
-        IDimRepositories dimRepositories,
-        IDimProcessHandler dimProcessHandler)
-    {
-        _dimRepositories = dimRepositories;
-        _dimProcessHandler = dimProcessHandler;
-    }
+    private string? _tenantName;
 
     public ProcessTypeId GetProcessTypeId() => ProcessTypeId.SETUP_DIM;
     public bool IsExecutableStepTypeId(ProcessStepTypeId processStepTypeId) => _executableProcessSteps.Contains(processStepTypeId);
@@ -69,7 +62,7 @@ public class DimProcessTypeExecutor : IProcessTypeExecutor
 
     public async ValueTask<IProcessTypeExecutor.InitializationResult> InitializeProcess(Guid processId, IEnumerable<ProcessStepTypeId> processStepTypeIds)
     {
-        var (exists, tenantId, companyName, bpn) = await _dimRepositories.GetInstance<ITenantRepository>().GetTenantDataForProcessId(processId).ConfigureAwait(false);
+        var (exists, tenantId, companyName, bpn) = await dimRepositories.GetInstance<ITenantRepository>().GetTenantDataForProcessId(processId).ConfigureAwait(false);
         if (!exists)
         {
             throw new NotFoundException($"process {processId} does not exist or is not associated with an tenant");
@@ -82,7 +75,7 @@ public class DimProcessTypeExecutor : IProcessTypeExecutor
 
     public async ValueTask<IProcessTypeExecutor.StepExecutionResult> ExecuteProcessStep(ProcessStepTypeId processStepTypeId, IEnumerable<ProcessStepTypeId> processStepTypeIds, CancellationToken cancellationToken)
     {
-        if (_tenantId == Guid.Empty || _tenantName == default)
+        if (_tenantId == Guid.Empty || _tenantName is null)
         {
             throw new UnexpectedConditionException("tenantId and tenantName should never be empty here");
         }
@@ -96,53 +89,55 @@ public class DimProcessTypeExecutor : IProcessTypeExecutor
         {
             (nextStepTypeIds, stepStatusId, modified, processMessage) = processStepTypeId switch
             {
-                ProcessStepTypeId.CREATE_SUBACCOUNT => await _dimProcessHandler.CreateSubaccount(_tenantId, _tenantName, cancellationToken)
+                ProcessStepTypeId.CREATE_SUBACCOUNT => await dimProcessHandler.CreateSubaccount(_tenantId, _tenantName, cancellationToken)
                     .ConfigureAwait(false),
-                ProcessStepTypeId.CREATE_SERVICEMANAGER_BINDINGS => await _dimProcessHandler.CreateServiceManagerBindings(_tenantId, cancellationToken)
+                ProcessStepTypeId.CREATE_SERVICEMANAGER_BINDINGS => await dimProcessHandler.CreateServiceManagerBindings(_tenantId, cancellationToken)
                     .ConfigureAwait(false),
-                ProcessStepTypeId.ASSIGN_ENTITLEMENTS => await _dimProcessHandler.AssignEntitlements(_tenantId, cancellationToken)
+                ProcessStepTypeId.ASSIGN_ENTITLEMENTS => await dimProcessHandler.AssignEntitlements(_tenantId, cancellationToken)
                     .ConfigureAwait(false),
-                ProcessStepTypeId.CREATE_SERVICE_INSTANCE => await _dimProcessHandler.CreateServiceInstance(_tenantId, cancellationToken)
+                ProcessStepTypeId.CREATE_SERVICE_INSTANCE => await dimProcessHandler.CreateServiceInstance(_tenantId, cancellationToken)
                     .ConfigureAwait(false),
-                ProcessStepTypeId.CREATE_SERVICE_BINDING => await _dimProcessHandler.CreateServiceBindings(_tenantId, cancellationToken)
+                ProcessStepTypeId.CREATE_SERVICE_BINDING => await dimProcessHandler.CreateServiceBindings(_tenantId, cancellationToken)
                     .ConfigureAwait(false),
-                ProcessStepTypeId.SUBSCRIBE_APPLICATION => await _dimProcessHandler.SubscribeApplication(_tenantId, cancellationToken)
+                ProcessStepTypeId.SUBSCRIBE_APPLICATION => await dimProcessHandler.SubscribeApplication(_tenantId, cancellationToken)
                     .ConfigureAwait(false),
-                ProcessStepTypeId.CREATE_CLOUD_FOUNDRY_ENVIRONMENT => await _dimProcessHandler.CreateCloudFoundryEnvironment(_tenantId, _tenantName, cancellationToken)
+                ProcessStepTypeId.CREATE_CLOUD_FOUNDRY_ENVIRONMENT => await dimProcessHandler.CreateCloudFoundryEnvironment(_tenantId, _tenantName, cancellationToken)
                     .ConfigureAwait(false),
-                ProcessStepTypeId.CREATE_CLOUD_FOUNDRY_SPACE => await _dimProcessHandler.CreateCloudFoundrySpace(_tenantId, _tenantName, cancellationToken)
+                ProcessStepTypeId.CREATE_CLOUD_FOUNDRY_SPACE => await dimProcessHandler.CreateCloudFoundrySpace(_tenantId, _tenantName, cancellationToken)
                     .ConfigureAwait(false),
-                ProcessStepTypeId.ADD_SPACE_MANAGER_ROLE => await _dimProcessHandler.AddSpaceManagerRole(_tenantId, cancellationToken)
+                ProcessStepTypeId.ADD_SPACE_MANAGER_ROLE => await dimProcessHandler.AddSpaceManagerRole(_tenantId, cancellationToken)
                     .ConfigureAwait(false),
-                ProcessStepTypeId.ADD_SPACE_DEVELOPER_ROLE => await _dimProcessHandler.AddSpaceDeveloperRole(_tenantId, cancellationToken)
+                ProcessStepTypeId.ADD_SPACE_DEVELOPER_ROLE => await dimProcessHandler.AddSpaceDeveloperRole(_tenantId, cancellationToken)
                     .ConfigureAwait(false),
-                ProcessStepTypeId.CREATE_DIM_SERVICE_INSTANCE => await _dimProcessHandler.CreateDimServiceInstance(_tenantName, _tenantId, cancellationToken)
+                ProcessStepTypeId.CREATE_DIM_SERVICE_INSTANCE => await dimProcessHandler.CreateDimServiceInstance(_tenantName, _tenantId, cancellationToken)
                     .ConfigureAwait(false),
-                ProcessStepTypeId.CREATE_SERVICE_INSTANCE_BINDING => await _dimProcessHandler.CreateServiceInstanceBindings(_tenantName, _tenantId, cancellationToken)
+                ProcessStepTypeId.CREATE_SERVICE_INSTANCE_BINDING => await dimProcessHandler.CreateServiceInstanceBindings(_tenantName, _tenantId, cancellationToken)
                     .ConfigureAwait(false),
-                ProcessStepTypeId.GET_DIM_DETAILS => await _dimProcessHandler.GetDimDetails(_tenantName, _tenantId, cancellationToken)
+                ProcessStepTypeId.GET_DIM_DETAILS => await dimProcessHandler.GetDimDetails(_tenantName, _tenantId, cancellationToken)
                     .ConfigureAwait(false),
-                ProcessStepTypeId.CREATE_APPLICATION => await _dimProcessHandler.CreateApplication(_tenantName, _tenantId, cancellationToken)
+                ProcessStepTypeId.CREATE_APPLICATION => await dimProcessHandler.CreateApplication(_tenantName, _tenantId, cancellationToken)
                     .ConfigureAwait(false),
-                ProcessStepTypeId.CREATE_COMPANY_IDENTITY => await _dimProcessHandler.CreateCompanyIdentity(_tenantId, _tenantName, cancellationToken)
+                ProcessStepTypeId.CREATE_COMPANY_IDENTITY => await dimProcessHandler.CreateCompanyIdentity(_tenantId, _tenantName, cancellationToken)
                     .ConfigureAwait(false),
-                ProcessStepTypeId.ASSIGN_COMPANY_APPLICATION => await _dimProcessHandler.AssignCompanyApplication(_tenantId, _tenantName, cancellationToken)
+                ProcessStepTypeId.ASSIGN_COMPANY_APPLICATION => await dimProcessHandler.AssignCompanyApplication(_tenantId, cancellationToken)
                     .ConfigureAwait(false),
-                ProcessStepTypeId.SEND_CALLBACK => await _dimProcessHandler.SendCallback(_tenantId, _tenantName, cancellationToken)
+                ProcessStepTypeId.CREATE_STATUS_LIST => await dimProcessHandler.CreateStatusList(_tenantId, cancellationToken)
+                    .ConfigureAwait(false),
+                ProcessStepTypeId.SEND_CALLBACK => await dimProcessHandler.SendCallback(_tenantId, cancellationToken)
                     .ConfigureAwait(false),
                 _ => (null, ProcessStepStatusId.TODO, false, null)
             };
         }
         catch (Exception ex) when (ex is not SystemException)
         {
-            (stepStatusId, processMessage, nextStepTypeIds) = ProcessError(ex, processStepTypeId);
+            (stepStatusId, processMessage, nextStepTypeIds) = ProcessError(ex);
             modified = true;
         }
 
         return new IProcessTypeExecutor.StepExecutionResult(modified, stepStatusId, nextStepTypeIds, null, processMessage);
     }
 
-    private static (ProcessStepStatusId StatusId, string? ProcessMessage, IEnumerable<ProcessStepTypeId>? nextSteps) ProcessError(Exception ex, ProcessStepTypeId processStepTypeId)
+    private static (ProcessStepStatusId StatusId, string? ProcessMessage, IEnumerable<ProcessStepTypeId>? nextSteps) ProcessError(Exception ex)
     {
         return ex switch
         {

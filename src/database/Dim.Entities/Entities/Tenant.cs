@@ -1,5 +1,5 @@
 /********************************************************************************
- * Copyright (c) 2024 Contributors to the Eclipse Foundation
+ * Copyright 2024 SAP SE or an SAP affiliate company and ssi-dim-middle-layer contributors.
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -19,28 +19,24 @@
 
 namespace Dim.Entities.Entities;
 
-public class Tenant
+public class Tenant(
+    Guid id,
+    string companyName,
+    string bpn,
+    string didDocumentLocation,
+    bool isIssuer,
+    Guid processId,
+    Guid operatorId)
 {
-    public Tenant(Guid id, string companyName, string bpn, string didDocumentLocation, bool isIssuer, Guid processId, Guid operatorId)
-    {
-        Id = id;
-        CompanyName = companyName;
-        Bpn = bpn;
-        DidDocumentLocation = didDocumentLocation;
-        IsIssuer = isIssuer;
-        ProcessId = processId;
-        OperatorId = operatorId;
-    }
+    public Guid Id { get; set; } = id;
+    public string CompanyName { get; set; } = companyName;
+    public string Bpn { get; set; } = bpn;
 
-    public Guid Id { get; set; }
-    public string CompanyName { get; set; }
-    public string Bpn { get; set; }
+    public string DidDocumentLocation { get; set; } = didDocumentLocation;
 
-    public string DidDocumentLocation { get; set; }
+    public bool IsIssuer { get; set; } = isIssuer;
 
-    public bool IsIssuer { get; set; }
-
-    public Guid ProcessId { get; set; }
+    public Guid ProcessId { get; set; } = processId;
 
     public Guid? SubAccountId { get; set; }
 
@@ -56,6 +52,7 @@ public class Tenant
     public string? ApplicationId { get; set; }
     public Guid? CompanyId { get; set; }
     public string? ApplicationKey { get; set; }
-    public Guid OperatorId { get; set; }
+    public Guid OperatorId { get; set; } = operatorId;
     public virtual Process? Process { get; set; }
+    public virtual ICollection<TechnicalUser> TechnicalUsers { get; private set; } = new HashSet<TechnicalUser>();
 }

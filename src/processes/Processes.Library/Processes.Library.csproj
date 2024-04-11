@@ -1,5 +1,5 @@
 <!--
-- Copyright (c) 2024 Contributors to the Eclipse Foundation
+- Copyright 2024 SAP SE or an SAP affiliate company and ssi-dim-middle-layer contributors.
 -
 - See the NOTICE file(s) distributed with this work for additional
 - information regarding copyright ownership.
@@ -22,7 +22,7 @@
     <PropertyGroup>
         <AssemblyName>Dim.Processes.Library</AssemblyName>
         <RootNamespace>Dim.Processes.Library</RootNamespace>
-        <TargetFramework>net7.0</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <UserSecretsId>76a1cf69-39e1-43a7-b6a7-fef83be5359f</UserSecretsId>

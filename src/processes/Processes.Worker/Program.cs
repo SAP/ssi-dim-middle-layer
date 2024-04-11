@@ -1,5 +1,5 @@
 /********************************************************************************
- * Copyright (c) 2024 Contributors to the Eclipse Foundation
+ * Copyright 2024 SAP SE or an SAP affiliate company and ssi-dim-middle-layer contributors.
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -40,7 +40,8 @@ try
                 .AddTransient<ITokenService, TokenService>()
                 .AddDatabase(hostContext.Configuration)
                 .AddProcessExecutionService(hostContext.Configuration.GetSection("Processes"))
-                .AddDimProcessExecutor(hostContext.Configuration);
+                .AddDimProcessExecutor(hostContext.Configuration)
+                .AddTechnicalUserProcessExecutor(hostContext.Configuration);
         })
         .AddLogging()
         .Build();

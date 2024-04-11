@@ -1,5 +1,5 @@
-/********************************************************************************
- * Copyright (c) 2024 Contributors to the Eclipse Foundation
+﻿/********************************************************************************
+ * Copyright 2024 SAP SE or an SAP affiliate company and ssi-dim-middle-layer contributors.
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -31,8 +31,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Dim.Migrations.Migrations
 {
     [DbContext(typeof(DimDbContext))]
-    [Migration("20240307101150_initial")]
-    partial class initial
+    [Migration("20240409140733_1.0.1")]
+    partial class _101
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -41,7 +41,7 @@ namespace Dim.Migrations.Migrations
             modelBuilder
                 .HasDefaultSchema("dim")
                 .UseCollation("en_US.utf8")
-                .HasAnnotation("ProductVersion", "7.0.13")
+                .HasAnnotation("ProductVersion", "8.0.3")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -267,7 +267,27 @@ namespace Dim.Migrations.Migrations
                         new
                         {
                             Id = 17,
+                            Label = "CREATE_STATUS_LIST"
+                        },
+                        new
+                        {
+                            Id = 18,
                             Label = "SEND_CALLBACK"
+                        },
+                        new
+                        {
+                            Id = 100,
+                            Label = "CREATE_TECHNICAL_USER"
+                        },
+                        new
+                        {
+                            Id = 101,
+                            Label = "GET_TECHNICAL_USER_DATA"
+                        },
+                        new
+                        {
+                            Id = 102,
+                            Label = "SEND_TECHNICAL_USER_CALLBACK"
                         });
                 });
 
@@ -293,7 +313,68 @@ namespace Dim.Migrations.Migrations
                         {
                             Id = 1,
                             Label = "SETUP_DIM"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Label = "CREATE_TECHNICAL_USER"
                         });
+                });
+
+            modelBuilder.Entity("Dim.Entities.Entities.TechnicalUser", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("ClientId")
+                        .HasColumnType("text")
+                        .HasColumnName("client_id");
+
+                    b.Property<byte[]>("ClientSecret")
+                        .HasColumnType("bytea")
+                        .HasColumnName("client_secret");
+
+                    b.Property<int?>("EncryptionMode")
+                        .HasColumnType("integer")
+                        .HasColumnName("encryption_mode");
+
+                    b.Property<Guid>("ExternalId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("external_id");
+
+                    b.Property<byte[]>("InitializationVector")
+                        .HasColumnType("bytea")
+                        .HasColumnName("initialization_vector");
+
+                    b.Property<Guid>("ProcessId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("process_id");
+
+                    b.Property<string>("TechnicalUserName")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("technical_user_name");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<string>("TokenAddress")
+                        .HasColumnType("text")
+                        .HasColumnName("token_address");
+
+                    b.HasKey("Id")
+                        .HasName("pk_technical_users");
+
+                    b.HasIndex("ProcessId")
+                        .HasDatabaseName("ix_technical_users_process_id");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_technical_users_tenant_id");
+
+                    b.ToTable("technical_users", "dim");
                 });
 
             modelBuilder.Entity("Dim.Entities.Entities.Tenant", b =>
@@ -419,6 +500,25 @@ namespace Dim.Migrations.Migrations
                     b.Navigation("ProcessStepType");
                 });
 
+            modelBuilder.Entity("Dim.Entities.Entities.TechnicalUser", b =>
+                {
+                    b.HasOne("Dim.Entities.Entities.Process", "Process")
+                        .WithMany("TechnicalUsers")
+                        .HasForeignKey("ProcessId")
+                        .IsRequired()
+                        .HasConstraintName("fk_technical_users_processes_process_id");
+
+                    b.HasOne("Dim.Entities.Entities.Tenant", "Tenant")
+                        .WithMany("TechnicalUsers")
+                        .HasForeignKey("TenantId")
+                        .IsRequired()
+                        .HasConstraintName("fk_technical_users_tenants_tenant_id");
+
+                    b.Navigation("Process");
+
+                    b.Navigation("Tenant");
+                });
+
             modelBuilder.Entity("Dim.Entities.Entities.Tenant", b =>
                 {
                     b.HasOne("Dim.Entities.Entities.Process", "Process")
@@ -433,6 +533,8 @@ namespace Dim.Migrations.Migrations
             modelBuilder.Entity("Dim.Entities.Entities.Process", b =>
                 {
                     b.Navigation("ProcessSteps");
+
+                    b.Navigation("TechnicalUsers");
 
                     b.Navigation("Tenants");
                 });
@@ -450,6 +552,11 @@ namespace Dim.Migrations.Migrations
             modelBuilder.Entity("Dim.Entities.Entities.ProcessType", b =>
                 {
                     b.Navigation("Processes");
+                });
+
+            modelBuilder.Entity("Dim.Entities.Entities.Tenant", b =>
+                {
+                    b.Navigation("TechnicalUsers");
                 });
 #pragma warning restore 612, 618
         }

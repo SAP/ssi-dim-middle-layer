@@ -1,5 +1,5 @@
 /********************************************************************************
- * Copyright (c) 2024 Contributors to the Eclipse Foundation
+ * Copyright 2024 SAP SE or an SAP affiliate company and ssi-dim-middle-layer contributors.
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -49,6 +49,21 @@ public static class DimHandlerExtensions
             .AddProvisioningClient()
             .AddCfClient(config.GetSection("Cf"))
             .AddDimClient()
+            .AddCallbackClient(config.GetSection("Callback"));
+
+        return services;
+    }
+
+    public static IServiceCollection AddTechnicalUserProcessHandler(this IServiceCollection services, IConfiguration config)
+    {
+        services.AddOptions<TechnicalUserSettings>()
+            .Bind(config.GetSection("TechnicalUserCreation"))
+            .ValidateOnStart();
+
+        services
+            .AddTransient<IBasicAuthTokenService, BasicAuthTokenService>()
+            .AddTransient<ITechnicalUserProcessHandler, TechnicalUserProcessHandler>()
+            .AddCfClient(config.GetSection("Cf"))
             .AddCallbackClient(config.GetSection("Callback"));
 
         return services;

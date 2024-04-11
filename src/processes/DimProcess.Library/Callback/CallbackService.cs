@@ -1,5 +1,5 @@
 /********************************************************************************
- * Copyright (c) 2024 Contributors to the Eclipse Foundation
+ * Copyright 2024 SAP SE or an SAP affiliate company and ssi-dim-middle-layer contributors.
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -29,20 +29,14 @@ using System.Text.Json;
 
 namespace DimProcess.Library.Callback;
 
-public class CallbackService : ICallbackService
+public class CallbackService(ITokenService tokenService, IOptions<CallbackSettings> options)
+    : ICallbackService
 {
-    private readonly ITokenService _tokenService;
-    private readonly CallbackSettings _settings;
-
-    public CallbackService(ITokenService tokenService, IOptions<CallbackSettings> options)
-    {
-        _tokenService = tokenService;
-        _settings = options.Value;
-    }
+    private readonly CallbackSettings _settings = options.Value;
 
     public async Task SendCallback(string bpn, ServiceCredentialBindingDetailResponse dimDetails, JsonDocument didDocument, string did, CancellationToken cancellationToken)
     {
-        var httpClient = await _tokenService.GetAuthorizedClient<CallbackService>(_settings, cancellationToken)
+        var httpClient = await tokenService.GetAuthorizedClient<CallbackService>(_settings, cancellationToken)
             .ConfigureAwait(false);
         var data = new CallbackDataModel(
             did,
@@ -52,6 +46,17 @@ public class CallbackService : ICallbackService
                 dimDetails.Credentials.Uaa.ClientId,
                 dimDetails.Credentials.Uaa.ClientSecret)
         );
-        await httpClient.PostAsJsonAsync($"{bpn}", data, JsonSerializerExtensions.Options, cancellationToken).ConfigureAwait(false);
+        await httpClient.PostAsJsonAsync($"/api/administration/registration/dim/{bpn}", data, JsonSerializerExtensions.Options, cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task SendTechnicalUserCallback(Guid externalId, string tokenAddress, string clientId, string clientSecret, CancellationToken cancellationToken)
+    {
+        var httpClient = await tokenService.GetAuthorizedClient<CallbackService>(_settings, cancellationToken)
+            .ConfigureAwait(false);
+        var data = new AuthenticationDetail(
+            tokenAddress,
+            clientId,
+            clientSecret);
+        await httpClient.PostAsJsonAsync($"/api/adminstration/serviceAccount/callback/{externalId}", data, JsonSerializerExtensions.Options, cancellationToken).ConfigureAwait(false);
     }
 }

@@ -1,5 +1,5 @@
 /********************************************************************************
- * Copyright (c) 2024 Contributors to the Eclipse Foundation
+ * Copyright 2024 SAP SE or an SAP affiliate company and ssi-dim-middle-layer contributors.
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -119,12 +119,43 @@ public class CfClient : ICfClient
 
             var servicePlans = response.Resources.Where(x => x.Name == servicePlanType &&
                                                    x.BrokerCatalog?.BrokerCatalogMetadata?.AutoSubscription?.AppName == servicePlanName);
-            if (response == null || servicePlans.Count() != 1)
+            if (servicePlans.Count() != 1)
             {
-                throw new ServiceException($"There must be exactly one service plan with name {servicePlanName} and type {servicePlanType}");
+                throw new ServiceException($"There must be exactly one service plan with name {servicePlanName} and type {servicePlanType}", isRecoverable: !servicePlans.Any());
             }
 
             return servicePlans.Single().Id;
+        }
+        catch (JsonException je)
+        {
+            throw new ServiceException(je.Message);
+        }
+    }
+
+    public async Task<Guid> GetSpace(string tenantName, CancellationToken cancellationToken)
+    {
+        var spaceName = $"{tenantName}-space";
+        var client = await _basicAuthTokenService.GetBasicAuthorizedLegacyClient<CfClient>(_settings, cancellationToken).ConfigureAwait(false);
+        var result = await client.GetAsync("/v3/spaces", cancellationToken)
+            .CatchingIntoServiceExceptionFor("get-space", HttpAsyncResponseMessageExtension.RecoverOptions.ALLWAYS).ConfigureAwait(false);
+        try
+        {
+            var response = await result.Content
+                .ReadFromJsonAsync<SpaceResponse>(JsonSerializerExtensions.Options, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (response == null)
+            {
+                throw new ServiceException("response should never be null here");
+            }
+
+            var spaces = response.Resources.Where(x => x.Name == spaceName);
+            if (spaces.Count() != 1)
+            {
+                throw new ServiceException($"There must be exactly one space with name {spaceName}", isRecoverable: !spaces.Any());
+            }
+
+            return spaces.Single().Id;
         }
         catch (JsonException je)
         {
@@ -163,10 +194,10 @@ public class CfClient : ICfClient
             }
 
             var name = $"{tenantName}-dim-instance";
-            var resources = response.Resources.Where(x => x.Name == name && x.Type == "managed" && (spaceId == null || x.Relationships.Space.Data.Id == spaceId.Value));
+            var resources = response.Resources.Where(x => x.Name == name && x.Type == "managed" && (spaceId == null || x.Relationships.Space.Data.Id == spaceId.Value) && x.LastOperation.State == "succeeded");
             if (resources.Count() != 1)
             {
-                throw new ServiceException($"There must be exactly one service instance");
+                throw new ServiceException("There must be exactly one service instance", isRecoverable: !resources.Any());
             }
 
             return resources.Single().Id;
@@ -177,13 +208,13 @@ public class CfClient : ICfClient
         }
     }
 
-    public async Task CreateServiceInstanceBindings(string tenantName, Guid spaceId, CancellationToken cancellationToken)
+    public async Task CreateServiceInstanceBindings(string tenantName, string? keyName, Guid spaceId, CancellationToken cancellationToken)
     {
         var serviceInstanceId = await GetServiceInstances(tenantName, spaceId, cancellationToken).ConfigureAwait(false);
         var client = await _basicAuthTokenService.GetBasicAuthorizedLegacyClient<CfClient>(_settings, cancellationToken).ConfigureAwait(false);
         var data = new CreateServiceCredentialBindingRequest(
             "key",
-            $"{tenantName}-dim-key01",
+            $"{keyName ?? tenantName}-dim-key01",
             new ServiceCredentialRelationships(
                 new DimServiceInstance(new DimData(serviceInstanceId)))
         );
@@ -210,7 +241,7 @@ public class CfClient : ICfClient
             var resources = response.Resources.Where(x => x.Relationships.ServiceInstance.Data.Id == serviceInstanceId);
             if (resources.Count() != 1)
             {
-                throw new ServiceException($"There must be exactly one service credential binding");
+                throw new ServiceException("There must be exactly one service credential binding", isRecoverable: !resources.Any());
             }
 
             return resources.Single().Id;
@@ -234,7 +265,7 @@ public class CfClient : ICfClient
 
             if (response == null)
             {
-                throw new ServiceException($"There must be exactly one service instance");
+                throw new ServiceException("There must be exactly one service instance", isRecoverable: true);
             }
 
             return response;

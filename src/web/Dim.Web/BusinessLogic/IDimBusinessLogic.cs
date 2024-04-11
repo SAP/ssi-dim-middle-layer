@@ -1,5 +1,5 @@
 /********************************************************************************
- * Copyright (c) 2024 Contributors to the Eclipse Foundation
+ * Copyright 2024 SAP SE or an SAP affiliate company and ssi-dim-middle-layer contributors.
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -17,6 +17,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using Dim.Web.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.DependencyInjection;
 
 namespace Dim.Web.BusinessLogic;
@@ -24,4 +25,7 @@ namespace Dim.Web.BusinessLogic;
 public interface IDimBusinessLogic : ITransient
 {
     Task StartSetupDim(string companyName, string bpn, string didDocumentLocation, bool isIssuer);
+    Task<string> GetStatusList(string bpn, CancellationToken cancellationToken);
+    Task<string> CreateStatusList(string bpn, CancellationToken cancellationToken);
+    Task CreateTechnicalUser(string bpn, TechnicalUserData technicalUserData, CancellationToken cancellationToken);
 }

@@ -1,5 +1,5 @@
 <!--
-- Copyright (c) 2024 Contributors to the Eclipse Foundation
+- Copyright 2024 SAP SE or an SAP affiliate company and ssi-dim-middle-layer contributors.
 -
 - See the NOTICE file(s) distributed with this work for additional
 - information regarding copyright ownership.
@@ -22,16 +22,17 @@
     <PropertyGroup>
         <RootNamespace>DimProcess.Library</RootNamespace>
         <AssemblyName>DimProcess.Library</AssemblyName>
-        <TargetFramework>net7.0</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <UserSecretsId>415ef31b-ed90-4c9e-9e5f-5f3e673d4f91</UserSecretsId>
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="7.0.0" />
-      <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
-      <PackageReference Include="Org.Eclipse.TractusX.Portal.Backend.Framework.Token" Version="1.1.0" />
+      <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="8.0.0" />
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.1" />
+      <PackageReference Include="Org.Eclipse.TractusX.Portal.Backend.Framework.Models" Version="2.0.0" />
+      <PackageReference Include="Org.Eclipse.TractusX.Portal.Backend.Framework.Token" Version="2.0.0" />
     </ItemGroup>
 
     <ItemGroup>

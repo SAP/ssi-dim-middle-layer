@@ -1,5 +1,5 @@
 /********************************************************************************
- * Copyright (c) 2024 Contributors to the Eclipse Foundation
+ * Copyright 2024 SAP SE or an SAP affiliate company and ssi-dim-middle-layer contributors.
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -154,5 +154,61 @@ public class DimClient : IDimClient
                     var message = await m.Content.ReadAsStringAsync().ConfigureAwait(false);
                     return (false, message);
                 }).ConfigureAwait(false);
+    }
+
+    public async Task<string> GetStatusList(BasicAuthSettings dimAuth, string dimBaseUrl, Guid companyId, CancellationToken cancellationToken)
+    {
+        var client = await _basicAuthTokenService.GetBasicAuthorizedClient<DimClient>(dimAuth, cancellationToken).ConfigureAwait(false);
+        var result = await client.GetAsync($"{dimBaseUrl}/api/v2.0.0/companyIdentities/{companyId}/revocationLists", cancellationToken);
+        try
+        {
+            var response = await result.Content
+                .ReadFromJsonAsync<StatusListListResponse>(JsonSerializerExtensions.Options, cancellationToken)
+                .ConfigureAwait(false);
+            if (response == null)
+            {
+                throw new ServiceException("Response must not be null");
+            }
+
+            if (!response.Data.Any(x => x.RemainingSpace > 0))
+            {
+                throw new ConflictException("There is no status list with remaining space, please create a new one.");
+            }
+
+            return response.Data.First(x => x.RemainingSpace > 0).StatusListCredential;
+        }
+        catch (JsonException je)
+        {
+            throw new ServiceException(je.Message);
+        }
+    }
+
+    public async Task<string> CreateStatusList(BasicAuthSettings dimAuth, string dimBaseUrl, Guid companyId, CancellationToken cancellationToken)
+    {
+        var client = await _basicAuthTokenService.GetBasicAuthorizedClient<DimClient>(dimAuth, cancellationToken).ConfigureAwait(false);
+        var data = new CreateStatusListRequest(new CreateStatusListPaypload(new CreateStatusList("StatusList2021", DateTimeOffset.UtcNow.ToString("yyyyMMdd"), "New revocation list", 2097152)));
+        var result = await client.PostAsJsonAsync($"{dimBaseUrl}/api/v2.0.0/companyIdentities/{companyId}/revocationLists", data, JsonSerializerExtensions.Options, cancellationToken)
+            .CatchingIntoServiceExceptionFor("assign-application", HttpAsyncResponseMessageExtension.RecoverOptions.INFRASTRUCTURE,
+                async m =>
+                {
+                    var message = await m.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    return (false, message);
+                }).ConfigureAwait(false);
+        try
+        {
+            var response = await result.Content
+                .ReadFromJsonAsync<CreateStatusListResponse>(JsonSerializerExtensions.Options, cancellationToken)
+                .ConfigureAwait(false);
+            if (response == null)
+            {
+                throw new ServiceException("Response must not be null");
+            }
+
+            return response.RevocationVc.Id;
+        }
+        catch (JsonException je)
+        {
+            throw new ServiceException(je.Message);
+        }
     }
 }

@@ -1,5 +1,5 @@
 /********************************************************************************
- * Copyright (c) 2024 Contributors to the Eclipse Foundation
+ * Copyright 2024 SAP SE or an SAP affiliate company and ssi-dim-middle-layer contributors.
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -91,12 +91,58 @@ public class TenantRepository : ITenantRepository
             .Select(x => new ValueTuple<Guid?, string, bool>(x.DimInstanceId, x.DidDocumentLocation, x.IsIssuer))
             .SingleOrDefaultAsync();
 
-    public Task<(string? ApplicationId, Guid? CompanyId, Guid? DimInstanceId)> GetApplicationAndCompanyId(Guid tenantId) =>
+    public Task<(string? ApplicationId, Guid? CompanyId, Guid? DimInstanceId, bool IsIssuer)> GetApplicationAndCompanyId(Guid tenantId) =>
         _context.Tenants
             .Where(x => x.Id == tenantId)
-            .Select(x => new ValueTuple<string?, Guid?, Guid?>(
+            .Select(x => new ValueTuple<string?, Guid?, Guid?, bool>(
                 x.ApplicationId,
                 x.CompanyId,
-                x.DimInstanceId))
+                x.DimInstanceId,
+                x.IsIssuer))
+            .SingleOrDefaultAsync();
+
+    public Task<(bool Exists, Guid? CompanyId, Guid? InstanceId)> GetCompanyAndInstanceIdForBpn(string bpn) =>
+        _context.Tenants.Where(x => x.Bpn == bpn)
+            .Select(x => new ValueTuple<bool, Guid?, Guid?>(true, x.CompanyId, x.DimInstanceId))
+            .SingleOrDefaultAsync();
+
+    public void CreateTenantTechnicalUser(Guid tenantId, string technicalUserName, Guid externalId, Guid processId) =>
+        _context.TechnicalUsers.Add(new TechnicalUser(Guid.NewGuid(), tenantId, externalId, technicalUserName, processId));
+
+    public void AttachAndModifyTechnicalUser(Guid technicalUserId, Action<TechnicalUser>? initialize, Action<TechnicalUser> modify)
+    {
+        var technicalUser = new TechnicalUser(technicalUserId, Guid.Empty, Guid.Empty, null!, Guid.Empty);
+        initialize?.Invoke(technicalUser);
+        _context.TechnicalUsers.Attach(technicalUser);
+        modify(technicalUser);
+    }
+
+    public Task<(bool Exists, Guid TenantId)> GetTenantForBpn(string bpn) =>
+        _context.Tenants.Where(x => x.Bpn == bpn)
+            .Select(x => new ValueTuple<bool, Guid>(true, x.Id))
+            .SingleOrDefaultAsync();
+
+    public Task<(bool Exists, Guid TechnicalUserId, string CompanyName, string Bpn)> GetTenantDataForTechnicalUserProcessId(Guid processId) =>
+        _context.TechnicalUsers
+            .Where(x => x.ProcessId == processId)
+            .Select(x => new ValueTuple<bool, Guid, string, string>(true, x.Id, x.Tenant!.CompanyName, x.Tenant.Bpn))
+            .SingleOrDefaultAsync();
+
+    public Task<(Guid? spaceId, string technicalUserName)> GetSpaceIdAndTechnicalUserName(Guid technicalUserId) =>
+        _context.TechnicalUsers
+            .Where(x => x.Id == technicalUserId)
+            .Select(x => new ValueTuple<Guid?, string>(x.Tenant!.SpaceId, x.TechnicalUserName))
+            .SingleOrDefaultAsync();
+
+    public Task<(Guid ExternalId, string? TokenAddress, string? ClientId, byte[]? ClientSecret, byte[]? InitializationVector, int? EncryptionMode)> GetTechnicalUserCallbackData(Guid technicalUserId) =>
+        _context.TechnicalUsers
+            .Where(x => x.Id == technicalUserId)
+            .Select(x => new ValueTuple<Guid, string?, string?, byte[]?, byte[]?, int?>(
+                x.ExternalId,
+                x.TokenAddress,
+                x.ClientId,
+                x.ClientSecret,
+                x.InitializationVector,
+                x.EncryptionMode))
             .SingleOrDefaultAsync();
 }

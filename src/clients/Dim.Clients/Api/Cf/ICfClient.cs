@@ -1,5 +1,5 @@
 /********************************************************************************
- * Copyright (c) 2024 Contributors to the Eclipse Foundation
+ * Copyright 2024 SAP SE or an SAP affiliate company and ssi-dim-middle-layer contributors.
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -24,8 +24,9 @@ public interface ICfClient
     Task<Guid> CreateCloudFoundrySpace(string tenantName, CancellationToken cancellationToken);
     Task AddSpaceRoleToUser(string type, string user, Guid spaceId, CancellationToken cancellationToken);
     Task<Guid> GetServicePlan(string servicePlanName, string servicePlanType, CancellationToken cancellationToken);
+    Task<Guid> GetSpace(string tenantName, CancellationToken cancellationToken);
     Task CreateDimServiceInstance(string tenantName, Guid spaceId, Guid servicePlanId, CancellationToken cancellationToken);
-    Task CreateServiceInstanceBindings(string tenantName, Guid spaceId, CancellationToken cancellationToken);
+    Task CreateServiceInstanceBindings(string tenantName, string? keyName, Guid spaceId, CancellationToken cancellationToken);
     Task<Guid> GetServiceBinding(string tenantName, Guid spaceId, string bindingName, CancellationToken cancellationToken);
     Task<ServiceCredentialBindingDetailResponse> GetServiceBindingDetails(Guid id, CancellationToken cancellationToken);
 }
