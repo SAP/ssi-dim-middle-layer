@@ -208,13 +208,13 @@ public class CfClient : ICfClient
         }
     }
 
-    public async Task CreateServiceInstanceBindings(string tenantName, Guid spaceId, CancellationToken cancellationToken)
+    public async Task CreateServiceInstanceBindings(string tenantName, string? keyName, Guid spaceId, CancellationToken cancellationToken)
     {
         var serviceInstanceId = await GetServiceInstances(tenantName, spaceId, cancellationToken).ConfigureAwait(false);
         var client = await _basicAuthTokenService.GetBasicAuthorizedLegacyClient<CfClient>(_settings, cancellationToken).ConfigureAwait(false);
         var data = new CreateServiceCredentialBindingRequest(
             "key",
-            $"{tenantName}-dim-key01",
+            $"{keyName ?? tenantName}-dim-key01",
             new ServiceCredentialRelationships(
                 new DimServiceInstance(new DimData(serviceInstanceId)))
         );

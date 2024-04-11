@@ -105,4 +105,44 @@ public class TenantRepository : ITenantRepository
         _context.Tenants.Where(x => x.Bpn == bpn)
             .Select(x => new ValueTuple<bool, Guid?, Guid?>(true, x.CompanyId, x.DimInstanceId))
             .SingleOrDefaultAsync();
+
+    public void CreateTenantTechnicalUser(Guid tenantId, string technicalUserName, Guid externalId, Guid processId) =>
+        _context.TechnicalUsers.Add(new TechnicalUser(Guid.NewGuid(), tenantId, externalId, technicalUserName, processId));
+
+    public void AttachAndModifyTechnicalUser(Guid technicalUserId, Action<TechnicalUser>? initialize, Action<TechnicalUser> modify)
+    {
+        var technicalUser = new TechnicalUser(technicalUserId, Guid.Empty, Guid.Empty, null!, Guid.Empty);
+        initialize?.Invoke(technicalUser);
+        _context.TechnicalUsers.Attach(technicalUser);
+        modify(technicalUser);
+    }
+
+    public Task<(bool Exists, Guid TenantId)> GetTenantForBpn(string bpn) =>
+        _context.Tenants.Where(x => x.Bpn == bpn)
+            .Select(x => new ValueTuple<bool, Guid>(true, x.Id))
+            .SingleOrDefaultAsync();
+
+    public Task<(bool Exists, Guid TechnicalUserId, string CompanyName, string Bpn)> GetTenantDataForTechnicalUserProcessId(Guid processId) =>
+        _context.TechnicalUsers
+            .Where(x => x.ProcessId == processId)
+            .Select(x => new ValueTuple<bool, Guid, string, string>(true, x.Id, x.Tenant!.CompanyName, x.Tenant.Bpn))
+            .SingleOrDefaultAsync();
+
+    public Task<(Guid? spaceId, string technicalUserName)> GetSpaceIdAndTechnicalUserName(Guid technicalUserId) =>
+        _context.TechnicalUsers
+            .Where(x => x.Id == technicalUserId)
+            .Select(x => new ValueTuple<Guid?, string>(x.Tenant!.SpaceId, x.TechnicalUserName))
+            .SingleOrDefaultAsync();
+
+    public Task<(Guid ExternalId, string? TokenAddress, string? ClientId, byte[]? ClientSecret, byte[]? InitializationVector, int? EncryptionMode)> GetTechnicalUserCallbackData(Guid technicalUserId) =>
+        _context.TechnicalUsers
+            .Where(x => x.Id == technicalUserId)
+            .Select(x => new ValueTuple<Guid, string?, string?, byte[]?, byte[]?, int?>(
+                x.ExternalId,
+                x.TokenAddress,
+                x.ClientId,
+                x.ClientSecret,
+                x.InitializationVector,
+                x.EncryptionMode))
+            .SingleOrDefaultAsync();
 }

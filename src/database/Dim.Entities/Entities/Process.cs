@@ -29,6 +29,7 @@ public class Process : ILockableEntity
     {
         ProcessSteps = new HashSet<ProcessStep>();
         Tenants = new HashSet<Tenant>();
+        TechnicalUsers = new HashSet<TechnicalUser>();
     }
 
     public Process(Guid id, ProcessTypeId processTypeId, Guid version) : this()
@@ -51,4 +52,5 @@ public class Process : ILockableEntity
     public virtual ProcessType? ProcessType { get; set; }
     public virtual ICollection<ProcessStep> ProcessSteps { get; private set; }
     public virtual ICollection<Tenant> Tenants { get; private set; }
+    public virtual ICollection<TechnicalUser> TechnicalUsers { get; private set; }
 }

@@ -53,4 +53,19 @@ public static class DimHandlerExtensions
 
         return services;
     }
+
+    public static IServiceCollection AddTechnicalUserProcessHandler(this IServiceCollection services, IConfiguration config)
+    {
+        services.AddOptions<TechnicalUserSettings>()
+            .Bind(config.GetSection("TechnicalUserCreation"))
+            .ValidateOnStart();
+
+        services
+            .AddTransient<IBasicAuthTokenService, BasicAuthTokenService>()
+            .AddTransient<ITechnicalUserProcessHandler, TechnicalUserProcessHandler>()
+            .AddCfClient(config.GetSection("Cf"))
+            .AddCallbackClient(config.GetSection("Callback"));
+
+        return services;
+    }
 }

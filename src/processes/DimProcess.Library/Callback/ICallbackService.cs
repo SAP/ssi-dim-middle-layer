@@ -25,4 +25,6 @@ namespace DimProcess.Library.Callback;
 public interface ICallbackService
 {
     Task SendCallback(string bpn, ServiceCredentialBindingDetailResponse dimDetails, JsonDocument didDocument, string did, CancellationToken cancellationToken);
+
+    Task SendTechnicalUserCallback(Guid externalId, string tokenAddress, string clientId, string clientSecret, CancellationToken cancellationToken);
 }

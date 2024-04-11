@@ -17,10 +17,25 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-namespace Dim.Entities.Enums;
+namespace Dim.Entities.Entities;
 
-public enum ProcessTypeId
+public class TechnicalUser(
+    Guid id,
+    Guid tenantId,
+    Guid externalId,
+    string technicalUserName,
+    Guid processId)
 {
-    SETUP_DIM = 1,
-    CREATE_TECHNICAL_USER = 2
+    public Guid Id { get; set; } = id;
+    public Guid TenantId { get; set; } = tenantId;
+    public Guid ExternalId { get; set; } = externalId;
+    public string TechnicalUserName { get; set; } = technicalUserName;
+    public string? TokenAddress { get; set; }
+    public string? ClientId { get; set; }
+    public byte[]? ClientSecret { get; set; }
+    public byte[]? InitializationVector { get; set; }
+    public int? EncryptionMode { get; set; }
+    public Guid ProcessId { get; set; } = processId;
+    public virtual Tenant? Tenant { get; set; }
+    public virtual Process? Process { get; set; }
 }
