@@ -27,28 +27,25 @@ public record CreateCompanyIdentityRequest(
 );
 
 public record Payload(
-    [property: JsonPropertyName("hostingUrl")] string HostingUrl,
-    [property: JsonPropertyName("bootstrap")] Bootstrap Bootstrap,
-    [property: JsonPropertyName("keys")] IEnumerable<Key> Keys
+    [property: JsonPropertyName("hostingURL")] string HostingUrl,
+    [property: JsonPropertyName("network")] Network Network,
+    [property: JsonPropertyName("services")] IEnumerable<Service> Services,
+    [property: JsonPropertyName("keys")] IEnumerable<Key> Keys,
+    [property: JsonPropertyName("name")] string Name
 );
 
 public record Service(
     [property: JsonPropertyName("id")] string Id,
-    [property: JsonPropertyName("type")] string Type
-);
-
-public record Bootstrap(
-    [property: JsonPropertyName("description")] string Description,
-    [property: JsonPropertyName("name")] string Name,
-    [property: JsonPropertyName("protocols")] IEnumerable<string> Protocols
-);
-
-public record Key(
-    [property: JsonPropertyName("type")] string Type
+    [property: JsonPropertyName("type")] string Type,
+    [property: JsonPropertyName("serviceEndpoint")] string ServiceEndpoint
 );
 
 public record Network(
     [property: JsonPropertyName("didMethod")] string DidMethod,
+    [property: JsonPropertyName("type")] string Type
+);
+
+public record Key(
     [property: JsonPropertyName("type")] string Type
 );
 
@@ -57,3 +54,12 @@ public record CreateCompanyIdentityResponse(
     [property: JsonPropertyName("companyId")] Guid CompanyId,
     [property: JsonPropertyName("downloadURL")] string DownloadUrl
 );
+//
+// public record UpdateCompanyIdentityRequest(
+//     [property: JsonPropertyName("didDocUpdates")] DidDocUpdates DidDocUpdates
+// );
+//
+// public record DidDocUpdates(
+//     [property: JsonPropertyName("removeServices")] IEnumerable<string> RemoveServices,
+//     [property: JsonPropertyName("addServices")] IEnumerable<Service> AddServices
+// );

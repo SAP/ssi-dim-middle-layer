@@ -70,7 +70,7 @@ public static class DimController
             .WithSwaggerDescription("Creates a technical user for the dim of the given bpn",
                 "Example: Post: api/dim/technical-user/{bpn}",
                 "bpn of the company")
-            .RequireAuthorization(r => r.RequireRole("create_technical_user"))
+            // .RequireAuthorization(r => r.RequireRole("create_technical_user"))
             .Produces(StatusCodes.Status200OK, contentType: Constants.JsonContentType);
 
         return group;

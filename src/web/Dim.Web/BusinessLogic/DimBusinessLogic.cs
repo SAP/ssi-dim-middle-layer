@@ -31,35 +31,29 @@ using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 
 namespace Dim.Web.BusinessLogic;
 
-public class DimBusinessLogic : IDimBusinessLogic
+public class DimBusinessLogic(
+    IDimRepositories dimRepositories,
+    ICfClient cfClient,
+    IDimClient dimClient,
+    IOptions<DimSettings> options)
+    : IDimBusinessLogic
 {
-    private readonly IDimRepositories _dimRepositories;
-    private readonly ICfClient _cfClient;
-    private readonly IDimClient _dimClient;
-    private readonly DimSettings _settings;
-
-    public DimBusinessLogic(IDimRepositories dimRepositories, ICfClient cfClient, IDimClient dimClient, IOptions<DimSettings> options)
-    {
-        _dimRepositories = dimRepositories;
-        _cfClient = cfClient;
-        _dimClient = dimClient;
-        _settings = options.Value;
-    }
+    private readonly DimSettings _settings = options.Value;
 
     public async Task StartSetupDim(string companyName, string bpn, string didDocumentLocation, bool isIssuer)
     {
-        var processStepRepository = _dimRepositories.GetInstance<IProcessStepRepository>();
+        var processStepRepository = dimRepositories.GetInstance<IProcessStepRepository>();
         var processId = processStepRepository.CreateProcess(ProcessTypeId.SETUP_DIM).Id;
         processStepRepository.CreateProcessStep(ProcessStepTypeId.CREATE_SUBACCOUNT, ProcessStepStatusId.TODO, processId);
 
-        _dimRepositories.GetInstance<ITenantRepository>().CreateTenant(companyName, bpn, didDocumentLocation, isIssuer, processId, _settings.OperatorId);
+        dimRepositories.GetInstance<ITenantRepository>().CreateTenant(companyName, bpn, didDocumentLocation, isIssuer, processId, _settings.OperatorId);
 
-        await _dimRepositories.SaveAsync().ConfigureAwait(false);
+        await dimRepositories.SaveAsync().ConfigureAwait(false);
     }
 
     public async Task<string> GetStatusList(string bpn, CancellationToken cancellationToken)
     {
-        var (exists, companyId, instanceId) = await _dimRepositories.GetInstance<ITenantRepository>().GetCompanyAndInstanceIdForBpn(bpn).ConfigureAwait(false);
+        var (exists, companyId, instanceId) = await dimRepositories.GetInstance<ITenantRepository>().GetCompanyAndInstanceIdForBpn(bpn).ConfigureAwait(false);
         if (!exists)
         {
             throw NotFoundException.Create(DimErrors.NO_COMPANY_FOR_BPN, new ErrorParameter[] { new("bpn", bpn) });
@@ -75,7 +69,7 @@ public class DimBusinessLogic : IDimBusinessLogic
             throw ConflictException.Create(DimErrors.NO_INSTANCE_ID_SET);
         }
 
-        var dimDetails = await _cfClient.GetServiceBindingDetails(instanceId.Value, cancellationToken).ConfigureAwait(false);
+        var dimDetails = await cfClient.GetServiceBindingDetails(instanceId.Value, cancellationToken).ConfigureAwait(false);
         var dimAuth = new BasicAuthSettings
         {
             TokenAddress = $"{dimDetails.Credentials.Uaa.Url}/oauth/token",
@@ -83,12 +77,12 @@ public class DimBusinessLogic : IDimBusinessLogic
             ClientSecret = dimDetails.Credentials.Uaa.ClientSecret
         };
         var dimBaseUrl = dimDetails.Credentials.Url;
-        return await _dimClient.GetStatusList(dimAuth, dimBaseUrl, companyId.Value, cancellationToken).ConfigureAwait(false);
+        return await dimClient.GetStatusList(dimAuth, dimBaseUrl, companyId.Value, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<string> CreateStatusList(string bpn, CancellationToken cancellationToken)
     {
-        var (exists, companyId, instanceId) = await _dimRepositories.GetInstance<ITenantRepository>().GetCompanyAndInstanceIdForBpn(bpn).ConfigureAwait(false);
+        var (exists, companyId, instanceId) = await dimRepositories.GetInstance<ITenantRepository>().GetCompanyAndInstanceIdForBpn(bpn).ConfigureAwait(false);
         if (!exists)
         {
             throw NotFoundException.Create(DimErrors.NO_COMPANY_FOR_BPN, new ErrorParameter[] { new("bpn", bpn) });
@@ -104,7 +98,7 @@ public class DimBusinessLogic : IDimBusinessLogic
             throw ConflictException.Create(DimErrors.NO_INSTANCE_ID_SET);
         }
 
-        var dimDetails = await _cfClient.GetServiceBindingDetails(instanceId.Value, cancellationToken).ConfigureAwait(false);
+        var dimDetails = await cfClient.GetServiceBindingDetails(instanceId.Value, cancellationToken).ConfigureAwait(false);
         var dimAuth = new BasicAuthSettings
         {
             TokenAddress = $"{dimDetails.Credentials.Uaa.Url}/oauth/token",
@@ -112,24 +106,24 @@ public class DimBusinessLogic : IDimBusinessLogic
             ClientSecret = dimDetails.Credentials.Uaa.ClientSecret
         };
         var dimBaseUrl = dimDetails.Credentials.Url;
-        return await _dimClient.CreateStatusList(dimAuth, dimBaseUrl, companyId.Value, cancellationToken).ConfigureAwait(false);
+        return await dimClient.CreateStatusList(dimAuth, dimBaseUrl, companyId.Value, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task CreateTechnicalUser(string bpn, TechnicalUserData technicalUserData, CancellationToken cancellationToken)
     {
-        var (exists, tenantId) = await _dimRepositories.GetInstance<ITenantRepository>().GetTenantForBpn(bpn).ConfigureAwait(false);
+        var (exists, tenantId) = await dimRepositories.GetInstance<ITenantRepository>().GetTenantForBpn(bpn).ConfigureAwait(false);
 
         if (!exists)
         {
             throw NotFoundException.Create(DimErrors.NO_COMPANY_FOR_BPN, new ErrorParameter[] { new("bpn", bpn) });
         }
 
-        var processStepRepository = _dimRepositories.GetInstance<IProcessStepRepository>();
+        var processStepRepository = dimRepositories.GetInstance<IProcessStepRepository>();
         var processId = processStepRepository.CreateProcess(ProcessTypeId.CREATE_TECHNICAL_USER).Id;
         processStepRepository.CreateProcessStep(ProcessStepTypeId.CREATE_TECHNICAL_USER, ProcessStepStatusId.TODO, processId);
 
-        _dimRepositories.GetInstance<ITenantRepository>().CreateTenantTechnicalUser(tenantId, technicalUserData.Name, technicalUserData.ExternalId, processId);
+        dimRepositories.GetInstance<ITenantRepository>().CreateTenantTechnicalUser(tenantId, technicalUserData.Name, technicalUserData.ExternalId, processId);
 
-        await _dimRepositories.SaveAsync().ConfigureAwait(false);
+        await dimRepositories.SaveAsync().ConfigureAwait(false);
     }
 }

@@ -30,7 +30,7 @@ public record CallbackDataModel(
 );
 
 public record AuthenticationDetail(
-        [property: JsonPropertyName("authenticationServiceUrl")] string AuthenticationServiceUrl,
+    [property: JsonPropertyName("authenticationServiceUrl")] string AuthenticationServiceUrl,
     [property: JsonPropertyName("clientID")] string ClientId,
     [property: JsonPropertyName("clientSecret")] string ClientSecret
 );
