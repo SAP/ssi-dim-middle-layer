@@ -56,6 +56,6 @@ public class CallbackService(ITokenService tokenService, IOptions<CallbackSettin
             tokenAddress,
             clientId,
             clientSecret);
-        await httpClient.PostAsJsonAsync($"/api/adminstration/serviceAccount/callback/{externalId}", data, JsonSerializerExtensions.Options, cancellationToken).ConfigureAwait(false);
+        await httpClient.PostAsJsonAsync($"/api/administration/serviceAccount/callback/{externalId}", data, JsonSerializerExtensions.Options, cancellationToken).ConfigureAwait(false);
     }
 }
