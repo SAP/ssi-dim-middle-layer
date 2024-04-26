@@ -26,30 +26,26 @@ using System.Text.Json;
 
 namespace Dim.Clients.Api.Dim;
 
-public class DimClient : IDimClient
+public class DimClient(IBasicAuthTokenService basicAuthTokenService, IHttpClientFactory clientFactory)
+    : IDimClient
 {
-    private readonly IBasicAuthTokenService _basicAuthTokenService;
-    private readonly IHttpClientFactory _clientFactory;
-
-    public DimClient(IBasicAuthTokenService basicAuthTokenService, IHttpClientFactory clientFactory)
+    public async Task<CreateCompanyIdentityResponse> CreateCompanyIdentity(BasicAuthSettings dimBasicAuth, Guid tenantId, string hostingUrl, string baseUrl, bool isIssuer, CancellationToken cancellationToken)
     {
-        _basicAuthTokenService = basicAuthTokenService;
-        _clientFactory = clientFactory;
-    }
-
-    public async Task<CreateCompanyIdentityResponse> CreateCompanyIdentity(BasicAuthSettings dimBasicAuth, string hostingUrl, string baseUrl, string tenantName, bool isIssuer, CancellationToken cancellationToken)
-    {
-        var client = await _basicAuthTokenService.GetBasicAuthorizedClient<DimClient>(dimBasicAuth, cancellationToken).ConfigureAwait(false);
+        var client = await basicAuthTokenService.GetBasicAuthorizedClient<DimClient>(dimBasicAuth, cancellationToken).ConfigureAwait(false);
         var data = new CreateCompanyIdentityRequest(new Payload(
             hostingUrl,
-            new Bootstrap("Holder with IATP", "Holder IATP", Enumerable.Repeat("IATP", 1)),
+            new Network("web", "production"),
+            [new Service($"dim:web:{tenantId}", "CredentialService", "https://dis-agent-prod.eu10.dim.cloud.sap/api/v1.0.0/iatp")],
             isIssuer ?
-                Enumerable.Empty<Key>() :
+                [
+                    new("SIGNING"),
+                    new("SIGNING_VC")
+                ] :
                 new Key[]
                 {
-                    new("SIGNING"),
-                    new("SIGNING_VC"),
-                }));
+                    new("SIGNING")
+                },
+            "holder iatp"));
         var result = await client.PostAsJsonAsync($"{baseUrl}/api/v2.0.0/companyIdentities", data, JsonSerializerExtensions.Options, cancellationToken)
             .CatchingIntoServiceExceptionFor("create-company-identity", HttpAsyncResponseMessageExtension.RecoverOptions.INFRASTRUCTURE,
                 async m =>
@@ -77,7 +73,7 @@ public class DimClient : IDimClient
 
     public async Task<JsonDocument> GetDidDocument(string url, CancellationToken cancellationToken)
     {
-        var client = _clientFactory.CreateClient("didDocumentDownload");
+        var client = clientFactory.CreateClient("didDocumentDownload");
         using var result = await client.GetStreamAsync(url, cancellationToken).ConfigureAwait(false);
         var document = await JsonDocument.ParseAsync(result, cancellationToken: cancellationToken).ConfigureAwait(false);
         return document;
@@ -85,7 +81,7 @@ public class DimClient : IDimClient
 
     public async Task<string> CreateApplication(BasicAuthSettings dimAuth, string dimBaseUrl, string tenantName, CancellationToken cancellationToken)
     {
-        var client = await _basicAuthTokenService.GetBasicAuthorizedClient<DimClient>(dimAuth, cancellationToken).ConfigureAwait(false);
+        var client = await basicAuthTokenService.GetBasicAuthorizedClient<DimClient>(dimAuth, cancellationToken).ConfigureAwait(false);
         var data = new CreateApplicationRequest(new ApplicationPayload(
             "catena-x-portal",
             $"Catena-X Portal MIW for {tenantName}",
@@ -117,7 +113,7 @@ public class DimClient : IDimClient
 
     public async Task<string> GetApplication(BasicAuthSettings dimAuth, string dimBaseUrl, string applicationId, CancellationToken cancellationToken)
     {
-        var client = await _basicAuthTokenService.GetBasicAuthorizedClient<DimClient>(dimAuth, cancellationToken).ConfigureAwait(false);
+        var client = await basicAuthTokenService.GetBasicAuthorizedClient<DimClient>(dimAuth, cancellationToken).ConfigureAwait(false);
         var result = await client.GetAsync($"{dimBaseUrl}/api/v2.0.0/applications/{applicationId}", cancellationToken)
             .CatchingIntoServiceExceptionFor("get-application", HttpAsyncResponseMessageExtension.RecoverOptions.INFRASTRUCTURE,
                 async m =>
@@ -145,7 +141,7 @@ public class DimClient : IDimClient
 
     public async Task AssignApplicationToCompany(BasicAuthSettings dimAuth, string dimBaseUrl, string applicationKey, Guid companyId, CancellationToken cancellationToken)
     {
-        var client = await _basicAuthTokenService.GetBasicAuthorizedClient<DimClient>(dimAuth, cancellationToken).ConfigureAwait(false);
+        var client = await basicAuthTokenService.GetBasicAuthorizedClient<DimClient>(dimAuth, cancellationToken).ConfigureAwait(false);
         var data = new CompanyIdentityPatch(new ApplicationUpdates(Enumerable.Repeat(applicationKey, 1)));
         await client.PatchAsJsonAsync($"{dimBaseUrl}/api/v2.0.0/companyIdentities/{companyId}", data, JsonSerializerExtensions.Options, cancellationToken)
             .CatchingIntoServiceExceptionFor("assign-application", HttpAsyncResponseMessageExtension.RecoverOptions.INFRASTRUCTURE,
@@ -158,7 +154,7 @@ public class DimClient : IDimClient
 
     public async Task<string> GetStatusList(BasicAuthSettings dimAuth, string dimBaseUrl, Guid companyId, CancellationToken cancellationToken)
     {
-        var client = await _basicAuthTokenService.GetBasicAuthorizedClient<DimClient>(dimAuth, cancellationToken).ConfigureAwait(false);
+        var client = await basicAuthTokenService.GetBasicAuthorizedClient<DimClient>(dimAuth, cancellationToken).ConfigureAwait(false);
         var result = await client.GetAsync($"{dimBaseUrl}/api/v2.0.0/companyIdentities/{companyId}/revocationLists", cancellationToken);
         try
         {
@@ -185,7 +181,7 @@ public class DimClient : IDimClient
 
     public async Task<string> CreateStatusList(BasicAuthSettings dimAuth, string dimBaseUrl, Guid companyId, CancellationToken cancellationToken)
     {
-        var client = await _basicAuthTokenService.GetBasicAuthorizedClient<DimClient>(dimAuth, cancellationToken).ConfigureAwait(false);
+        var client = await basicAuthTokenService.GetBasicAuthorizedClient<DimClient>(dimAuth, cancellationToken).ConfigureAwait(false);
         var data = new CreateStatusListRequest(new CreateStatusListPaypload(new CreateStatusList("StatusList2021", DateTimeOffset.UtcNow.ToString("yyyyMMdd"), "New revocation list", 2097152)));
         var result = await client.PostAsJsonAsync($"{dimBaseUrl}/api/v2.0.0/companyIdentities/{companyId}/revocationLists", data, JsonSerializerExtensions.Options, cancellationToken)
             .CatchingIntoServiceExceptionFor("assign-application", HttpAsyncResponseMessageExtension.RecoverOptions.INFRASTRUCTURE,

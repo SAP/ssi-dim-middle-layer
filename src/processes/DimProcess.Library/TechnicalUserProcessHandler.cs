@@ -64,7 +64,9 @@ public class TechnicalUserProcessHandler(
 
         var dimInstanceId = await cfClient.GetServiceBinding(tenantName, spaceId.Value, $"{technicalUserName}-dim-key01", cancellationToken).ConfigureAwait(false);
         var dimDetails = await cfClient.GetServiceBindingDetails(dimInstanceId, cancellationToken).ConfigureAwait(false);
-        var (secret, initializationVector, encryptionMode) = Encrypt(dimDetails.Credentials.Uaa.ClientSecret);
+
+        var cryptoConfig = _settings.EncryptionConfigs.SingleOrDefault(x => x.Index == _settings.EncryptionConfigIndex) ?? throw new ConfigurationException($"encryptionConfigIndex {_settings.EncryptionConfigIndex} is not configured");
+        var (secret, initializationVector) = CryptoHelper.Encrypt(dimDetails.Credentials.Uaa.ClientSecret, Convert.FromHexString(cryptoConfig.EncryptionKey), cryptoConfig.CipherMode, cryptoConfig.PaddingMode);
 
         dimRepositories.GetInstance<ITenantRepository>().AttachAndModifyTechnicalUser(technicalUserId, technicalUser =>
             {
@@ -80,20 +82,13 @@ public class TechnicalUserProcessHandler(
                 technicalUser.ClientId = dimDetails.Credentials.Uaa.ClientId;
                 technicalUser.ClientSecret = secret;
                 technicalUser.InitializationVector = initializationVector;
-                technicalUser.EncryptionMode = encryptionMode;
+                technicalUser.EncryptionMode = _settings.EncryptionConfigIndex;
             });
         return new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(
             Enumerable.Repeat(ProcessStepTypeId.SEND_TECHNICAL_USER_CALLBACK, 1),
             ProcessStepStatusId.DONE,
             false,
             null);
-    }
-
-    private (byte[] Secret, byte[] InitializationVector, int EncryptionMode) Encrypt(string clientSecret)
-    {
-        var cryptoConfig = _settings.EncryptionConfigs.SingleOrDefault(x => x.Index == _settings.EncryptionConfigIndex) ?? throw new ConfigurationException($"EncryptionModeIndex {_settings.EncryptionConfigIndex} is not configured");
-        var (secret, initializationVector) = CryptoHelper.Encrypt(clientSecret, Convert.FromHexString(cryptoConfig.EncryptionKey), cryptoConfig.CipherMode, cryptoConfig.PaddingMode);
-        return (secret, initializationVector, _settings.EncryptionConfigIndex);
     }
 
     public async Task<(IEnumerable<ProcessStepTypeId>? nextStepTypeIds, ProcessStepStatusId stepStatusId, bool modified, string? processMessage)> SendCallback(Guid technicalUserId, CancellationToken cancellationToken)

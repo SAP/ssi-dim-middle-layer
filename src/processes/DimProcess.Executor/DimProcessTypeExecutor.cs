@@ -117,7 +117,7 @@ public class DimProcessTypeExecutor(
                     .ConfigureAwait(false),
                 ProcessStepTypeId.CREATE_APPLICATION => await dimProcessHandler.CreateApplication(_tenantName, _tenantId, cancellationToken)
                     .ConfigureAwait(false),
-                ProcessStepTypeId.CREATE_COMPANY_IDENTITY => await dimProcessHandler.CreateCompanyIdentity(_tenantId, _tenantName, cancellationToken)
+                ProcessStepTypeId.CREATE_COMPANY_IDENTITY => await dimProcessHandler.CreateCompanyIdentity(_tenantId, cancellationToken)
                     .ConfigureAwait(false),
                 ProcessStepTypeId.ASSIGN_COMPANY_APPLICATION => await dimProcessHandler.AssignCompanyApplication(_tenantId, cancellationToken)
                     .ConfigureAwait(false),

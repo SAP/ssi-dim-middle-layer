@@ -310,7 +310,7 @@ public class CredentialProcessTypeExecutorTests
         A.CallTo(() => _dimProcessHandler.GetDimDetails(tenantName, tenantId, A<CancellationToken>._))
             .Returns(new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(null, ProcessStepStatusId.DONE, false, null));
 
-        A.CallTo(() => _dimProcessHandler.CreateCompanyIdentity(tenantId, tenantName, A<CancellationToken>._))
+        A.CallTo(() => _dimProcessHandler.CreateCompanyIdentity(tenantId, A<CancellationToken>._))
             .Returns(new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(null, ProcessStepStatusId.DONE, false, null));
 
         A.CallTo(() => _dimProcessHandler.CreateStatusList(tenantId, A<CancellationToken>._))

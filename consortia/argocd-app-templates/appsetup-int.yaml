@@ -28,7 +28,7 @@ spec:
   source:
     path: charts/dim
     repoURL: 'https://github.com/sap/dim-client.git'
-    targetRevision: dim-1.0.0
+    targetRevision: dim-1.1.0
     plugin:
       env:
         - name: AVP_SECRET

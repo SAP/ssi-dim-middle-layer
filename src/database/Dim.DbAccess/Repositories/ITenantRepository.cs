@@ -41,4 +41,5 @@ public interface ITenantRepository
     Task<(bool Exists, Guid TechnicalUserId, string CompanyName, string Bpn)> GetTenantDataForTechnicalUserProcessId(Guid processId);
     Task<(Guid? spaceId, string technicalUserName)> GetSpaceIdAndTechnicalUserName(Guid technicalUserId);
     Task<(Guid ExternalId, string? TokenAddress, string? ClientId, byte[]? ClientSecret, byte[]? InitializationVector, int? EncryptionMode)> GetTechnicalUserCallbackData(Guid technicalUserId);
+    Task<(Guid? DimInstanceId, Guid? CompanyId)> GetDimInstanceIdAndDid(Guid tenantId);
 }

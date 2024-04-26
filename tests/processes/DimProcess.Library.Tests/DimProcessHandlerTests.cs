@@ -751,7 +751,7 @@ public class DimProcessHandlerTests
         // Arrange
         A.CallTo(() => _tenantRepositories.GetDimInstanceIdAndHostingUrl(_tenantId))
             .Returns(((Guid?)null, string.Empty, false));
-        async Task Act() => await _sut.CreateCompanyIdentity(_tenantId, _tenantName, CancellationToken.None).ConfigureAwait(false);
+        async Task Act() => await _sut.CreateCompanyIdentity(_tenantId, CancellationToken.None).ConfigureAwait(false);
 
         // Act
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
@@ -780,14 +780,14 @@ public class DimProcessHandlerTests
                 initialize?.Invoke(tenant);
                 modify(tenant);
             });
-        A.CallTo(() => _dimClient.CreateCompanyIdentity(A<BasicAuthSettings>._, "https://example.org/hosting", A<string>._, _tenantName, tenant.IsIssuer, A<CancellationToken>._))
+        A.CallTo(() => _dimClient.CreateCompanyIdentity(A<BasicAuthSettings>._, _tenantId, "https://example.org/hosting", A<string>._, tenant.IsIssuer, A<CancellationToken>._))
             .Returns(identityResponse);
 
         // Act
-        var result = await _sut.CreateCompanyIdentity(_tenantId, _tenantName, CancellationToken.None);
+        var result = await _sut.CreateCompanyIdentity(_tenantId, CancellationToken.None);
 
         // Assert
-        A.CallTo(() => _dimClient.CreateCompanyIdentity(A<BasicAuthSettings>._, A<string>._, A<string>._, _tenantName, tenant.IsIssuer, A<CancellationToken>._))
+        A.CallTo(() => _dimClient.CreateCompanyIdentity(A<BasicAuthSettings>._, A<Guid>._, A<string>._, A<string>._, tenant.IsIssuer, A<CancellationToken>._))
             .MustHaveHappenedOnceExactly();
 
         result.modified.Should().BeFalse();
@@ -873,7 +873,7 @@ public class DimProcessHandlerTests
                 initialize?.Invoke(tenant);
                 modify(tenant);
             });
-        A.CallTo(() => _dimClient.CreateCompanyIdentity(A<BasicAuthSettings>._, "https://example.org/hosting", A<string>._, _tenantName, false, A<CancellationToken>._))
+        A.CallTo(() => _dimClient.CreateCompanyIdentity(A<BasicAuthSettings>._, _tenantId, "https://example.org/hosting", A<string>._, false, A<CancellationToken>._))
             .Returns(identityResponse);
 
         // Act
@@ -1020,7 +1020,7 @@ public class DimProcessHandlerTests
                 initialize?.Invoke(tenant);
                 modify(tenant);
             });
-        A.CallTo(() => _dimClient.CreateCompanyIdentity(A<BasicAuthSettings>._, "https://example.org/hosting", A<string>._, _tenantName, false, A<CancellationToken>._))
+        A.CallTo(() => _dimClient.CreateCompanyIdentity(A<BasicAuthSettings>._, _tenantId, "https://example.org/hosting", A<string>._, false, A<CancellationToken>._))
             .Returns(identityResponse);
 
         // Act
