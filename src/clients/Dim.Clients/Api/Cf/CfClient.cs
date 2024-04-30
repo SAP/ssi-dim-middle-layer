@@ -26,6 +26,7 @@ using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.HttpClientExtensions;
 using System.Net.Http.Json;
 using System.Text.Json;
+using System.Web;
 
 namespace Dim.Clients.Api.Cf;
 
@@ -72,7 +73,7 @@ public class CfClient : ICfClient
 
     private static async Task<Guid> GetEnvironmentId(string tenantName, CancellationToken cancellationToken, HttpClient client)
     {
-        var environmentsResponse = await client.GetAsync($"/v3/organizations?names={tenantName}", cancellationToken)
+        var environmentsResponse = await client.GetAsync($"/v3/organizations?names={HttpUtility.UrlEncode(tenantName)}", cancellationToken)
             .CatchingIntoServiceExceptionFor("get-organizations", HttpAsyncResponseMessageExtension.RecoverOptions.INFRASTRUCTURE);
         var environments = await environmentsResponse.Content
             .ReadFromJsonAsync<GetEnvironmentsResponse>(JsonSerializerExtensions.Options, cancellationToken)
@@ -137,7 +138,7 @@ public class CfClient : ICfClient
     {
         var spaceName = $"{tenantName}-space";
         var client = await _basicAuthTokenService.GetBasicAuthorizedLegacyClient<CfClient>(_settings, cancellationToken).ConfigureAwait(false);
-        var result = await client.GetAsync($"/v3/spaces?names={spaceName}", cancellationToken)
+        var result = await client.GetAsync($"/v3/spaces?names={HttpUtility.UrlEncode(spaceName)}", cancellationToken)
             .CatchingIntoServiceExceptionFor("get-space", HttpAsyncResponseMessageExtension.RecoverOptions.ALLWAYS).ConfigureAwait(false);
         try
         {
@@ -183,7 +184,7 @@ public class CfClient : ICfClient
     {
         var name = $"{tenantName}-dim-instance";
         var client = await _basicAuthTokenService.GetBasicAuthorizedLegacyClient<CfClient>(_settings, cancellationToken).ConfigureAwait(false);
-        var result = await client.GetAsync($"/v3/service_instances?names={name}", cancellationToken)
+        var result = await client.GetAsync($"/v3/service_instances?names={HttpUtility.UrlEncode(name)}", cancellationToken)
             .CatchingIntoServiceExceptionFor("get-si", HttpAsyncResponseMessageExtension.RecoverOptions.INFRASTRUCTURE).ConfigureAwait(false);
         try
         {
@@ -227,7 +228,7 @@ public class CfClient : ICfClient
     {
         var client = await _basicAuthTokenService.GetBasicAuthorizedLegacyClient<CfClient>(_settings, cancellationToken).ConfigureAwait(false);
         var serviceInstanceId = await GetServiceInstances(tenantName, spaceId, cancellationToken).ConfigureAwait(false);
-        var result = await client.GetAsync($"/v3/service_credential_bindings?names={bindingName}", cancellationToken)
+        var result = await client.GetAsync($"/v3/service_credential_bindings?names={HttpUtility.UrlEncode(bindingName)}", cancellationToken)
             .CatchingIntoServiceExceptionFor("get-credential-binding", HttpAsyncResponseMessageExtension.RecoverOptions.INFRASTRUCTURE).ConfigureAwait(false);
         try
         {
