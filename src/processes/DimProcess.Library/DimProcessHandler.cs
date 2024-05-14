@@ -1,4 +1,5 @@
 /********************************************************************************
+ * Copyright (c) 2024 BMW Group AG
  * Copyright 2024 SAP SE or an SAP affiliate company and ssi-dim-middle-layer contributors.
  *
  * See the NOTICE file(s) distributed with this work for additional
@@ -399,7 +400,7 @@ public class DimProcessHandler(
             null);
     }
 
-    public async Task<(IEnumerable<ProcessStepTypeId>? nextStepTypeIds, ProcessStepStatusId stepStatusId, bool modified, string? processMessage)> CreateCompanyIdentity(Guid tenantId, string tenantName, CancellationToken cancellationToken)
+    public async Task<(IEnumerable<ProcessStepTypeId>? nextStepTypeIds, ProcessStepStatusId stepStatusId, bool modified, string? processMessage)> CreateCompanyIdentity(Guid tenantId, CancellationToken cancellationToken)
     {
         var (dimInstanceId, hostingUrl, isIssuer) = await dimRepositories.GetInstance<ITenantRepository>().GetDimInstanceIdAndHostingUrl(tenantId).ConfigureAwait(false);
         if (dimInstanceId == null)
@@ -416,7 +417,7 @@ public class DimProcessHandler(
             ClientSecret = dimDetails.Credentials.Uaa.ClientSecret
         };
         var dimBaseUrl = dimDetails.Credentials.Url;
-        var result = await dimClient.CreateCompanyIdentity(dimAuth, hostingUrl, dimBaseUrl, tenantName, isIssuer, cancellationToken).ConfigureAwait(false);
+        var result = await dimClient.CreateCompanyIdentity(dimAuth, tenantId, hostingUrl, dimBaseUrl, isIssuer, cancellationToken).ConfigureAwait(false);
 
         dimRepositories.GetInstance<ITenantRepository>().AttachAndModifyTenant(tenantId, tenant =>
             {

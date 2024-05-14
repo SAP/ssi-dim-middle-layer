@@ -1,4 +1,5 @@
 /********************************************************************************
+ * Copyright (c) 2024 BMW Group AG
  * Copyright 2024 SAP SE or an SAP affiliate company and ssi-dim-middle-layer contributors.
  *
  * See the NOTICE file(s) distributed with this work for additional
@@ -117,7 +118,7 @@ public class DimProcessTypeExecutor(
                     .ConfigureAwait(false),
                 ProcessStepTypeId.CREATE_APPLICATION => await dimProcessHandler.CreateApplication(_tenantName, _tenantId, cancellationToken)
                     .ConfigureAwait(false),
-                ProcessStepTypeId.CREATE_COMPANY_IDENTITY => await dimProcessHandler.CreateCompanyIdentity(_tenantId, _tenantName, cancellationToken)
+                ProcessStepTypeId.CREATE_COMPANY_IDENTITY => await dimProcessHandler.CreateCompanyIdentity(_tenantId, cancellationToken)
                     .ConfigureAwait(false),
                 ProcessStepTypeId.ASSIGN_COMPANY_APPLICATION => await dimProcessHandler.AssignCompanyApplication(_tenantId, cancellationToken)
                     .ConfigureAwait(false),

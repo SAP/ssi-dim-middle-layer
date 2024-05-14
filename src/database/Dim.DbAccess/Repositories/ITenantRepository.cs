@@ -1,4 +1,5 @@
 /********************************************************************************
+ * Copyright (c) 2024 BMW Group AG
  * Copyright 2024 SAP SE or an SAP affiliate company and ssi-dim-middle-layer contributors.
  *
  * See the NOTICE file(s) distributed with this work for additional
@@ -41,4 +42,5 @@ public interface ITenantRepository
     Task<(bool Exists, Guid TechnicalUserId, string CompanyName, string Bpn)> GetTenantDataForTechnicalUserProcessId(Guid processId);
     Task<(Guid? spaceId, string technicalUserName)> GetSpaceIdAndTechnicalUserName(Guid technicalUserId);
     Task<(Guid ExternalId, string? TokenAddress, string? ClientId, byte[]? ClientSecret, byte[]? InitializationVector, int? EncryptionMode)> GetTechnicalUserCallbackData(Guid technicalUserId);
+    Task<(Guid? DimInstanceId, Guid? CompanyId)> GetDimInstanceIdAndDid(Guid tenantId);
 }

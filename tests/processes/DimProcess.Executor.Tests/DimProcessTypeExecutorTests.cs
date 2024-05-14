@@ -1,4 +1,5 @@
 /********************************************************************************
+ * Copyright (c) 2024 BMW Group AG
  * Copyright 2024 SAP SE or an SAP affiliate company and ssi-dim-middle-layer contributors.
  *
  * See the NOTICE file(s) distributed with this work for additional
@@ -310,7 +311,7 @@ public class CredentialProcessTypeExecutorTests
         A.CallTo(() => _dimProcessHandler.GetDimDetails(tenantName, tenantId, A<CancellationToken>._))
             .Returns(new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(null, ProcessStepStatusId.DONE, false, null));
 
-        A.CallTo(() => _dimProcessHandler.CreateCompanyIdentity(tenantId, tenantName, A<CancellationToken>._))
+        A.CallTo(() => _dimProcessHandler.CreateCompanyIdentity(tenantId, A<CancellationToken>._))
             .Returns(new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(null, ProcessStepStatusId.DONE, false, null));
 
         A.CallTo(() => _dimProcessHandler.CreateStatusList(tenantId, A<CancellationToken>._))

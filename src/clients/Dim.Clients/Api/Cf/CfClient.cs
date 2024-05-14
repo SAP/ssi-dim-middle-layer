@@ -1,4 +1,5 @@
 /********************************************************************************
+ * Copyright (c) 2024 BMW Group AG
  * Copyright 2024 SAP SE or an SAP affiliate company and ssi-dim-middle-layer contributors.
  *
  * See the NOTICE file(s) distributed with this work for additional
@@ -25,6 +26,7 @@ using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.HttpClientExtensions;
 using System.Net.Http.Json;
 using System.Text.Json;
+using System.Web;
 
 namespace Dim.Clients.Api.Cf;
 
@@ -71,7 +73,7 @@ public class CfClient : ICfClient
 
     private static async Task<Guid> GetEnvironmentId(string tenantName, CancellationToken cancellationToken, HttpClient client)
     {
-        var environmentsResponse = await client.GetAsync("/v3/organizations", cancellationToken)
+        var environmentsResponse = await client.GetAsync($"/v3/organizations?names={HttpUtility.UrlEncode(tenantName)}", cancellationToken)
             .CatchingIntoServiceExceptionFor("get-organizations", HttpAsyncResponseMessageExtension.RecoverOptions.INFRASTRUCTURE);
         var environments = await environmentsResponse.Content
             .ReadFromJsonAsync<GetEnvironmentsResponse>(JsonSerializerExtensions.Options, cancellationToken)
@@ -136,7 +138,7 @@ public class CfClient : ICfClient
     {
         var spaceName = $"{tenantName}-space";
         var client = await _basicAuthTokenService.GetBasicAuthorizedLegacyClient<CfClient>(_settings, cancellationToken).ConfigureAwait(false);
-        var result = await client.GetAsync("/v3/spaces", cancellationToken)
+        var result = await client.GetAsync($"/v3/spaces?names={HttpUtility.UrlEncode(spaceName)}", cancellationToken)
             .CatchingIntoServiceExceptionFor("get-space", HttpAsyncResponseMessageExtension.RecoverOptions.ALLWAYS).ConfigureAwait(false);
         try
         {
@@ -180,8 +182,9 @@ public class CfClient : ICfClient
 
     private async Task<Guid> GetServiceInstances(string tenantName, Guid? spaceId, CancellationToken cancellationToken)
     {
+        var name = $"{tenantName}-dim-instance";
         var client = await _basicAuthTokenService.GetBasicAuthorizedLegacyClient<CfClient>(_settings, cancellationToken).ConfigureAwait(false);
-        var result = await client.GetAsync("/v3/service_instances", cancellationToken)
+        var result = await client.GetAsync($"/v3/service_instances?names={HttpUtility.UrlEncode(name)}", cancellationToken)
             .CatchingIntoServiceExceptionFor("get-si", HttpAsyncResponseMessageExtension.RecoverOptions.INFRASTRUCTURE).ConfigureAwait(false);
         try
         {
@@ -193,7 +196,6 @@ public class CfClient : ICfClient
                 throw new ServiceException("Response must not be null");
             }
 
-            var name = $"{tenantName}-dim-instance";
             var resources = response.Resources.Where(x => x.Name == name && x.Type == "managed" && (spaceId == null || x.Relationships.Space.Data.Id == spaceId.Value) && x.LastOperation.State == "succeeded");
             if (resources.Count() != 1)
             {
@@ -226,7 +228,7 @@ public class CfClient : ICfClient
     {
         var client = await _basicAuthTokenService.GetBasicAuthorizedLegacyClient<CfClient>(_settings, cancellationToken).ConfigureAwait(false);
         var serviceInstanceId = await GetServiceInstances(tenantName, spaceId, cancellationToken).ConfigureAwait(false);
-        var result = await client.GetAsync($"/v3/service_credential_bindings?names={bindingName}", cancellationToken)
+        var result = await client.GetAsync($"/v3/service_credential_bindings?names={HttpUtility.UrlEncode(bindingName)}", cancellationToken)
             .CatchingIntoServiceExceptionFor("get-credential-binding", HttpAsyncResponseMessageExtension.RecoverOptions.INFRASTRUCTURE).ConfigureAwait(false);
         try
         {

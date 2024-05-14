@@ -1,4 +1,5 @@
 /********************************************************************************
+ * Copyright (c) 2024 BMW Group AG
  * Copyright 2024 SAP SE or an SAP affiliate company and ssi-dim-middle-layer contributors.
  *
  * See the NOTICE file(s) distributed with this work for additional
@@ -57,6 +58,6 @@ public class CallbackService(ITokenService tokenService, IOptions<CallbackSettin
             tokenAddress,
             clientId,
             clientSecret);
-        await httpClient.PostAsJsonAsync($"/api/adminstration/serviceAccount/callback/{externalId}", data, JsonSerializerExtensions.Options, cancellationToken).ConfigureAwait(false);
+        await httpClient.PostAsJsonAsync($"/api/administration/serviceAccount/callback/{externalId}", data, JsonSerializerExtensions.Options, cancellationToken).ConfigureAwait(false);
     }
 }

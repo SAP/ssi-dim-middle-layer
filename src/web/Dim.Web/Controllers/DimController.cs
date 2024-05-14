@@ -1,4 +1,5 @@
 /********************************************************************************
+ * Copyright (c) 2024 BMW Group AG
  * Copyright 2024 SAP SE or an SAP affiliate company and ssi-dim-middle-layer contributors.
  *
  * See the NOTICE file(s) distributed with this work for additional
@@ -69,7 +70,7 @@ public static class DimController
             .WithSwaggerDescription("Creates a technical user for the dim of the given bpn",
                 "Example: Post: api/dim/technical-user/{bpn}",
                 "bpn of the company")
-            .RequireAuthorization(r => r.RequireRole("create_technical_user"))
+            // .RequireAuthorization(r => r.RequireRole("create_technical_user"))
             .Produces(StatusCodes.Status200OK, contentType: Constants.JsonContentType);
 
         return group;

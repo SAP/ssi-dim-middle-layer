@@ -1,4 +1,5 @@
 /********************************************************************************
+ * Copyright (c) 2024 BMW Group AG
  * Copyright 2024 SAP SE or an SAP affiliate company and ssi-dim-middle-layer contributors.
  *
  * See the NOTICE file(s) distributed with this work for additional
@@ -29,7 +30,7 @@ public record CallbackDataModel(
 );
 
 public record AuthenticationDetail(
-        [property: JsonPropertyName("authenticationServiceUrl")] string AuthenticationServiceUrl,
+    [property: JsonPropertyName("authenticationServiceUrl")] string AuthenticationServiceUrl,
     [property: JsonPropertyName("clientID")] string ClientId,
     [property: JsonPropertyName("clientSecret")] string ClientSecret
 );
