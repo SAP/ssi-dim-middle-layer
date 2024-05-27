@@ -57,7 +57,7 @@ jobs:
         uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
 
       - name: Run Trivy vulnerability scanner in repo mode
-        uses: aquasecurity/trivy-action@d710430a6722f083d3b36b8339ff66b32f22ee55 # v0.19.0
+        uses: aquasecurity/trivy-action@fd25fed6972e341ff0007ddb61f77e88103953c2 # v0.21.0
         with:
           scan-type: "config"
           hide-progress: false
@@ -91,7 +91,7 @@ jobs:
       # For public images, no ENV vars must be set.
       - name: Run Trivy vulnerability scanner
         if: always()
-        uses: aquasecurity/trivy-action@d710430a6722f083d3b36b8339ff66b32f22ee55 # v0.19.0
+        uses: aquasecurity/trivy-action@fd25fed6972e341ff0007ddb61f77e88103953c2 # v0.21.0
         with:
           # Path to Docker image
           image-ref: "${{ env.REGISTRY}}/${{ env.IMAGE_NAME_SERVICE}}:main"
@@ -123,7 +123,7 @@ jobs:
       # For public images, no ENV vars must be set.
       - name: Run Trivy vulnerability scanner
         if: always()
-        uses: aquasecurity/trivy-action@d710430a6722f083d3b36b8339ff66b32f22ee55 # v0.19.0
+        uses: aquasecurity/trivy-action@fd25fed6972e341ff0007ddb61f77e88103953c2 # v0.21.0
         with:
           # Path to Docker image
           image-ref: "${{ env.REGISTRY}}/${{ env.IMAGE_NAME_MIGRATIONS}}:main"
@@ -155,7 +155,7 @@ jobs:
       # For public images, no ENV vars must be set.
       - name: Run Trivy vulnerability scanner
         if: always()
-        uses: aquasecurity/trivy-action@d710430a6722f083d3b36b8339ff66b32f22ee55 # v0.19.0
+        uses: aquasecurity/trivy-action@fd25fed6972e341ff0007ddb61f77e88103953c2 # v0.21.0
         with:
           # Path to Docker image
           image-ref: "${{ env.REGISTRY}}/${{ env.IMAGE_NAME_WORKER}}:main"
