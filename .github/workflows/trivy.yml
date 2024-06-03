@@ -68,7 +68,7 @@ jobs:
           timeout: "3600s"
 
       - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@d39d31e687223d841ef683f52467bd88e9b21c14 # v3.25.3
+        uses: github/codeql-action/upload-sarif@f079b8493333aace61c81488f8bd40919487bd9f # v3.25.7
         if: always()
         with:
           sarif_file: "trivy-results1.sarif"
@@ -101,7 +101,7 @@ jobs:
 
       - name: Upload Trivy scan results to GitHub Security tab
         if: always()
-        uses: github/codeql-action/upload-sarif@d39d31e687223d841ef683f52467bd88e9b21c14 # v3.25.3
+        uses: github/codeql-action/upload-sarif@f079b8493333aace61c81488f8bd40919487bd9f # v3.25.7
         with:
           sarif_file: "trivy-results2.sarif"
 
@@ -133,7 +133,7 @@ jobs:
 
       - name: Upload Trivy scan results to GitHub Security tab
         if: always()
-        uses: github/codeql-action/upload-sarif@d39d31e687223d841ef683f52467bd88e9b21c14 # v3.25.3
+        uses: github/codeql-action/upload-sarif@f079b8493333aace61c81488f8bd40919487bd9f # v3.25.7
         with:
           sarif_file: "trivy-results4.sarif"
         
@@ -165,7 +165,7 @@ jobs:
 
       - name: Upload Trivy scan results to GitHub Security tab
         if: always()
-        uses: github/codeql-action/upload-sarif@d39d31e687223d841ef683f52467bd88e9b21c14 # v3.25.3
+        uses: github/codeql-action/upload-sarif@f079b8493333aace61c81488f8bd40919487bd9f # v3.25.7
         with:
           sarif_file: "trivy-results4.sarif"
         
