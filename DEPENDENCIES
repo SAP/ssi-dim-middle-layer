@@ -11,8 +11,8 @@ nuget/nuget/-/Humanizer.Core/2.14.1, MIT, approved, #10060
 nuget/nuget/-/Mono.TextTemplating/2.2.1, MIT, approved, clearlydefined
 nuget/nuget/-/Newtonsoft.Json/13.0.1, MIT AND BSD-3-Clause, approved, #3266
 nuget/nuget/-/Newtonsoft.Json/13.0.3, MIT AND BSD-3-Clause, approved, #3266
-nuget/nuget/-/Npgsql.EntityFrameworkCore.PostgreSQL/8.0.2, PostgreSQL AND MIT, approved, #13972
-nuget/nuget/-/Npgsql/8.0.2, PostgreSQL, approved, #13963
+nuget/nuget/-/Npgsql.EntityFrameworkCore.PostgreSQL/8.0.4, PostgreSQL AND MIT, approved, #13972
+nuget/nuget/-/Npgsql/8.0.3, PostgreSQL, approved, #13963
 nuget/nuget/-/SSH.NET/2023.0.0, MIT AND (MIT AND MS-PL) AND ISC, approved, #13965
 nuget/nuget/-/Serilog.AspNetCore/8.0.1, Apache-2.0 AND MIT, approved, #13967
 nuget/nuget/-/Serilog.Enrichers.CorrelationId/3.0.1, MIT, approved, clearlydefined
