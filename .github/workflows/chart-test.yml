@@ -39,7 +39,7 @@ on:
       upgrade_from:
         description: 'dim chart version to upgrade from'
         # tbd
-        default: 'tbd'
+        default: '1.0.0'
         required: false
         type: string
 
@@ -116,14 +116,14 @@ jobs:
         run: ct install --charts charts/dim --config charts/chart-testing-config.yaml --helm-extra-set-args "--set dim.image.name=kind-registry:5000/dim-service --set dim.image.tag=testing --set migrations.image.name=kind-registry:5000/dim-migrations --set migrations.image.tag=testing --set processesworker.image.name=kind-registry:5000/dim-processes-worker --set processesworker.image.tag=testing"
         if: github.event_name != 'pull_request' || steps.list-changed.outputs.changed == 'true'
 
-      # TODO: re-add the step after the first version release  
+      # TODO: uncomment once repository is public and the released dim chart can be added
       # Upgrade the released chart version with the locally available chart
       # default value for event_name != workflow_dispatch
       # - name: Run helm upgrade
       #   run: |
       #     helm repo add bitnami https://charts.bitnami.com/bitnami
-      #     helm repo add tractusx-dev https://eclipse-tractusx.github.io/charts/dev
-      #     helm install dim tractusx-dev/dim --version ${{ github.event.inputs.upgrade_from || 'tbd' }} --namespace upgrade --create-namespace
+      #     helm repo add ssi-dim-middle-layer https://sap.github.io/ssi-dim-middle-layer
+      #     helm install dim ssi-dim-middle-layer/dim --version ${{ github.event.inputs.upgrade_from || '1.0.0' }} --namespace upgrade --create-namespace
       #     helm dependency update charts/dim
       #     helm upgrade dim charts/dim --set dim.image.name=kind-registry:5000/dim-service --set dim.image.tag=testing --set migrations.image.name=kind-registry:5000/dim-migrations --set migrations.image.tag=testing --set processesworker.image.name=kind-registry:5000/dim-processes-worker --set processesworker.image.tag=testing --namespace upgrade
       #   if: github.event_name != 'pull_request' || steps.list-changed.outputs.changed == 'true'
