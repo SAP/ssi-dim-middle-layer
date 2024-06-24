@@ -18,9 +18,8 @@
 # SPDX-License-Identifier: Apache-2.0
 ###############################################################
 
-FROM mcr.microsoft.com/dotnet/runtime:8.0-alpine AS base
-
-FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine-amd64 AS publish
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS publish
+ARG TARGETARCH
 WORKDIR /
 COPY LICENSE /
 COPY /src/database /src/database
@@ -28,7 +27,7 @@ COPY /src/processes/Processes.Worker.Library /src/processes/Processes.Worker.Lib
 WORKDIR /src/database/Dim.Migrations
 RUN dotnet publish "Dim.Migrations.csproj" -c Release -o /migrations/publish
 
-FROM base AS final
+FROM mcr.microsoft.com/dotnet/runtime:8.0-alpine
 ENV COMPlus_EnableDiagnostics=0
 WORKDIR /migrations
 COPY --from=publish /migrations/publish .
