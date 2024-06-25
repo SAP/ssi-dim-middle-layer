@@ -70,7 +70,14 @@ public static class DimController
             .WithSwaggerDescription("Creates a technical user for the dim of the given bpn",
                 "Example: Post: api/dim/technical-user/{bpn}",
                 "bpn of the company")
-            // .RequireAuthorization(r => r.RequireRole("create_technical_user"))
+            .RequireAuthorization(r => r.RequireRole("create_technical_user"))
+            .Produces(StatusCodes.Status200OK, contentType: Constants.JsonContentType);
+
+        policyHub.MapPost("technical-user/{bpn}/delete", ([FromRoute] string bpn, [FromBody] TechnicalUserData technicalUserData, CancellationToken cancellationToken, [FromServices] IDimBusinessLogic dimBusinessLogic) => dimBusinessLogic.DeleteTechnicalUser(bpn, technicalUserData, cancellationToken))
+            .WithSwaggerDescription("Deletes a technical user with the given name of the given bpn",
+                "Example: Post: api/dim/technical-user/{bpn}/delete",
+                "bpn of the company")
+            .RequireAuthorization(r => r.RequireRole("delete_technical_user"))
             .Produces(StatusCodes.Status200OK, contentType: Constants.JsonContentType);
 
         return group;

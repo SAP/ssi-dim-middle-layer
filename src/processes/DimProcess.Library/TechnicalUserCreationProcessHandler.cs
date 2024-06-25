@@ -30,11 +30,11 @@ using Org.Eclipse.TractusX.Portal.Backend.Framework.Models.Encryption;
 
 namespace DimProcess.Library;
 
-public class TechnicalUserProcessHandler(
+public class TechnicalUserCreationProcessHandler(
     IDimRepositories dimRepositories,
     ICfClient cfClient,
     ICallbackService callbackService,
-    IOptions<TechnicalUserSettings> options) : ITechnicalUserProcessHandler
+    IOptions<TechnicalUserSettings> options) : ITechnicalUserCreationProcessHandler
 {
     private readonly TechnicalUserSettings _settings = options.Value;
 
@@ -86,7 +86,7 @@ public class TechnicalUserProcessHandler(
                 technicalUser.EncryptionMode = _settings.EncryptionConfigIndex;
             });
         return new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(
-            Enumerable.Repeat(ProcessStepTypeId.SEND_TECHNICAL_USER_CALLBACK, 1),
+            Enumerable.Repeat(ProcessStepTypeId.SEND_TECHNICAL_USER_CREATION_CALLBACK, 1),
             ProcessStepStatusId.DONE,
             false,
             null);

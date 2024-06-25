@@ -277,4 +277,11 @@ public class CfClient : ICfClient
             throw new ServiceException(je.Message);
         }
     }
+
+    public async Task DeleteServiceInstanceBindings(Guid serviceBindingId, CancellationToken cancellationToken)
+    {
+        var client = await _basicAuthTokenService.GetBasicAuthorizedLegacyClient<CfClient>(_settings, cancellationToken).ConfigureAwait(false);
+        await client.DeleteAsync($"/v3/service_credential_bindings/{serviceBindingId}", cancellationToken)
+            .CatchingIntoServiceExceptionFor("delete-si-bindings", HttpAsyncResponseMessageExtension.RecoverOptions.ALLWAYS);
+    }
 }

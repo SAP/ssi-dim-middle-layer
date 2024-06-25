@@ -63,7 +63,8 @@ public static class DimHandlerExtensions
 
         services
             .AddTransient<IBasicAuthTokenService, BasicAuthTokenService>()
-            .AddTransient<ITechnicalUserProcessHandler, TechnicalUserProcessHandler>()
+            .AddTransient<ITechnicalUserCreationProcessHandler, TechnicalUserCreationProcessHandler>()
+            .AddTransient<ITechnicalUserDeletionProcessHandler, TechnicalUserDeletionProcessHandler>()
             .AddCfClient(config.GetSection("Cf"))
             .AddCallbackClient(config.GetSection("Callback"));
 

@@ -30,4 +30,5 @@ public interface ICfClient
     Task CreateServiceInstanceBindings(string tenantName, string? keyName, Guid spaceId, CancellationToken cancellationToken);
     Task<Guid> GetServiceBinding(string tenantName, Guid spaceId, string bindingName, CancellationToken cancellationToken);
     Task<ServiceCredentialBindingDetailResponse> GetServiceBindingDetails(Guid id, CancellationToken cancellationToken);
+    Task DeleteServiceInstanceBindings(Guid serviceBindingId, CancellationToken cancellationToken);
 }

@@ -32,7 +32,7 @@ updates:
       interval: "weekly"
     ignore:
       - dependency-name: "*"
-        update-types: ["version-update:semver-major"]
+        update-types: ["version-update:semver-major"]     
     groups:
       production-dependencies:
         dependency-type: "production"

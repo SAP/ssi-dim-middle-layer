@@ -126,4 +126,25 @@ public class DimBusinessLogic(
 
         await dimRepositories.SaveAsync().ConfigureAwait(false);
     }
+
+    public async Task DeleteTechnicalUser(string bpn, TechnicalUserData technicalUserData, CancellationToken cancellationToken)
+    {
+        var (exists, technicalUserId) = await dimRepositories.GetInstance<ITenantRepository>().GetTechnicalUserForBpn(bpn, technicalUserData.Name).ConfigureAwait(false);
+        if (!exists)
+        {
+            throw NotFoundException.Create(DimErrors.NO_TECHNICAL_USER_FOUND, new ErrorParameter[] { new("bpn", bpn) });
+        }
+
+        var processStepRepository = dimRepositories.GetInstance<IProcessStepRepository>();
+        var processId = processStepRepository.CreateProcess(ProcessTypeId.DELETE_TECHNICAL_USER).Id;
+        processStepRepository.CreateProcessStep(ProcessStepTypeId.DELETE_TECHNICAL_USER, ProcessStepStatusId.TODO, processId);
+
+        dimRepositories.GetInstance<ITenantRepository>().AttachAndModifyTechnicalUser(technicalUserId, null, t =>
+        {
+            t.ExternalId = technicalUserData.ExternalId;
+            t.ProcessId = processId;
+        });
+
+        await dimRepositories.SaveAsync().ConfigureAwait(false);
+    }
 }

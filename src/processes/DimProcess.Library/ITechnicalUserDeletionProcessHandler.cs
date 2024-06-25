@@ -18,11 +18,12 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-namespace Dim.Entities.Enums;
+using Dim.Entities.Enums;
 
-public enum ProcessTypeId
+namespace DimProcess.Library;
+
+public interface ITechnicalUserDeletionProcessHandler
 {
-    SETUP_DIM = 1,
-    CREATE_TECHNICAL_USER = 2,
-    DELETE_TECHNICAL_USER = 3
+    Task<(IEnumerable<ProcessStepTypeId>? nextStepTypeIds, ProcessStepStatusId stepStatusId, bool modified, string? processMessage)> DeleteServiceInstanceBindings(string tenantName, Guid technicalUserId, CancellationToken cancellationToken);
+    Task<(IEnumerable<ProcessStepTypeId>? nextStepTypeIds, ProcessStepStatusId stepStatusId, bool modified, string? processMessage)> SendCallback(Guid technicalUserId, CancellationToken cancellationToken);
 }

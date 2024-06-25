@@ -22,7 +22,7 @@ using Dim.Entities.Enums;
 
 namespace DimProcess.Library;
 
-public interface ITechnicalUserProcessHandler
+public interface ITechnicalUserCreationProcessHandler
 {
     Task<(IEnumerable<ProcessStepTypeId>? nextStepTypeIds, ProcessStepStatusId stepStatusId, bool modified, string? processMessage)> CreateServiceInstanceBindings(string tenantName, Guid technicalUserId, CancellationToken cancellationToken);
     Task<(IEnumerable<ProcessStepTypeId>? nextStepTypeIds, ProcessStepStatusId stepStatusId, bool modified, string? processMessage)> GetTechnicalUserData(string tenantName, Guid technicalUserId, CancellationToken cancellationToken);

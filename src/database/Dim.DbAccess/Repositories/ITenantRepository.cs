@@ -43,4 +43,7 @@ public interface ITenantRepository
     Task<(Guid? spaceId, string technicalUserName)> GetSpaceIdAndTechnicalUserName(Guid technicalUserId);
     Task<(Guid ExternalId, string? TokenAddress, string? ClientId, byte[]? ClientSecret, byte[]? InitializationVector, int? EncryptionMode)> GetTechnicalUserCallbackData(Guid technicalUserId);
     Task<(Guid? DimInstanceId, Guid? CompanyId)> GetDimInstanceIdAndDid(Guid tenantId);
+    Task<(bool Exists, Guid TechnicalUserId)> GetTechnicalUserForBpn(string bpn, string technicalUserName);
+    Task<Guid> GetExternalIdForTechnicalUser(Guid technicalUserId);
+    void RemoveTechnicalUser(Guid technicalUserId);
 }

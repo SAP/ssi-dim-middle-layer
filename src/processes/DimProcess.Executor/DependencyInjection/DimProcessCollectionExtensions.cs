@@ -34,6 +34,7 @@ public static class DimProcessCollectionExtensions
 
     public static IServiceCollection AddTechnicalUserProcessExecutor(this IServiceCollection services, IConfiguration config) =>
         services
-            .AddTransient<IProcessTypeExecutor, TechnicalUserProcessTypeExecutor>()
+            .AddTransient<IProcessTypeExecutor, TechnicalUserCreationProcessTypeExecutor>()
+            .AddTransient<IProcessTypeExecutor, TechnicalUserDeletionProcessTypeExecutor>()
             .AddTechnicalUserProcessHandler(config);
 }

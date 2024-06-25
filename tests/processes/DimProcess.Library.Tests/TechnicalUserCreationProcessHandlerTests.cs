@@ -31,31 +31,27 @@ using System.Security.Cryptography;
 
 namespace DimProcess.Library.Tests;
 
-public class TechnicalUserProcessHandlerTests
+public class TechnicalUserCreationProcessHandlerTests
 {
-    private readonly ICallbackService _callbackService;
-    private readonly IFixture _fixture;
-    private readonly IDimRepositories _repositories;
     private readonly ITenantRepository _tenantRepositories;
-    private readonly IOptions<TechnicalUserSettings> _options;
     private readonly ICfClient _cfClient;
-    private readonly TechnicalUserProcessHandler _sut;
+    private readonly TechnicalUserCreationProcessHandler _sut;
 
-    public TechnicalUserProcessHandlerTests()
+    public TechnicalUserCreationProcessHandlerTests()
     {
-        _fixture = new Fixture().Customize(new AutoFakeItEasyCustomization { ConfigureMembers = true });
-        _fixture.Behaviors.OfType<ThrowingRecursionBehavior>().ToList()
-            .ForEach(b => _fixture.Behaviors.Remove(b));
-        _fixture.Behaviors.Add(new OmitOnRecursionBehavior());
+        var fixture = new Fixture().Customize(new AutoFakeItEasyCustomization { ConfigureMembers = true });
+        fixture.Behaviors.OfType<ThrowingRecursionBehavior>().ToList()
+            .ForEach(b => fixture.Behaviors.Remove(b));
+        fixture.Behaviors.Add(new OmitOnRecursionBehavior());
 
-        _repositories = A.Fake<IDimRepositories>();
+        var repositories = A.Fake<IDimRepositories>();
         _tenantRepositories = A.Fake<ITenantRepository>();
 
-        A.CallTo(() => _repositories.GetInstance<ITenantRepository>()).Returns(_tenantRepositories);
+        A.CallTo(() => repositories.GetInstance<ITenantRepository>()).Returns(_tenantRepositories);
 
         _cfClient = A.Fake<ICfClient>();
-        _callbackService = A.Fake<ICallbackService>();
-        _options = Options.Create(new TechnicalUserSettings
+        var callbackService = A.Fake<ICallbackService>();
+        var options = Options.Create(new TechnicalUserSettings
         {
             EncryptionConfigIndex = 0,
             EncryptionConfigs = new[]
@@ -70,7 +66,7 @@ public class TechnicalUserProcessHandlerTests
             }
         });
 
-        _sut = new TechnicalUserProcessHandler(_repositories, _cfClient, _callbackService, _options);
+        _sut = new TechnicalUserCreationProcessHandler(repositories, _cfClient, callbackService, options);
     }
 
     #region CreateSubaccount
@@ -102,11 +98,10 @@ public class TechnicalUserProcessHandlerTests
         result.modified.Should().BeFalse();
         result.processMessage.Should().BeNull();
         result.stepStatusId.Should().Be(ProcessStepStatusId.DONE);
-        result.nextStepTypeIds.Should().ContainSingle().Which.Should().Be(ProcessStepTypeId.SEND_TECHNICAL_USER_CALLBACK);
+        result.nextStepTypeIds.Should().ContainSingle().Which.Should().Be(ProcessStepTypeId.SEND_TECHNICAL_USER_CREATION_CALLBACK);
         technicalUser.EncryptionMode.Should().NotBeNull().And.Be(0);
         technicalUser.ClientId.Should().Be("cl1");
     }
 
     #endregion
-
 }

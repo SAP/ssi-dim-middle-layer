@@ -145,4 +145,20 @@ public class TenantRepository(DimDbContext context) : ITenantRepository
             .Where(x => x.Id == tenantId)
             .Select(x => new ValueTuple<Guid?, Guid?>(x.DimInstanceId, x.CompanyId))
             .SingleOrDefaultAsync();
+
+    public Task<(bool Exists, Guid TechnicalUserId)> GetTechnicalUserForBpn(string bpn, string technicalUserName) =>
+        context.TechnicalUsers
+            .Where(x => x.TechnicalUserName == technicalUserName && x.Tenant!.Bpn == bpn)
+            .Select(x => new ValueTuple<bool, Guid>(true, x.Id))
+            .SingleOrDefaultAsync();
+
+    public Task<Guid> GetExternalIdForTechnicalUser(Guid technicalUserId) =>
+        context.TechnicalUsers
+            .Where(x => x.Id == technicalUserId)
+            .Select(x => x.ExternalId)
+            .SingleOrDefaultAsync();
+
+    public void RemoveTechnicalUser(Guid technicalUserId) =>
+        context.TechnicalUsers
+            .Remove(new TechnicalUser(technicalUserId, default, default, null!, default));
 }

@@ -29,4 +29,5 @@ public interface IDimBusinessLogic : ITransient
     Task<string> GetStatusList(string bpn, CancellationToken cancellationToken);
     Task<string> CreateStatusList(string bpn, CancellationToken cancellationToken);
     Task CreateTechnicalUser(string bpn, TechnicalUserData technicalUserData, CancellationToken cancellationToken);
+    Task DeleteTechnicalUser(string bpn, TechnicalUserData technicalUserData, CancellationToken cancellationToken);
 }

@@ -30,7 +30,8 @@ public class DimErrorMessageContainer : IErrorMessageContainer
     private static readonly IReadOnlyDictionary<int, string> _messageContainer = new Dictionary<DimErrors, string> {
         { DimErrors.NO_COMPANY_FOR_BPN, "No Tenant found for Bpn {bpn}" },
         { DimErrors.NO_COMPANY_ID_SET, "No Company Id set" },
-        { DimErrors.NO_INSTANCE_ID_SET, "No Instnace Id set" },
+        { DimErrors.NO_INSTANCE_ID_SET, "No Instance Id set" },
+        { DimErrors.NO_TECHNICAL_USER_FOUND, "No Technical User found" },
     }.ToImmutableDictionary(x => (int)x.Key, x => x.Value);
 
     public Type Type { get => typeof(DimErrors); }
@@ -41,5 +42,6 @@ public enum DimErrors
 {
     NO_COMPANY_FOR_BPN,
     NO_COMPANY_ID_SET,
-    NO_INSTANCE_ID_SET
+    NO_INSTANCE_ID_SET,
+    NO_TECHNICAL_USER_FOUND
 }
