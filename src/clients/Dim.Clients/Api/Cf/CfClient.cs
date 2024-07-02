@@ -79,8 +79,8 @@ public class CfClient : ICfClient
             .ReadFromJsonAsync<GetEnvironmentsResponse>(JsonSerializerExtensions.Options, cancellationToken)
             .ConfigureAwait(false);
 
-        var tenantEnvironment = environments.Resources.Where(x => x.Name == tenantName);
-        if (tenantEnvironment.Count() > 1)
+        var tenantEnvironment = environments?.Resources.Where(x => x.Name == tenantName);
+        if (tenantEnvironment == null || tenantEnvironment.Count() > 1)
         {
             throw new ConflictException($"There should only be one cf environment for tenant {tenantName}");
         }
@@ -276,5 +276,12 @@ public class CfClient : ICfClient
         {
             throw new ServiceException(je.Message);
         }
+    }
+
+    public async Task DeleteServiceInstanceBindings(Guid serviceBindingId, CancellationToken cancellationToken)
+    {
+        var client = await _basicAuthTokenService.GetBasicAuthorizedLegacyClient<CfClient>(_settings, cancellationToken).ConfigureAwait(false);
+        await client.DeleteAsync($"/v3/service_credential_bindings/{serviceBindingId}", cancellationToken)
+            .CatchingIntoServiceExceptionFor("delete-si-bindings", HttpAsyncResponseMessageExtension.RecoverOptions.ALLWAYS);
     }
 }

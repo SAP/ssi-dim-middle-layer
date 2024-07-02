@@ -28,7 +28,7 @@ spec:
     server: 'https://kubernetes.default.svc'
   source:
     path: charts/dim
-    repoURL: 'https://github.com/sap/dim-client.git'
+    repoURL: 'https://github.com/sap/ssi-dim-middle-layer.git'
     targetRevision: main
     plugin:
       env:

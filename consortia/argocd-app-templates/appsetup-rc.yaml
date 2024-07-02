@@ -29,11 +29,14 @@ spec:
   source:
     path: charts/dim
     repoURL: 'https://github.com/sap/ssi-dim-middle-layer.git'
-    targetRevision: dim-1.0.0
+    targetRevision: main
     plugin:
       env:
         - name: AVP_SECRET
           value: vault-secret
         - name: helm_args
-          value: '-f values.yaml -f ../../consortia/environments/values-int.yaml'
+          value: '-f values.yaml -f ../../consortia/environments/values-rc.yaml'
   project: project-portal
+  syncPolicy:
+    automated:
+      prune: true

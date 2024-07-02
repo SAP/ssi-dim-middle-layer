@@ -109,7 +109,7 @@ public class DimBusinessLogic(
         return await dimClient.CreateStatusList(dimAuth, dimBaseUrl, companyId.Value, cancellationToken).ConfigureAwait(false);
     }
 
-    public async Task CreateTechnicalUser(string bpn, TechnicalUserData technicalUserData, CancellationToken cancellationToken)
+    public async Task CreateTechnicalUser(string bpn, TechnicalUserData technicalUserData)
     {
         var (exists, tenantId) = await dimRepositories.GetInstance<ITenantRepository>().GetTenantForBpn(bpn).ConfigureAwait(false);
 
@@ -119,10 +119,30 @@ public class DimBusinessLogic(
         }
 
         var processStepRepository = dimRepositories.GetInstance<IProcessStepRepository>();
-        var processId = processStepRepository.CreateProcess(ProcessTypeId.CREATE_TECHNICAL_USER).Id;
+        var processId = processStepRepository.CreateProcess(ProcessTypeId.TECHNICAL_USER).Id;
         processStepRepository.CreateProcessStep(ProcessStepTypeId.CREATE_TECHNICAL_USER, ProcessStepStatusId.TODO, processId);
 
         dimRepositories.GetInstance<ITenantRepository>().CreateTenantTechnicalUser(tenantId, technicalUserData.Name, technicalUserData.ExternalId, processId);
+
+        await dimRepositories.SaveAsync().ConfigureAwait(false);
+    }
+
+    public async Task DeleteTechnicalUser(string bpn, TechnicalUserData technicalUserData)
+    {
+        var (exists, technicalUserId, processId) = await dimRepositories.GetInstance<ITenantRepository>().GetTechnicalUserForBpn(bpn, technicalUserData.Name).ConfigureAwait(false);
+        if (!exists)
+        {
+            throw NotFoundException.Create(DimErrors.NO_TECHNICAL_USER_FOUND, new ErrorParameter[] { new("bpn", bpn) });
+        }
+
+        var processStepRepository = dimRepositories.GetInstance<IProcessStepRepository>();
+        processStepRepository.CreateProcessStep(ProcessStepTypeId.DELETE_TECHNICAL_USER, ProcessStepStatusId.TODO, processId);
+
+        dimRepositories.GetInstance<ITenantRepository>().AttachAndModifyTechnicalUser(technicalUserId, null, t =>
+        {
+            t.ExternalId = technicalUserData.ExternalId;
+            t.ProcessId = processId;
+        });
 
         await dimRepositories.SaveAsync().ConfigureAwait(false);
     }
