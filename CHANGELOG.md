@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.1.0 (2024-07-04)
+
+
+### Features
+
+* **ci:** adjust company identity creation ([#36](https://github.com/SAP/ssi-dim-middle-layer/issues/36)) ([e427ebf](https://github.com/SAP/ssi-dim-middle-layer/commit/e427ebfa98391b1bb3304661d7fcfb701e1c7529))
+* **technicalUser:** add endpoint to create technicalUser for wallet ([#30](https://github.com/SAP/ssi-dim-middle-layer/issues/30)) ([d8a4d61](https://github.com/SAP/ssi-dim-middle-layer/commit/d8a4d61f107452c3b86d5e9857f3643bb4a3ca27))
+
+
+### Bug Fixes
+
+* add url encoding to get endpoints ([#44](https://github.com/SAP/ssi-dim-middle-layer/issues/44)) ([6470a57](https://github.com/SAP/ssi-dim-middle-layer/commit/6470a5769116b7bc52a41587bb09df332aae18eb))
+* **env:** adjust callback environment ([d75473b](https://github.com/SAP/ssi-dim-middle-layer/commit/d75473b037d306dacc8831f860dd2a0cee46f53c))
+* **technicalUser:** fix callback url for technical user ([accfee8](https://github.com/SAP/ssi-dim-middle-layer/commit/accfee8007f368152a440f3d6f7754a5ac15c83e))
+
+
+### Miscellaneous Chores
+
+* release v1.1.0 ([d2face6](https://github.com/SAP/ssi-dim-middle-layer/commit/d2face64a55f3f94475b892a46e6a46beaa0e465))
+
 ## 1.0.0 (2024-04-09)
 
 
