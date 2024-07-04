@@ -27,7 +27,7 @@ To use the helm chart as a dependency:
 dependencies:
   - name: dim
     repository: https://sap.github.io/ssi-dim-middle-layer
-    version: 1.0.0
+    version: 1.1.0
 ```
 
 ## Requirements
@@ -82,6 +82,11 @@ dependencies:
 | processesworker.callback.clientSecret | string | `""` | Client-secret for callback client-id. Secret-key 'callback-client-secret'. |
 | processesworker.callback.tokenAddress | string | `""` |  |
 | processesworker.callback.baseAddress | string | `""` | Url to the cf service api |
+| processesworker.technicalUserCreation.encryptionConfigIndex | int | `0` |  |
+| processesworker.technicalUserCreation.encryptionConfigs.index0.index | int | `0` |  |
+| processesworker.technicalUserCreation.encryptionConfigs.index0.cipherMode | string | `"CBC"` |  |
+| processesworker.technicalUserCreation.encryptionConfigs.index0.paddingMode | string | `"PKCS7"` |  |
+| processesworker.technicalUserCreation.encryptionConfigs.index0.encryptionKey | string | `""` | EncryptionKey to encrypt the technical user client-secret. Secret-key 'technicalusercreation-encryption-key0'. Expected format is 256 bit (64 digits) hex. |
 | existingSecret | string | `""` | Secret containing "client-secret-cis-central", "client-secret-cf" and "client-secret-callback" |
 | dotnetEnvironment | string | `"Production"` |  |
 | dbConnection.schema | string | `"dim"` |  |

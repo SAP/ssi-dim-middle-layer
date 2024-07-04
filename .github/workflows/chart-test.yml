@@ -39,7 +39,7 @@ on:
       upgrade_from:
         description: 'dim chart version to upgrade from'
         # tbd
-        default: '1.0.0'
+        default: '1.1.0'
         required: false
         type: string
 
