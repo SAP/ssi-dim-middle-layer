@@ -36,12 +36,14 @@ public class TechnicalUserProcessTypeExecutor(
     private readonly IEnumerable<ProcessStepTypeId> _executableProcessSteps = ImmutableArray.Create(
         ProcessStepTypeId.CREATE_TECHNICAL_USER,
         ProcessStepTypeId.GET_TECHNICAL_USER_DATA,
-        ProcessStepTypeId.SEND_TECHNICAL_USER_CALLBACK);
+        ProcessStepTypeId.SEND_TECHNICAL_USER_CREATION_CALLBACK,
+        ProcessStepTypeId.DELETE_TECHNICAL_USER,
+        ProcessStepTypeId.SEND_TECHNICAL_USER_DELETION_CALLBACK);
 
     private Guid _technicalUserId;
     private string? _tenantName;
 
-    public ProcessTypeId GetProcessTypeId() => ProcessTypeId.CREATE_TECHNICAL_USER;
+    public ProcessTypeId GetProcessTypeId() => ProcessTypeId.TECHNICAL_USER;
     public bool IsExecutableStepTypeId(ProcessStepTypeId processStepTypeId) => _executableProcessSteps.Contains(processStepTypeId);
     public IEnumerable<ProcessStepTypeId> GetExecutableStepTypeIds() => _executableProcessSteps;
     public ValueTask<bool> IsLockRequested(ProcessStepTypeId processStepTypeId) => new(false);
@@ -79,7 +81,11 @@ public class TechnicalUserProcessTypeExecutor(
                     .ConfigureAwait(false),
                 ProcessStepTypeId.GET_TECHNICAL_USER_DATA => await technicalUserProcessHandler.GetTechnicalUserData(_tenantName, _technicalUserId, cancellationToken)
                     .ConfigureAwait(false),
-                ProcessStepTypeId.SEND_TECHNICAL_USER_CALLBACK => await technicalUserProcessHandler.SendCallback(_technicalUserId, cancellationToken)
+                ProcessStepTypeId.SEND_TECHNICAL_USER_CREATION_CALLBACK => await technicalUserProcessHandler.SendCreateCallback(_technicalUserId, cancellationToken)
+                    .ConfigureAwait(false),
+                ProcessStepTypeId.DELETE_TECHNICAL_USER => await technicalUserProcessHandler.DeleteServiceInstanceBindings(_tenantName, _technicalUserId, cancellationToken)
+                    .ConfigureAwait(false),
+                ProcessStepTypeId.SEND_TECHNICAL_USER_DELETION_CALLBACK => await technicalUserProcessHandler.SendDeleteCallback(_technicalUserId, cancellationToken)
                     .ConfigureAwait(false),
                 _ => (null, ProcessStepStatusId.TODO, false, null)
             };

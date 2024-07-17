@@ -23,5 +23,5 @@ namespace Dim.Entities.Enums;
 public enum ProcessTypeId
 {
     SETUP_DIM = 1,
-    CREATE_TECHNICAL_USER = 2
+    TECHNICAL_USER = 2,
 }

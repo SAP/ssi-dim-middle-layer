@@ -58,4 +58,11 @@ public class CallbackService(ITokenService tokenService, IOptions<CallbackSettin
             clientSecret);
         await httpClient.PostAsJsonAsync($"/api/administration/serviceAccount/callback/{externalId}", data, JsonSerializerExtensions.Options, cancellationToken).ConfigureAwait(false);
     }
+
+    public async Task SendTechnicalUserDeletionCallback(Guid externalId, CancellationToken cancellationToken)
+    {
+        var httpClient = await tokenService.GetAuthorizedClient<CallbackService>(_settings, cancellationToken)
+            .ConfigureAwait(false);
+        await httpClient.PostAsync($"/api/administration/serviceAccount/callback/{externalId}/delete", null, cancellationToken).ConfigureAwait(false);
+    }
 }
