@@ -21,7 +21,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: dim-wrapper
+  name: dim-middle-layer
 spec:
   destination:
     namespace: product-portal
