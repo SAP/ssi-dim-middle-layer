@@ -29,7 +29,7 @@ spec:
   source:
     path: charts/dim
     repoURL: 'https://github.com/SAP/ssi-dim-middle-layer.git'
-    targetRevision: chore/349-deploy-to-eV
+    targetRevision: dim-1.2.0
     plugin:
       env:
         - name: AVP_SECRET
