@@ -32,8 +32,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Dim.Migrations.Migrations
 {
     [DbContext(typeof(DimDbContext))]
-    [Migration("20240702132222_AddDeleteTechnicalUser")]
-    partial class AddDeleteTechnicalUser
+    [Migration("20240717155124_1.2.0")]
+    partial class _120
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -42,7 +42,7 @@ namespace Dim.Migrations.Migrations
             modelBuilder
                 .HasDefaultSchema("dim")
                 .UseCollation("en_US.utf8")
-                .HasAnnotation("ProductVersion", "8.0.4")
+                .HasAnnotation("ProductVersion", "8.0.5")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);

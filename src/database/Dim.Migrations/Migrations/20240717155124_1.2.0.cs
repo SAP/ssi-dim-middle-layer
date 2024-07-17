@@ -27,7 +27,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Dim.Migrations.Migrations
 {
     /// <inheritdoc />
-    public partial class AddDeleteTechnicalUser : Migration
+    public partial class _120 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
