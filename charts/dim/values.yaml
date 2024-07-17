@@ -20,7 +20,7 @@
 
 dim:
   image:
-    name: "ghcr.io/sap/dim-client_dim-service"
+    name: "ghcr.io/sap/ssi-dim-middle-layer_dim-service"
     tag: ""
   imagePullPolicy: "IfNotPresent"
   # -- We recommend to review the default resource limits as this should a conscious choice.
@@ -48,7 +48,7 @@ dim:
 migrations:
   name: "migrations"
   image:
-    name: "ghcr.io/sap/dim-client_dim-migrations"
+    name: "ghcr.io/sap/ssi-dim-middle-layer_dim-migrations"
     tag: ""
   imagePullPolicy: "IfNotPresent"
   # -- We recommend to review the default resource limits as this should a conscious choice.
@@ -68,7 +68,7 @@ migrations:
 processesworker:
   name: "processesworker"
   image:
-    name: "ghcr.io/sap/dim-client_dim-processes-worker"
+    name: "ghcr.io/sap/ssi-dim-middle-layer_dim-processes-worker"
     tag: ""
   imagePullPolicy: "IfNotPresent"
   # -- We recommend to review the default resource limits as this should a conscious choice.

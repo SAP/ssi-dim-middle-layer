@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/SAP/ssi-dim-middle-layer/compare/v1.1.0...v1.2.0) (2024-07-17)
+
+
+### Features
+
+* add technical user deletion logic and adjust exception handling for encryption ([#50](https://github.com/SAP/ssi-dim-middle-layer/issues/50)) ([a140a48](https://github.com/SAP/ssi-dim-middle-layer/commit/a140a481136eb2e97338b96be5a5732086945a34))
+
 ## 1.1.0 (2024-07-04)
 
 
