@@ -82,7 +82,7 @@ processesworker:
   technicalUserCreation:
     encryptionConfigs:
       index0:
-        encryptionKey: "<<path:portal/data/dim/int/technicaluser#technicalusercreation-encryption-key0>"
+        encryptionKey: "<path:portal/data/dim/int/technicaluser#technicalusercreation-encryption-key0>"
 
 idp:
   address: "https://centralidp.int.catena-x.net"
