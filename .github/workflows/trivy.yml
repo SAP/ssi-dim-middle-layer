@@ -40,9 +40,9 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME_SERVICE: ${{ github.repository }}_dim-service
-  IMAGE_NAME_MIGRATIONS: ${{ github.repository }}_dim-migrations
-  IMAGE_NAME_WORKER: ${{ github.repository }}_dim-processes-worker
+  IMAGE_NAME_SERVICE: sap/ssi-dim-middle-layer_dim-service
+  IMAGE_NAME_MIGRATIONS: sap/ssi-dim-middle-layer_dim-migrations
+  IMAGE_NAME_WORKER: sap/ssi-dim-middle-layer_dim-processes-worker
 
 jobs:
   analyze-config:
