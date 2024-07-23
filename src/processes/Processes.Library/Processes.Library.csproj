@@ -34,8 +34,4 @@
       <ProjectReference Include="..\..\database\Dim.Entities\Dim.Entities.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <PackageReference Include="Flurl.Http.Signed" Version="3.2.4" />
-    </ItemGroup>
-
 </Project>
