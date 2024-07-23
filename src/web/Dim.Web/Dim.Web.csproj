@@ -14,8 +14,7 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.3"/>
-        <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0"/>
-        <PackageReference Include="Org.Eclipse.TractusX.Portal.Backend.Framework.Web" Version="2.3.0"/>
+        <PackageReference Include="Org.Eclipse.TractusX.Portal.Backend.Framework.Web" Version="2.4.2"/>
         <PackageReference Include="System.Json" Version="4.7.1" />
     </ItemGroup>
 
