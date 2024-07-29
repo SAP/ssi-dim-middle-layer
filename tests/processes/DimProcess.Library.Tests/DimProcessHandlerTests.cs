@@ -34,7 +34,6 @@ using DimProcess.Library.Callback;
 using DimProcess.Library.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
-using System.Runtime.CompilerServices;
 using System.Text.Json;
 
 namespace DimProcess.Library.Tests;
