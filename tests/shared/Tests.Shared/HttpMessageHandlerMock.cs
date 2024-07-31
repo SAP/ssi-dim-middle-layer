@@ -18,29 +18,37 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using Microsoft.Extensions.Logging;
+using System.Net;
 
 namespace Dim.Tests.Shared;
 
-public interface IMockLogger<T>
+public class HttpMessageHandlerMock(
+    HttpStatusCode statusCode,
+    HttpContent? httpContent = null,
+    Exception? ex = null,
+    bool isRequestUri = false)
+    : HttpMessageHandler
 {
-    void Log(LogLevel logLevel, Exception? exception, string logMessage);
-}
-
-public class MockLogger<T>(IMockLogger<T> logger) : ILogger<T>
-{
-    public IDisposable? BeginScope<TState>(TState state) where TState : notnull => new TestDisposable();
-
-    public bool IsEnabled(LogLevel logLevel) => true;
-
-    public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter) =>
-        logger.Log(logLevel, exception, formatter(state, exception));
-
-    public class TestDisposable : IDisposable
+    protected override Task<HttpResponseMessage> SendAsync(
+        HttpRequestMessage request,
+        CancellationToken cancellationToken)
     {
-        public void Dispose()
+        RequestMessage = request;
+
+        if (ex != null)
         {
-            GC.SuppressFinalize(this);
+            throw ex;
         }
+
+        var httpResponseMessage = new HttpResponseMessage(statusCode);
+        httpResponseMessage.RequestMessage = isRequestUri ? request : null;
+        if (httpContent != null)
+        {
+            httpResponseMessage.Content = httpContent;
+        }
+
+        return Task.FromResult(httpResponseMessage);
     }
+
+    public HttpRequestMessage? RequestMessage { get; private set; } = null;
 }

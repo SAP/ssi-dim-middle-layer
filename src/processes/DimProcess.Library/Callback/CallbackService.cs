@@ -22,6 +22,7 @@ using Dim.Clients.Api.Cf;
 using Dim.Clients.Extensions;
 using DimProcess.Library.Callback.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.HttpClientExtensions;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Token;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -45,7 +46,9 @@ public class CallbackService(ITokenService tokenService, IOptions<CallbackSettin
                 dimDetails.Credentials.Uaa.ClientId,
                 dimDetails.Credentials.Uaa.ClientSecret)
         );
-        await httpClient.PostAsJsonAsync($"/api/administration/registration/dim/{bpn}", data, JsonSerializerExtensions.Options, cancellationToken).ConfigureAwait(false);
+        await httpClient.PostAsJsonAsync($"/api/administration/registration/dim/{bpn}", data, JsonSerializerExtensions.Options, cancellationToken)
+                .CatchingIntoServiceExceptionFor("send-callback", HttpAsyncResponseMessageExtension.RecoverOptions.INFRASTRUCTURE)
+                .ConfigureAwait(false);
     }
 
     public async Task SendTechnicalUserCallback(Guid externalId, string tokenAddress, string clientId, string clientSecret, CancellationToken cancellationToken)
@@ -56,13 +59,17 @@ public class CallbackService(ITokenService tokenService, IOptions<CallbackSettin
             tokenAddress,
             clientId,
             clientSecret);
-        await httpClient.PostAsJsonAsync($"/api/administration/serviceAccount/callback/{externalId}", data, JsonSerializerExtensions.Options, cancellationToken).ConfigureAwait(false);
+        await httpClient.PostAsJsonAsync($"/api/administration/serviceAccount/callback/{externalId}", data, JsonSerializerExtensions.Options, cancellationToken)
+            .CatchingIntoServiceExceptionFor("send-technical-user-callback", HttpAsyncResponseMessageExtension.RecoverOptions.INFRASTRUCTURE)
+            .ConfigureAwait(false);
     }
 
     public async Task SendTechnicalUserDeletionCallback(Guid externalId, CancellationToken cancellationToken)
     {
         var httpClient = await tokenService.GetAuthorizedClient<CallbackService>(_settings, cancellationToken)
             .ConfigureAwait(false);
-        await httpClient.PostAsync($"/api/administration/serviceAccount/callback/{externalId}/delete", null, cancellationToken).ConfigureAwait(false);
+        await httpClient.PostAsync($"/api/administration/serviceAccount/callback/{externalId}/delete", null, cancellationToken)
+            .CatchingIntoServiceExceptionFor("send-technical-user-deletion-callback", HttpAsyncResponseMessageExtension.RecoverOptions.INFRASTRUCTURE)
+            .ConfigureAwait(false);
     }
 }

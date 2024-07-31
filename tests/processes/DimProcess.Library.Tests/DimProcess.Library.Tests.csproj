@@ -25,5 +25,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\database\Dim.DbAccess\Dim.DbAccess.csproj" />
     <ProjectReference Include="..\..\..\src\processes\DimProcess.Library\DimProcess.Library.csproj" />
+    <ProjectReference Include="..\..\shared\Tests.Shared\Tests.Shared.csproj" />
   </ItemGroup>
 </Project>
