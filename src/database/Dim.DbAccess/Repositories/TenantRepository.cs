@@ -160,5 +160,9 @@ public class TenantRepository(DimDbContext context) : ITenantRepository
 
     public void RemoveTechnicalUser(Guid technicalUserId) =>
         context.TechnicalUsers
-            .Remove(new TechnicalUser(technicalUserId, default, default, null!, default));
+            .Remove(new TechnicalUser(technicalUserId, Guid.Empty, Guid.Empty, null!, Guid.Empty));
+
+    public Task<bool> IsTenantExisting(string companyName, string bpn) =>
+        context.Tenants
+            .AnyAsync(x => x.CompanyName == companyName && x.Bpn == bpn);
 }

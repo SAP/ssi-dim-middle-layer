@@ -46,4 +46,5 @@ public interface ITenantRepository
     Task<(bool Exists, Guid TechnicalUserId, Guid ProcessId)> GetTechnicalUserForBpn(string bpn, string technicalUserName);
     Task<Guid> GetExternalIdForTechnicalUser(Guid technicalUserId);
     void RemoveTechnicalUser(Guid technicalUserId);
+    Task<bool> IsTenantExisting(string companyName, string bpn);
 }
