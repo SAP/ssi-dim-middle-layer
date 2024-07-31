@@ -35,8 +35,8 @@ public static class DimController
         var dim = group.MapGroup("/dim");
 
         dim.MapPost("setup-dim", ([FromQuery] string companyName, [FromQuery] string bpn, [FromQuery] string didDocumentLocation, IDimBusinessLogic dimBusinessLogic) => dimBusinessLogic.StartSetupDim(companyName, bpn, didDocumentLocation, false))
-            .WithSwaggerDescription("Gets the keys for the attributes",
-                "Example: Post: api/dim/setup-dim",
+            .WithSwaggerDescription("Creates a holder wallet",
+                "Example: POST: api/dim/setup-dim",
                 "the name of the company",
                 "bpn of the wallets company",
                 "The did document location")
@@ -44,8 +44,8 @@ public static class DimController
             .Produces(StatusCodes.Status201Created);
 
         dim.MapPost("setup-issuer", ([FromQuery] string companyName, [FromQuery] string bpn, [FromQuery] string didDocumentLocation, IDimBusinessLogic dimBusinessLogic) => dimBusinessLogic.StartSetupDim(companyName, bpn, didDocumentLocation, true))
-            .WithSwaggerDescription("Gets the keys for the attributes",
-                "Example: Post: api/dim/setup-issuer",
+            .WithSwaggerDescription("Creates a wallet for an issuer",
+                "Example: POST: api/dim/setup-issuer",
                 "the name of the company",
                 "bpn of the wallets company",
                 "The did document location")

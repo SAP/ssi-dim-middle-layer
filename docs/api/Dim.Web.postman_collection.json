@@ -1,0 +1,321 @@
+{
+	"info": {
+		"_postman_id": "6192d67b-f199-4e4d-ba7b-53700873c13a",
+		"name": "Dim.Web",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "2223943"
+	},
+	"item": [
+		{
+			"name": "api",
+			"item": [
+				{
+					"name": "dim",
+					"item": [
+						{
+							"name": "setup-dim",
+							"item": [
+								{
+									"name": "Create a wallet",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"url": {
+											"raw": "{{baseUrl}}/api/dim/setup-dim?companyName=<string>&bpn=<string>&didDocumentLocation=<string>",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"api",
+												"dim",
+												"setup-dim"
+											],
+											"query": [
+												{
+													"key": "companyName",
+													"value": "<string>",
+													"description": "(Required) the name of the company"
+												},
+												{
+													"key": "bpn",
+													"value": "<string>",
+													"description": "(Required) bpn of the wallets company"
+												},
+												{
+													"key": "didDocumentLocation",
+													"value": "<string>",
+													"description": "(Required) The did document location"
+												}
+											]
+										},
+										"description": "Example: Post: api/dim/setup-dim"
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "setup-issuer",
+							"item": [
+								{
+									"name": "Create a wallet for an issuer",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"url": {
+											"raw": "{{baseUrl}}/api/dim/setup-issuer?companyName=<string>&bpn=<string>&didDocumentLocation=<string>",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"api",
+												"dim",
+												"setup-issuer"
+											],
+											"query": [
+												{
+													"key": "companyName",
+													"value": "<string>",
+													"description": "(Required) the name of the company"
+												},
+												{
+													"key": "bpn",
+													"value": "<string>",
+													"description": "(Required) bpn of the wallets company"
+												},
+												{
+													"key": "didDocumentLocation",
+													"value": "<string>",
+													"description": "(Required) The did document location"
+												}
+											]
+										},
+										"description": "Example: Post: api/dim/setup-issuer"
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "status-list",
+							"item": [
+								{
+									"name": "Gets the status list for the given company",
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Accept",
+												"value": "application/json"
+											}
+										],
+										"url": {
+											"raw": "{{baseUrl}}/api/dim/status-list?bpn=<string>",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"api",
+												"dim",
+												"status-list"
+											],
+											"query": [
+												{
+													"key": "bpn",
+													"value": "<string>",
+													"description": "(Required) id of the dim company"
+												}
+											]
+										},
+										"description": "Example: GET: api/dim/status-list/{bpn}"
+									},
+									"response": []
+								},
+								{
+									"name": "Creates a status list for the given company",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Accept",
+												"value": "application/json"
+											}
+										],
+										"url": {
+											"raw": "{{baseUrl}}/api/dim/status-list?bpn=<string>",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"api",
+												"dim",
+												"status-list"
+											],
+											"query": [
+												{
+													"key": "bpn",
+													"value": "<string>",
+													"description": "(Required) bpn of the company"
+												}
+											]
+										},
+										"description": "Example: Post: api/dim/status-list/{bpn}"
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "technical-user",
+							"item": [
+								{
+									"name": "{bpn}",
+									"item": [
+										{
+											"name": "delete",
+											"item": [
+												{
+													"name": "Deletes a technical user with the given name of the given bpn",
+													"request": {
+														"method": "POST",
+														"header": [
+															{
+																"key": "Content-Type",
+																"value": "application/json"
+															},
+															{
+																"key": "Accept",
+																"value": "application/json"
+															}
+														],
+														"body": {
+															"mode": "raw",
+															"raw": "{\n  \"externalId\": \"<uuid>\",\n  \"name\": \"<string>\"\n}",
+															"options": {
+																"raw": {
+																	"headerFamily": "json",
+																	"language": "json"
+																}
+															}
+														},
+														"url": {
+															"raw": "{{baseUrl}}/api/dim/technical-user/:bpn/delete",
+															"host": [
+																"{{baseUrl}}"
+															],
+															"path": [
+																"api",
+																"dim",
+																"technical-user",
+																":bpn",
+																"delete"
+															],
+															"variable": [
+																{
+																	"key": "bpn",
+																	"value": "<string>",
+																	"description": "(Required) bpn of the company"
+																}
+															]
+														},
+														"description": "Example: Post: api/dim/technical-user/{bpn}/delete"
+													},
+													"response": []
+												}
+											]
+										},
+										{
+											"name": "Creates a technical user for the dim of the given bpn",
+											"request": {
+												"method": "POST",
+												"header": [
+													{
+														"key": "Content-Type",
+														"value": "application/json"
+													},
+													{
+														"key": "Accept",
+														"value": "application/json"
+													}
+												],
+												"body": {
+													"mode": "raw",
+													"raw": "{\n  \"externalId\": \"<uuid>\",\n  \"name\": \"<string>\"\n}",
+													"options": {
+														"raw": {
+															"headerFamily": "json",
+															"language": "json"
+														}
+													}
+												},
+												"url": {
+													"raw": "{{baseUrl}}/api/dim/technical-user/:bpn",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"api",
+														"dim",
+														"technical-user",
+														":bpn"
+													],
+													"variable": [
+														{
+															"key": "bpn",
+															"value": "<string>",
+															"description": "(Required) bpn of the company"
+														}
+													]
+												},
+												"description": "Example: Post: api/dim/technical-user/{bpn}"
+											},
+											"response": []
+										}
+									]
+								}
+							]
+						}
+					]
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{dimToken}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "/"
+		}
+	]
+}
