@@ -32,9 +32,9 @@ public static class DimController
 {
     public static RouteGroupBuilder MapDimApi(this RouteGroupBuilder group)
     {
-        var policyHub = group.MapGroup("/dim");
+        var dim = group.MapGroup("/dim");
 
-        policyHub.MapPost("setup-dim", ([FromQuery] string companyName, [FromQuery] string bpn, [FromQuery] string didDocumentLocation, IDimBusinessLogic dimBusinessLogic) => dimBusinessLogic.StartSetupDim(companyName, bpn, didDocumentLocation, false))
+        dim.MapPost("setup-dim", ([FromQuery] string companyName, [FromQuery] string bpn, [FromQuery] string didDocumentLocation, IDimBusinessLogic dimBusinessLogic) => dimBusinessLogic.StartSetupDim(companyName, bpn, didDocumentLocation, false))
             .WithSwaggerDescription("Gets the keys for the attributes",
                 "Example: Post: api/dim/setup-dim",
                 "the name of the company",
@@ -43,7 +43,7 @@ public static class DimController
             .RequireAuthorization(r => r.RequireRole("setup_wallet"))
             .Produces(StatusCodes.Status201Created);
 
-        policyHub.MapPost("setup-issuer", ([FromQuery] string companyName, [FromQuery] string bpn, [FromQuery] string didDocumentLocation, IDimBusinessLogic dimBusinessLogic) => dimBusinessLogic.StartSetupDim(companyName, bpn, didDocumentLocation, true))
+        dim.MapPost("setup-issuer", ([FromQuery] string companyName, [FromQuery] string bpn, [FromQuery] string didDocumentLocation, IDimBusinessLogic dimBusinessLogic) => dimBusinessLogic.StartSetupDim(companyName, bpn, didDocumentLocation, true))
             .WithSwaggerDescription("Gets the keys for the attributes",
                 "Example: Post: api/dim/setup-issuer",
                 "the name of the company",
@@ -52,28 +52,28 @@ public static class DimController
             .RequireAuthorization(r => r.RequireRole("setup_wallet"))
             .Produces(StatusCodes.Status201Created);
 
-        policyHub.MapGet("status-list", ([FromQuery] string bpn, CancellationToken cancellationToken, [FromServices] IDimBusinessLogic dimBusinessLogic) => dimBusinessLogic.GetStatusList(bpn, cancellationToken))
+        dim.MapGet("status-list", ([FromQuery] string bpn, CancellationToken cancellationToken, [FromServices] IDimBusinessLogic dimBusinessLogic) => dimBusinessLogic.GetStatusList(bpn, cancellationToken))
             .WithSwaggerDescription("Gets the status list for the given company",
                 "Example: GET: api/dim/status-list/{bpn}",
                 "id of the dim company")
             .RequireAuthorization(r => r.RequireRole("view_status_list"))
             .Produces(StatusCodes.Status200OK, responseType: typeof(string), contentType: Constants.JsonContentType);
 
-        policyHub.MapPost("status-list", ([FromQuery] string bpn, CancellationToken cancellationToken, [FromServices] IDimBusinessLogic dimBusinessLogic) => dimBusinessLogic.CreateStatusList(bpn, cancellationToken))
+        dim.MapPost("status-list", ([FromQuery] string bpn, CancellationToken cancellationToken, [FromServices] IDimBusinessLogic dimBusinessLogic) => dimBusinessLogic.CreateStatusList(bpn, cancellationToken))
             .WithSwaggerDescription("Creates a status list for the given company",
                 "Example: Post: api/dim/status-list/{bpn}",
                 "bpn of the company")
             .RequireAuthorization(r => r.RequireRole("create_status_list"))
             .Produces(StatusCodes.Status200OK, responseType: typeof(string), contentType: Constants.JsonContentType);
 
-        policyHub.MapPost("technical-user/{bpn}", ([FromRoute] string bpn, [FromBody] TechnicalUserData technicalUserData, [FromServices] IDimBusinessLogic dimBusinessLogic) => dimBusinessLogic.CreateTechnicalUser(bpn, technicalUserData))
+        dim.MapPost("technical-user/{bpn}", ([FromRoute] string bpn, [FromBody] TechnicalUserData technicalUserData, [FromServices] IDimBusinessLogic dimBusinessLogic) => dimBusinessLogic.CreateTechnicalUser(bpn, technicalUserData))
             .WithSwaggerDescription("Creates a technical user for the dim of the given bpn",
                 "Example: Post: api/dim/technical-user/{bpn}",
                 "bpn of the company")
             .RequireAuthorization(r => r.RequireRole("create_technical_user"))
             .Produces(StatusCodes.Status200OK, contentType: Constants.JsonContentType);
 
-        policyHub.MapPost("technical-user/{bpn}/delete", ([FromRoute] string bpn, [FromBody] TechnicalUserData technicalUserData, [FromServices] IDimBusinessLogic dimBusinessLogic) => dimBusinessLogic.DeleteTechnicalUser(bpn, technicalUserData))
+        dim.MapPost("technical-user/{bpn}/delete", ([FromRoute] string bpn, [FromBody] TechnicalUserData technicalUserData, [FromServices] IDimBusinessLogic dimBusinessLogic) => dimBusinessLogic.DeleteTechnicalUser(bpn, technicalUserData))
             .WithSwaggerDescription("Deletes a technical user with the given name of the given bpn",
                 "Example: Post: api/dim/technical-user/{bpn}/delete",
                 "bpn of the company")
