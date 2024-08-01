@@ -22,6 +22,8 @@ Should you wish to work on an issue, please claim it first by commenting on the 
 
 If you have questions about one of the issues, please comment on them, and one of the maintainers will clarify.
 
+Please also refer to [How to Contribute](/docs/admin/dev-process/How%20to%20contribute.md).
+
 ## Contributing Code or Documentation
 
 You are welcome to contribute code in order to fix a bug or to implement a new feature that is logged as an issue.

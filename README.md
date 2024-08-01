@@ -6,6 +6,8 @@
 
 This repository contains the code for the Integration layer between Digital Identity Management (DIM) solution and Tractus-X Portal written in C#. It's used to create a wallet and configure all needed information.
 
+The SSI Dim Middle Layer is currently designed to work with the [Eclipse Tractus-X Portal](https://github.com/eclipse-tractusx/portal) in version [v2.1.0](https://github.com/eclipse-tractusx/portal/tree/portal-2.1.0). The Eclipse Tractus-X Portal is the reference implementation of the portal application for [Catena-X](https://catena-x.net).
+
 For **installation** details and further information, please refer to the chart specific [README](./charts/dim/README.md).
 
 ## Requirements and Setup
@@ -31,6 +33,10 @@ This project is open to feature requests/suggestions, bug reports etc. via [GitH
 
 ## Security / Disclosure
 If you find any bug that may be a security problem, please follow our instructions at [in our security policy](https://github.com/SAP/ssi-dim-middle-layer/security/policy) on how to report it. Please do not create GitHub issues for security-related doubts or problems.
+
+## Known Issues and Limitations
+
+See [Known Knowns](/docs/admin/known-knowns/known-issues-and-limitations.md).
 
 ## Code of Conduct
 
