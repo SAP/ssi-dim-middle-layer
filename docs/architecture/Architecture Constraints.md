@@ -16,26 +16,6 @@ The following document outlines the architecture constraints for the SSI Dim Mid
 - **Run Anywhere**: The system is designed to be containerized and deployable as a Docker image. This ensures it can run on various platforms, including cloud environments, on-premises infrastructure, or locally.
 - **Platform-Independent**: The application is platform-independent, capable of running on Kubernetes or similar orchestration platforms.
 
-## Developer Constraints
-
-### Open Source Software
-
-- **Apache License 2.0**: The Apache License 2.0 is selected as the approved license to respect and guarantee intellectual property rights.
-
-### Development Standards
-
-- **Coding Guidelines**: Defined coding guidelines for frontend (FE) and backend (BE) development must be followed for all portal-related developments.
-- **Consistency Enforcement**: Code analysis tools, linters, and code coverage metrics are used to enforce coding standards and maintain a consistent style. These standards are enforced through the Continuous Integration (CI) process to prevent the merging of non-compliant code.
-
-## Code Analysis and Security
-
-To ensure code quality and security, the following analyses and checks are performed during standard reviews:
-
-### Code Quality Checks
-
-- **Code Linting**: Tools to enforce coding style and detect syntax errors.
-- **Code Coverage**: Metrics to ensure a sufficient percentage of the codebase is covered by automated tests.
-
 ## NOTICE
 
 This work is licensed under the [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0).

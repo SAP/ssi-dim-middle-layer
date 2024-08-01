@@ -2,7 +2,7 @@
 
 ## Business Context
 
-The Self-Sovereign Identity (SSI) dim middle layer purpose is to facilitate seamless communication with digital wallet of SAP. Being responsible for the critical functions of creating wallets and managing technical user.
+The Self-Sovereign Identity (SSI) DIM Middle Layer purpose is to facilitate seamless communication with digital wallet of SAP. Being responsible for the critical functions of creating wallets and managing technical user.
 
 ## Technical Context
 

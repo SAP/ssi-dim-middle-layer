@@ -11,8 +11,6 @@ The release process for a new version can roughly be divided into the following 
   - [Merge release branch](#merge-release-branch)
   - [NOTICE](#notice)
 
-The process builds on the [Development Flow](../dev-process/Dev-flow_git-diagram.md) which, usually, takes place within forks and leads to merged pull requests in the repositories of the eclipse-tractusx organization.
-
 For assigning and incrementing **version** numbers [Semantic Versioning](https://semver.org) is followed.
 
 ## Preparations on the release branch
@@ -32,8 +30,6 @@ Be aware that migrations coming release branches for release candidates or from 
 The version needs to be updated in the `src` directory within the 'Directory.Build.props' file.
 
 Also, bump the chart and app version in the [Chart.yaml](../../../charts/dim/Chart.yaml) and the version of the images in the [values.yaml](../../../charts/dim/values.yaml).
-
-_Consortia relevant:  Update the version of the targetRevision tag in the [argocd-app-templates](../../../consortia/argocd-app-templates/), used for consortia-environments._
 
 Example for commit message:
 
@@ -76,8 +72,6 @@ _build(1.2.0): merge release into main_
 > The workflow creates a 'ssi-dim-middle-layer-x.x.x' tag and release. The release contains the new chart.
 >
 > This workflow also pushes the version tag that triggers the [release workflow](../../../.github/workflows/release.yml) which creates the versioned docker image/s.
-
-_Consortia relevant: The 'ssi-dim-middle-layer-x.x.x' tag is used to install (with the convenience of the argocd-app-templates) or upgrade the version via AgroCD on the consortia K8s clusters._
 
 ## NOTICE
 
