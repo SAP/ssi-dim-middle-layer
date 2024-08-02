@@ -18,29 +18,19 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using Microsoft.Extensions.Logging;
+using AutoFixture;
+using System.Text.Json;
 
 namespace Dim.Tests.Shared;
 
-public interface IMockLogger<T>
+public static class AutoFixtureExtensions
 {
-    void Log(LogLevel logLevel, Exception? exception, string logMessage);
-}
-
-public class MockLogger<T>(IMockLogger<T> logger) : ILogger<T>
-{
-    public IDisposable? BeginScope<TState>(TState state) where TState : notnull => new TestDisposable();
-
-    public bool IsEnabled(LogLevel logLevel) => true;
-
-    public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter) =>
-        logger.Log(logLevel, exception, formatter(state, exception));
-
-    public class TestDisposable : IDisposable
+    public static IFixture ConfigureFixture(this IFixture fixture)
     {
-        public void Dispose()
-        {
-            GC.SuppressFinalize(this);
-        }
+        fixture.Behaviors.OfType<ThrowingRecursionBehavior>().ToList()
+            .ForEach(b => fixture.Behaviors.Remove(b));
+        fixture.Behaviors.Add(new OmitOnRecursionBehavior());
+        fixture.Customize<JsonDocument>(x => x.FromFactory(() => JsonDocument.Parse("{}")));
+        return fixture;
     }
 }
