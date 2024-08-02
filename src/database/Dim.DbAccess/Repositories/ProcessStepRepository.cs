@@ -18,6 +18,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using Dim.DbAccess.Models;
 using Dim.Entities;
 using Dim.Entities.Entities;
 using Dim.Entities.Enums;
@@ -42,10 +43,10 @@ public class ProcessStepRepository : IProcessStepRepository
     public Process CreateProcess(ProcessTypeId processTypeId) =>
         _context.Add(new Process(Guid.NewGuid(), processTypeId, Guid.NewGuid())).Entity;
 
-    public ProcessStep CreateProcessStep(Dim.Entities.Enums.ProcessStepTypeId processStepTypeId, Dim.Entities.Enums.ProcessStepStatusId processStepStatusId, Guid processId) =>
+    public ProcessStep CreateProcessStep(ProcessStepTypeId processStepTypeId, ProcessStepStatusId processStepStatusId, Guid processId) =>
         _context.Add(new ProcessStep(Guid.NewGuid(), processStepTypeId, processStepStatusId, processId, DateTimeOffset.UtcNow)).Entity;
 
-    public IEnumerable<ProcessStep> CreateProcessStepRange(IEnumerable<(Dim.Entities.Enums.ProcessStepTypeId ProcessStepTypeId, Dim.Entities.Enums.ProcessStepStatusId ProcessStepStatusId, Guid ProcessId)> processStepTypeStatus)
+    public IEnumerable<ProcessStep> CreateProcessStepRange(IEnumerable<(ProcessStepTypeId ProcessStepTypeId, ProcessStepStatusId ProcessStepStatusId, Guid ProcessId)> processStepTypeStatus)
     {
         var processSteps = processStepTypeStatus.Select(x => new ProcessStep(Guid.NewGuid(), x.ProcessStepTypeId, x.ProcessStepStatusId, x.ProcessId, DateTimeOffset.UtcNow)).ToList();
         _context.AddRange(processSteps);
@@ -98,4 +99,43 @@ public class ProcessStepRepository : IProcessStepRepository
                     step.Id,
                     step.ProcessStepTypeId))
             .AsAsyncEnumerable();
+
+    public Task<ProcessData?> GetWalletProcessForTenant(string bpn, string companyName) =>
+        _context.Processes
+            .Where(x =>
+                x.ProcessTypeId == ProcessTypeId.SETUP_DIM &&
+                x.Tenant!.Bpn == bpn &&
+                x.Tenant.CompanyName == companyName)
+            .Select(x => new ProcessData(
+                x.Id,
+                x.ProcessSteps.Select(ps => new ProcessStepData(
+                    ps.ProcessStepTypeId,
+                    ps.ProcessStepStatusId))))
+            .SingleOrDefaultAsync();
+
+    public Task<ProcessData?> GetTechnicalUserProcess(string technicalUserName) =>
+        _context.Processes
+            .Where(x =>
+                x.ProcessTypeId == ProcessTypeId.TECHNICAL_USER &&
+                x.TechnicalUser!.TechnicalUserName == technicalUserName)
+            .Select(x => new ProcessData(
+                x.Id,
+                x.ProcessSteps.Select(ps => new ProcessStepData(
+                    ps.ProcessStepTypeId,
+                    ps.ProcessStepStatusId))))
+            .SingleOrDefaultAsync();
+
+    public Task<(bool ProcessExists, VerifyProcessData ProcessData)> IsValidProcess(Guid processId, ProcessTypeId processTypeId, IEnumerable<ProcessStepTypeId> processStepTypeIds) => _context.Processes
+        .AsNoTracking()
+        .Where(x => x.Id == processId && x.ProcessTypeId == processTypeId)
+        .Select(x => new ValueTuple<bool, VerifyProcessData>(
+            true,
+            new VerifyProcessData(
+                x,
+                x.ProcessSteps
+                    .Where(step =>
+                        processStepTypeIds.Contains(step.ProcessStepTypeId) &&
+                        step.ProcessStepStatusId == ProcessStepStatusId.TODO))
+        ))
+        .SingleOrDefaultAsync();
 }

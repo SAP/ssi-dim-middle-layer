@@ -133,7 +133,7 @@ public class DimProcessHandlerTests
         // Arrange
         A.CallTo(() => _tenantRepositories.GetSubAccountIdByTenantId(_tenantId))
             .Returns((Guid?)null);
-        async Task Act() => await _sut.CreateServiceManagerBindings(_tenantId, CancellationToken.None).ConfigureAwait(false);
+        async Task Act() => await _sut.CreateServiceManagerBindings(_tenantId, CancellationToken.None).ConfigureAwait(ConfigureAwaitOptions.None);
 
         // Act
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
@@ -173,7 +173,7 @@ public class DimProcessHandlerTests
         // Arrange
         A.CallTo(() => _tenantRepositories.GetSubAccountIdByTenantId(_tenantId))
             .Returns((Guid?)null);
-        async Task Act() => await _sut.AssignEntitlements(_tenantId, CancellationToken.None).ConfigureAwait(false);
+        async Task Act() => await _sut.AssignEntitlements(_tenantId, CancellationToken.None).ConfigureAwait(ConfigureAwaitOptions.None);
 
         // Act
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
@@ -213,7 +213,7 @@ public class DimProcessHandlerTests
         // Arrange
         A.CallTo(() => _tenantRepositories.GetSubAccountIdByTenantId(_tenantId))
             .Returns((Guid?)null);
-        async Task Act() => await _sut.CreateServiceInstance(_tenantId, CancellationToken.None).ConfigureAwait(false);
+        async Task Act() => await _sut.CreateServiceInstance(_tenantId, CancellationToken.None).ConfigureAwait(ConfigureAwaitOptions.None);
 
         // Act
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
@@ -266,7 +266,7 @@ public class DimProcessHandlerTests
         // Arrange
         A.CallTo(() => _tenantRepositories.GetSubAccountAndServiceInstanceIdsByTenantId(_tenantId))
             .Returns((null, null));
-        async Task Act() => await _sut.CreateServiceBindings(_tenantId, CancellationToken.None).ConfigureAwait(false);
+        async Task Act() => await _sut.CreateServiceBindings(_tenantId, CancellationToken.None).ConfigureAwait(ConfigureAwaitOptions.None);
 
         // Act
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
@@ -281,7 +281,7 @@ public class DimProcessHandlerTests
         // Arrange
         A.CallTo(() => _tenantRepositories.GetSubAccountAndServiceInstanceIdsByTenantId(_tenantId))
             .Returns((Guid.NewGuid(), null));
-        async Task Act() => await _sut.CreateServiceBindings(_tenantId, CancellationToken.None).ConfigureAwait(false);
+        async Task Act() => await _sut.CreateServiceBindings(_tenantId, CancellationToken.None).ConfigureAwait(ConfigureAwaitOptions.None);
 
         // Act
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
@@ -337,7 +337,7 @@ public class DimProcessHandlerTests
         // Arrange
         A.CallTo(() => _tenantRepositories.GetSubAccountAndServiceInstanceIdsByTenantId(_tenantId))
             .Returns((null, null));
-        async Task Act() => await _sut.SubscribeApplication(_tenantId, CancellationToken.None).ConfigureAwait(false);
+        async Task Act() => await _sut.SubscribeApplication(_tenantId, CancellationToken.None).ConfigureAwait(ConfigureAwaitOptions.None);
 
         // Act
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
@@ -352,7 +352,7 @@ public class DimProcessHandlerTests
         // Arrange
         A.CallTo(() => _tenantRepositories.GetSubAccountAndServiceInstanceIdsByTenantId(_tenantId))
             .Returns((Guid.NewGuid(), null));
-        async Task Act() => await _sut.SubscribeApplication(_tenantId, CancellationToken.None).ConfigureAwait(false);
+        async Task Act() => await _sut.SubscribeApplication(_tenantId, CancellationToken.None).ConfigureAwait(ConfigureAwaitOptions.None);
 
         // Act
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
@@ -404,7 +404,7 @@ public class DimProcessHandlerTests
         // Arrange
         A.CallTo(() => _tenantRepositories.GetSubAccountIdAndServiceBindingNameByTenantId(_tenantId))
             .Returns((null, null));
-        async Task Act() => await _sut.CreateCloudFoundryEnvironment(_tenantId, _tenantName, CancellationToken.None).ConfigureAwait(false);
+        async Task Act() => await _sut.CreateCloudFoundryEnvironment(_tenantId, _tenantName, CancellationToken.None).ConfigureAwait(ConfigureAwaitOptions.None);
 
         // Act
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
@@ -419,7 +419,7 @@ public class DimProcessHandlerTests
         // Arrange
         A.CallTo(() => _tenantRepositories.GetSubAccountIdAndServiceBindingNameByTenantId(_tenantId))
             .Returns((Guid.NewGuid(), null));
-        async Task Act() => await _sut.CreateCloudFoundryEnvironment(_tenantId, _tenantName, CancellationToken.None).ConfigureAwait(false);
+        async Task Act() => await _sut.CreateCloudFoundryEnvironment(_tenantId, _tenantName, CancellationToken.None).ConfigureAwait(ConfigureAwaitOptions.None);
 
         // Act
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
@@ -498,7 +498,7 @@ public class DimProcessHandlerTests
         // Arrange
         A.CallTo(() => _tenantRepositories.GetSpaceId(_tenantId))
             .Returns((Guid?)null);
-        async Task Act() => await _sut.AddSpaceManagerRole(_tenantId, CancellationToken.None).ConfigureAwait(false);
+        async Task Act() => await _sut.AddSpaceManagerRole(_tenantId, CancellationToken.None).ConfigureAwait(ConfigureAwaitOptions.None);
 
         // Act
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
@@ -538,7 +538,7 @@ public class DimProcessHandlerTests
         // Arrange
         A.CallTo(() => _tenantRepositories.GetSpaceId(_tenantId))
             .Returns((Guid?)null);
-        async Task Act() => await _sut.AddSpaceDeveloperRole(_tenantId, CancellationToken.None).ConfigureAwait(false);
+        async Task Act() => await _sut.AddSpaceDeveloperRole(_tenantId, CancellationToken.None).ConfigureAwait(ConfigureAwaitOptions.None);
 
         // Act
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
@@ -606,7 +606,7 @@ public class DimProcessHandlerTests
         // Arrange
         A.CallTo(() => _tenantRepositories.GetSpaceId(_tenantId))
             .Returns((Guid?)null);
-        async Task Act() => await _sut.CreateServiceInstanceBindings(_tenantName, _tenantId, CancellationToken.None).ConfigureAwait(false);
+        async Task Act() => await _sut.CreateServiceInstanceBindings(_tenantName, _tenantId, CancellationToken.None).ConfigureAwait(ConfigureAwaitOptions.None);
 
         // Act
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
@@ -649,7 +649,7 @@ public class DimProcessHandlerTests
         // Arrange
         A.CallTo(() => _tenantRepositories.GetSpaceId(_tenantId))
             .Returns((Guid?)null);
-        async Task Act() => await _sut.GetDimDetails(_tenantName, _tenantId, CancellationToken.None).ConfigureAwait(false);
+        async Task Act() => await _sut.GetDimDetails(_tenantName, _tenantId, CancellationToken.None).ConfigureAwait(ConfigureAwaitOptions.None);
 
         // Act
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
@@ -697,7 +697,7 @@ public class DimProcessHandlerTests
         // Arrange
         A.CallTo(() => _tenantRepositories.GetDimInstanceIdAndHostingUrl(_tenantId))
             .Returns(((Guid?)null, string.Empty, false));
-        async Task Act() => await _sut.CreateApplication(_tenantName, _tenantId, CancellationToken.None).ConfigureAwait(false);
+        async Task Act() => await _sut.CreateApplication(_tenantName, _tenantId, CancellationToken.None).ConfigureAwait(ConfigureAwaitOptions.None);
 
         // Act
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
@@ -751,7 +751,7 @@ public class DimProcessHandlerTests
         // Arrange
         A.CallTo(() => _tenantRepositories.GetDimInstanceIdAndHostingUrl(_tenantId))
             .Returns(((Guid?)null, string.Empty, false));
-        async Task Act() => await _sut.CreateCompanyIdentity(_tenantId, CancellationToken.None).ConfigureAwait(false);
+        async Task Act() => await _sut.CreateCompanyIdentity(_tenantId, CancellationToken.None).ConfigureAwait(ConfigureAwaitOptions.None);
 
         // Act
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
@@ -809,7 +809,7 @@ public class DimProcessHandlerTests
         // Arrange
         A.CallTo(() => _tenantRepositories.GetApplicationAndCompanyId(_tenantId))
             .Returns(((string?)null, (Guid?)null, (Guid?)null, false));
-        async Task Act() => await _sut.AssignCompanyApplication(_tenantId, CancellationToken.None).ConfigureAwait(false);
+        async Task Act() => await _sut.AssignCompanyApplication(_tenantId, CancellationToken.None).ConfigureAwait(ConfigureAwaitOptions.None);
 
         // Act
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
@@ -824,7 +824,7 @@ public class DimProcessHandlerTests
         // Arrange
         A.CallTo(() => _tenantRepositories.GetApplicationAndCompanyId(_tenantId))
             .Returns((Guid.NewGuid().ToString(), (Guid?)null, (Guid?)null, false));
-        async Task Act() => await _sut.AssignCompanyApplication(_tenantId, CancellationToken.None).ConfigureAwait(false);
+        async Task Act() => await _sut.AssignCompanyApplication(_tenantId, CancellationToken.None).ConfigureAwait(ConfigureAwaitOptions.None);
 
         // Act
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
@@ -839,7 +839,7 @@ public class DimProcessHandlerTests
         // Arrange
         A.CallTo(() => _tenantRepositories.GetApplicationAndCompanyId(_tenantId))
             .Returns((Guid.NewGuid().ToString(), Guid.NewGuid(), null, false));
-        async Task Act() => await _sut.AssignCompanyApplication(_tenantId, CancellationToken.None).ConfigureAwait(false);
+        async Task Act() => await _sut.AssignCompanyApplication(_tenantId, CancellationToken.None).ConfigureAwait(ConfigureAwaitOptions.None);
 
         // Act
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
@@ -900,7 +900,7 @@ public class DimProcessHandlerTests
         // Arrange
         A.CallTo(() => _tenantRepositories.GetApplicationAndCompanyId(_tenantId))
             .Returns((Guid.NewGuid().ToString(), (Guid?)null, (Guid?)null, false));
-        async Task Act() => await _sut.CreateStatusList(_tenantId, CancellationToken.None).ConfigureAwait(false);
+        async Task Act() => await _sut.CreateStatusList(_tenantId, CancellationToken.None).ConfigureAwait(ConfigureAwaitOptions.None);
 
         // Act
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
@@ -915,7 +915,7 @@ public class DimProcessHandlerTests
         // Arrange
         A.CallTo(() => _tenantRepositories.GetApplicationAndCompanyId(_tenantId))
             .Returns((Guid.NewGuid().ToString(), Guid.NewGuid(), null, false));
-        async Task Act() => await _sut.CreateStatusList(_tenantId, CancellationToken.None).ConfigureAwait(false);
+        async Task Act() => await _sut.CreateStatusList(_tenantId, CancellationToken.None).ConfigureAwait(ConfigureAwaitOptions.None);
 
         // Act
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
@@ -960,7 +960,7 @@ public class DimProcessHandlerTests
         // Arrange
         A.CallTo(() => _tenantRepositories.GetCallbackData(_tenantId))
             .Returns(("bpn123", (string?)null, (string?)null, (Guid?)null));
-        async Task Act() => await _sut.SendCallback(_tenantId, CancellationToken.None).ConfigureAwait(false);
+        async Task Act() => await _sut.SendCallback(_tenantId, CancellationToken.None).ConfigureAwait(ConfigureAwaitOptions.None);
 
         // Act
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
@@ -975,7 +975,7 @@ public class DimProcessHandlerTests
         // Arrange
         A.CallTo(() => _tenantRepositories.GetCallbackData(_tenantId))
             .Returns(("bpn123", "https://example.org/did", (string?)null, (Guid?)null));
-        async Task Act() => await _sut.SendCallback(_tenantId, CancellationToken.None).ConfigureAwait(false);
+        async Task Act() => await _sut.SendCallback(_tenantId, CancellationToken.None).ConfigureAwait(ConfigureAwaitOptions.None);
 
         // Act
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
@@ -990,7 +990,7 @@ public class DimProcessHandlerTests
         // Arrange
         A.CallTo(() => _tenantRepositories.GetCallbackData(_tenantId))
             .Returns(("bpn123", "https://example.org/did", Guid.NewGuid().ToString(), (Guid?)null));
-        async Task Act() => await _sut.SendCallback(_tenantId, CancellationToken.None).ConfigureAwait(false);
+        async Task Act() => await _sut.SendCallback(_tenantId, CancellationToken.None).ConfigureAwait(ConfigureAwaitOptions.None);
 
         // Act
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);

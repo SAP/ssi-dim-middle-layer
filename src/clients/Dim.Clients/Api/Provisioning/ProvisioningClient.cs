@@ -26,15 +26,8 @@ using System.Net.Http.Json;
 
 namespace Dim.Clients.Api.Provisioning;
 
-public class ProvisioningClient : IProvisioningClient
+public class ProvisioningClient(IBasicAuthTokenService basicAuthTokenService) : IProvisioningClient
 {
-    private readonly IBasicAuthTokenService _basicAuthTokenService;
-
-    public ProvisioningClient(IBasicAuthTokenService basicAuthTokenService)
-    {
-        _basicAuthTokenService = basicAuthTokenService;
-    }
-
     public async Task CreateCloudFoundryEnvironment(string authUrl, BindingItem bindingData, string tenantName, string user, CancellationToken cancellationToken)
     {
         var authSettings = new BasicAuthSettings
@@ -43,7 +36,7 @@ public class ProvisioningClient : IProvisioningClient
             ClientId = bindingData.Credentials.Uaa.ClientId,
             ClientSecret = bindingData.Credentials.Uaa.ClientSecret
         };
-        var client = await _basicAuthTokenService.GetBasicAuthorizedClient<ProvisioningClient>(authSettings, cancellationToken).ConfigureAwait(false);
+        var client = await basicAuthTokenService.GetBasicAuthorizedClient<ProvisioningClient>(authSettings, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
         var data = new CreateCfeRequest(
             "cloudfoundry",
             new Dictionary<string, string>

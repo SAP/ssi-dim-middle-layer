@@ -23,7 +23,7 @@ using Dim.DbAccess.Repositories;
 using Dim.Entities.Enums;
 using DimProcess.Library;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
-using Org.Eclipse.TractusX.Portal.Backend.Processes.Worker.Library;
+using Processes.Worker.Library;
 using System.Collections.Immutable;
 
 namespace DimProcess.Executor;
@@ -50,7 +50,7 @@ public class TechnicalUserProcessTypeExecutor(
 
     public async ValueTask<IProcessTypeExecutor.InitializationResult> InitializeProcess(Guid processId, IEnumerable<ProcessStepTypeId> processStepTypeIds)
     {
-        var (exists, technicalUserId, companyName, bpn) = await dimRepositories.GetInstance<ITenantRepository>().GetTenantDataForTechnicalUserProcessId(processId).ConfigureAwait(false);
+        var (exists, technicalUserId, companyName, bpn) = await dimRepositories.GetInstance<ITenantRepository>().GetTenantDataForTechnicalUserProcessId(processId).ConfigureAwait(ConfigureAwaitOptions.None);
         if (!exists)
         {
             throw new NotFoundException($"process {processId} does not exist or is not associated with an technical user");
@@ -78,15 +78,15 @@ public class TechnicalUserProcessTypeExecutor(
             (nextStepTypeIds, stepStatusId, modified, processMessage) = processStepTypeId switch
             {
                 ProcessStepTypeId.CREATE_TECHNICAL_USER => await technicalUserProcessHandler.CreateServiceInstanceBindings(_tenantName, _technicalUserId, cancellationToken)
-                    .ConfigureAwait(false),
+                    .ConfigureAwait(ConfigureAwaitOptions.None),
                 ProcessStepTypeId.GET_TECHNICAL_USER_DATA => await technicalUserProcessHandler.GetTechnicalUserData(_tenantName, _technicalUserId, cancellationToken)
-                    .ConfigureAwait(false),
+                    .ConfigureAwait(ConfigureAwaitOptions.None),
                 ProcessStepTypeId.SEND_TECHNICAL_USER_CREATION_CALLBACK => await technicalUserProcessHandler.SendCreateCallback(_technicalUserId, cancellationToken)
-                    .ConfigureAwait(false),
+                    .ConfigureAwait(ConfigureAwaitOptions.None),
                 ProcessStepTypeId.DELETE_TECHNICAL_USER => await technicalUserProcessHandler.DeleteServiceInstanceBindings(_tenantName, _technicalUserId, cancellationToken)
-                    .ConfigureAwait(false),
+                    .ConfigureAwait(ConfigureAwaitOptions.None),
                 ProcessStepTypeId.SEND_TECHNICAL_USER_DELETION_CALLBACK => await technicalUserProcessHandler.SendDeleteCallback(_technicalUserId, cancellationToken)
-                    .ConfigureAwait(false),
+                    .ConfigureAwait(ConfigureAwaitOptions.None),
                 _ => (null, ProcessStepStatusId.TODO, false, null)
             };
         }

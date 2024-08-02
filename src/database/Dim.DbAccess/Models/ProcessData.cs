@@ -20,17 +20,14 @@
 
 using Dim.Entities.Enums;
 
-namespace Processes.Worker.Library;
+namespace Dim.DbAccess.Models;
 
-public interface IProcessExecutor
-{
-    enum ProcessExecutionResult
-    {
-        SaveRequested = 1,
-        LockRequested = 2,
-        Unmodified = 3
-    }
-    IAsyncEnumerable<ProcessExecutionResult> ExecuteProcess(Guid processId, ProcessTypeId processTypeId, CancellationToken cancellationToken);
-    IEnumerable<ProcessTypeId> GetRegisteredProcessTypeIds();
-    IEnumerable<ProcessStepTypeId> GetExecutableStepTypeIds();
-}
+public record ProcessData(
+    Guid ProcessId,
+    IEnumerable<ProcessStepData> ProcessStepData
+);
+
+public record ProcessStepData(
+    ProcessStepTypeId ProcessStepTypeId,
+    ProcessStepStatusId ProcessStepStatusId
+);

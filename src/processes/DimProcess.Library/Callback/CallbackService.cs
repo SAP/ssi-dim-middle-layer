@@ -37,7 +37,7 @@ public class CallbackService(ITokenService tokenService, IOptions<CallbackSettin
     public async Task SendCallback(string bpn, ServiceCredentialBindingDetailResponse dimDetails, JsonDocument didDocument, string did, CancellationToken cancellationToken)
     {
         var httpClient = await tokenService.GetAuthorizedClient<CallbackService>(_settings, cancellationToken)
-            .ConfigureAwait(false);
+            .ConfigureAwait(ConfigureAwaitOptions.None);
         var data = new CallbackDataModel(
             did,
             didDocument,
@@ -54,7 +54,7 @@ public class CallbackService(ITokenService tokenService, IOptions<CallbackSettin
     public async Task SendTechnicalUserCallback(Guid externalId, string tokenAddress, string clientId, string clientSecret, CancellationToken cancellationToken)
     {
         var httpClient = await tokenService.GetAuthorizedClient<CallbackService>(_settings, cancellationToken)
-            .ConfigureAwait(false);
+            .ConfigureAwait(ConfigureAwaitOptions.None);
         var data = new AuthenticationDetail(
             tokenAddress,
             clientId,

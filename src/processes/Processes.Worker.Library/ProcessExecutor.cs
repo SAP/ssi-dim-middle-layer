@@ -27,7 +27,7 @@ using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using System.Collections.Immutable;
 using System.Runtime.CompilerServices;
 
-namespace Org.Eclipse.TractusX.Portal.Backend.Processes.Worker.Library;
+namespace Processes.Worker.Library;
 
 public class ProcessExecutor : IProcessExecutor
 {
@@ -78,6 +78,7 @@ public class ProcessExecutor : IProcessExecutor
             {
                 yield return IProcessExecutor.ProcessExecutionResult.LockRequested;
             }
+
             ProcessStepStatusId resultStepStatusId;
             IEnumerable<ProcessStepTypeId>? scheduleStepTypeIds;
             IEnumerable<ProcessStepTypeId>? skipStepTypeIds;
@@ -97,10 +98,12 @@ public class ProcessExecutor : IProcessExecutor
                 modified = false;
                 success = false;
             }
+
             if (!success)
             {
                 yield return IProcessExecutor.ProcessExecutionResult.Unmodified;
             }
+
             modified |= SetProcessStepStatus(stepTypeId, resultStepStatusId, context, processMessage);
             modified |= SkipProcessStepTypeIds(skipStepTypeIds, context);
             modified |= ScheduleProcessStepTypeIds(scheduleStepTypeIds, context);
@@ -123,6 +126,7 @@ public class ProcessExecutor : IProcessExecutor
         {
             return false;
         }
+
         foreach (var newStep in _processStepRepository.CreateProcessStepRange(newStepTypeIds.Select(stepTypeId => (stepTypeId, ProcessStepStatusId.TODO, context.ProcessId))))
         {
             context.AllSteps.Add(newStep.ProcessStepTypeId, new[] { newStep.Id });
@@ -131,6 +135,7 @@ public class ProcessExecutor : IProcessExecutor
                 context.ExecutableStepTypeIds.Add(newStep.ProcessStepTypeId);
             }
         }
+
         return true;
     }
 
@@ -140,6 +145,7 @@ public class ProcessExecutor : IProcessExecutor
         {
             return false;
         }
+
         var modified = false;
         foreach (var skipStepTypeId in skipStepTypeIds)
         {
@@ -151,6 +157,7 @@ public class ProcessExecutor : IProcessExecutor
 
             modified |= skippedStep;
         }
+
         return modified;
     }
 
@@ -164,17 +171,23 @@ public class ProcessExecutor : IProcessExecutor
         var isFirst = true;
         foreach (var stepId in stepIds)
         {
-            _processStepRepository.AttachAndModifyProcessStep(stepId, null, step =>
+            _processStepRepository.AttachAndModifyProcessStep(stepId, s =>
+            {
+                s.Message = "placeholder";
+            },
+            step =>
             {
                 step.ProcessStepStatusId = isFirst ? stepStatusId : ProcessStepStatusId.DUPLICATE;
                 step.Message = processMessage;
             });
             isFirst = false;
         }
+
         if (context.Executor.IsExecutableStepTypeId(stepTypeId))
         {
             context.ExecutableStepTypeIds.Remove(stepTypeId);
         }
+
         return true;
     }
 
@@ -185,14 +198,9 @@ public class ProcessExecutor : IProcessExecutor
         IProcessTypeExecutor Executor
     );
 
-    private sealed class ProcessStepTypeSet
+    private sealed class ProcessStepTypeSet(IEnumerable<ProcessStepTypeId> items)
     {
-        private readonly HashSet<ProcessStepTypeId> _items;
-
-        public ProcessStepTypeSet(IEnumerable<ProcessStepTypeId> items)
-        {
-            _items = new HashSet<ProcessStepTypeId>(items);
-        }
+        private readonly HashSet<ProcessStepTypeId> _items = new(items);
 
         public bool TryGetNext(out ProcessStepTypeId item)
         {
@@ -202,6 +210,7 @@ public class ProcessExecutor : IProcessExecutor
                 item = default;
                 return false;
             }
+
             item = enumerator.Current;
             _items.Remove(item);
             return true;

@@ -251,7 +251,7 @@ public class CredentialProcessTypeExecutorTests
 
         // Assert
         result.Modified.Should().BeTrue();
-        result.ScheduleStepTypeIds.Should().BeNull();
+        result.ScheduleStepTypeIds.Should().ContainSingle().Which.Should().Be(ProcessStepTypeId.RETRIGGER_CREATE_SUBACCOUNT);
         result.ProcessStepStatusId.Should().Be(ProcessStepStatusId.FAILED);
         result.ProcessMessage.Should().Be("this is a test");
         result.SkipStepTypeIds.Should().BeNull();

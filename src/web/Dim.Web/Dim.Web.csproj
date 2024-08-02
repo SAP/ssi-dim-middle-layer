@@ -21,6 +21,7 @@
     <ItemGroup>
       <ProjectReference Include="..\..\clients\Dim.Clients\Dim.Clients.csproj" />
       <ProjectReference Include="..\..\database\Dim.DbAccess\Dim.DbAccess.csproj" />
+      <ProjectReference Include="..\..\processes\Processes.Library\Processes.Library.csproj" />
     </ItemGroup>
 
 </Project>

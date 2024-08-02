@@ -28,15 +28,8 @@ using System.Text.Json;
 
 namespace Dim.Clients.Api.Services;
 
-public class ServiceClient : IServiceClient
+public class ServiceClient(IBasicAuthTokenService basicAuthTokenService) : IServiceClient
 {
-    private readonly IBasicAuthTokenService _basicAuthTokenService;
-
-    public ServiceClient(IBasicAuthTokenService basicAuthTokenService)
-    {
-        _basicAuthTokenService = basicAuthTokenService;
-    }
-
     public async Task<CreateServiceInstanceResponse> CreateServiceInstance(ServiceManagementBindingItem saBinding, CancellationToken cancellationToken)
     {
         var serviceAuth = new BasicAuthSettings
@@ -45,7 +38,7 @@ public class ServiceClient : IServiceClient
             ClientId = saBinding.ClientId,
             ClientSecret = saBinding.ClientSecret
         };
-        var client = await _basicAuthTokenService.GetBasicAuthorizedClient<ServiceClient>(serviceAuth, cancellationToken).ConfigureAwait(false);
+        var client = await basicAuthTokenService.GetBasicAuthorizedClient<ServiceClient>(serviceAuth, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
         var directory = new CreateServiceInstanceRequest(
             "cis-local-instance",
             "cis",
@@ -57,12 +50,12 @@ public class ServiceClient : IServiceClient
         );
 
         var result = await client.PostAsJsonAsync($"{saBinding.SmUrl}/v1/service_instances?async=false", directory, JsonSerializerExtensions.Options, cancellationToken)
-            .CatchingIntoServiceExceptionFor("create-service-instance", HttpAsyncResponseMessageExtension.RecoverOptions.ALLWAYS).ConfigureAwait(false);
+            .CatchingIntoServiceExceptionFor("create-service-instance", HttpAsyncResponseMessageExtension.RecoverOptions.INFRASTRUCTURE).ConfigureAwait(false);
         try
         {
             var response = await result.Content
                 .ReadFromJsonAsync<CreateServiceInstanceResponse>(JsonSerializerExtensions.Options, cancellationToken)
-                .ConfigureAwait(false);
+                .ConfigureAwait(ConfigureAwaitOptions.None);
             if (response == null)
             {
                 throw new ServiceException("Response was empty", true);
@@ -84,7 +77,7 @@ public class ServiceClient : IServiceClient
             ClientId = saBinding.ClientId,
             ClientSecret = saBinding.ClientSecret
         };
-        var client = await _basicAuthTokenService.GetBasicAuthorizedClient<ServiceClient>(serviceAuth, cancellationToken).ConfigureAwait(false);
+        var client = await basicAuthTokenService.GetBasicAuthorizedClient<ServiceClient>(serviceAuth, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
         var data = new CreateServiceBindingRequest(
             "cis-local-binding",
             serviceInstanceId
@@ -96,7 +89,7 @@ public class ServiceClient : IServiceClient
         {
             var response = await result.Content
                 .ReadFromJsonAsync<CreateServiceBindingResponse>(JsonSerializerExtensions.Options, cancellationToken)
-                .ConfigureAwait(false);
+                .ConfigureAwait(ConfigureAwaitOptions.None);
             if (response == null)
             {
                 throw new ServiceException("Response was empty", true);
@@ -118,14 +111,14 @@ public class ServiceClient : IServiceClient
             ClientId = saBinding.ClientId,
             ClientSecret = saBinding.ClientSecret
         };
-        var client = await _basicAuthTokenService.GetBasicAuthorizedClient<ServiceClient>(serviceAuth, cancellationToken).ConfigureAwait(false);
+        var client = await basicAuthTokenService.GetBasicAuthorizedClient<ServiceClient>(serviceAuth, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
         var result = await client.GetAsync($"{saBinding.SmUrl}/v1/service_bindings?fieldQuery=name eq '{serviceBindingName}'", cancellationToken)
             .CatchingIntoServiceExceptionFor("get-service-binding", HttpAsyncResponseMessageExtension.RecoverOptions.INFRASTRUCTURE).ConfigureAwait(false);
         try
         {
             var response = await result.Content
                 .ReadFromJsonAsync<GetBindingResponse>(JsonSerializerExtensions.Options, cancellationToken)
-                .ConfigureAwait(false);
+                .ConfigureAwait(ConfigureAwaitOptions.None);
             if (response == null)
             {
                 throw new ServiceException("Response was empty", true);

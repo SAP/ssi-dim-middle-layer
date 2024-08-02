@@ -25,18 +25,11 @@ using System.Net.Http.Json;
 
 namespace Dim.Clients.Api.Entitlements;
 
-public class EntitlementClient : IEntitlementClient
+public class EntitlementClient(IBasicAuthTokenService basicAuthTokenService) : IEntitlementClient
 {
-    private readonly IBasicAuthTokenService _basicAuthTokenService;
-
-    public EntitlementClient(IBasicAuthTokenService basicAuthTokenService)
-    {
-        _basicAuthTokenService = basicAuthTokenService;
-    }
-
     public async Task AssignEntitlements(BasicAuthSettings basicAuthSettings, Guid subAccountId, CancellationToken cancellationToken)
     {
-        var client = await _basicAuthTokenService.GetBasicAuthorizedClient<EntitlementClient>(basicAuthSettings, cancellationToken).ConfigureAwait(false);
+        var client = await basicAuthTokenService.GetBasicAuthorizedClient<EntitlementClient>(basicAuthSettings, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
         var data = new CreateSubAccountRequest(
                 new List<SubaccountServicePlan>
                 {
