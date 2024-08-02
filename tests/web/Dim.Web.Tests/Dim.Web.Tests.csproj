@@ -1,4 +1,4 @@
-<!--
+﻿<!--
 - Copyright (c) 2024 BMW Group AG
 - Copyright 2024 SAP SE or an SAP affiliate company and ssi-dim-middle-layer contributors.
 -
@@ -24,8 +24,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
-    <RootNamespace>DimProcess.Executor.Tests</RootNamespace>
-    <AssemblyName>DimProcess.Executor.Tests</AssemblyName>
+    <RootNamespace>Dim.Web.Tests</RootNamespace>
+    <AssemblyName>Dim.Web.Tests</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="AutoFixture.AutoFakeItEasy" Version="4.18.1" />
@@ -43,9 +43,9 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\src\clients\Dim.Clients\Dim.Clients.csproj" />
     <ProjectReference Include="..\..\..\src\database\Dim.DbAccess\Dim.DbAccess.csproj" />
-    <ProjectReference Include="..\..\..\src\processes\DimProcess.Executor\DimProcess.Executor.csproj" />
-    <ProjectReference Include="..\..\..\src\processes\DimProcess.Library\DimProcess.Library.csproj" />
+    <ProjectReference Include="..\..\..\src\web\Dim.Web\Dim.Web.csproj" />
     <ProjectReference Include="..\..\shared\Tests.Shared\Tests.Shared.csproj" />
   </ItemGroup>
 </Project>

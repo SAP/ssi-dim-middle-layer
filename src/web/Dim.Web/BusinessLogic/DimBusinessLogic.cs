@@ -42,6 +42,11 @@ public class DimBusinessLogic(
 
     public async Task StartSetupDim(string companyName, string bpn, string didDocumentLocation, bool isIssuer)
     {
+        if (await dimRepositories.GetInstance<ITenantRepository>().IsTenantExisting(companyName, bpn).ConfigureAwait(ConfigureAwaitOptions.None))
+        {
+            throw new ConflictException($"Tenant {companyName} with Bpn {bpn} already exists");
+        }
+
         var processStepRepository = dimRepositories.GetInstance<IProcessStepRepository>();
         var processId = processStepRepository.CreateProcess(ProcessTypeId.SETUP_DIM).Id;
         processStepRepository.CreateProcessStep(ProcessStepTypeId.CREATE_SUBACCOUNT, ProcessStepStatusId.TODO, processId);
