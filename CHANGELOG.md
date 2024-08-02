@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.1](https://github.com/SAP/ssi-dim-middle-layer/compare/v1.2.0...v1.2.1) (2024-08-02)
+
+
+### Bug Fixes
+
+* adjust variable naming ([#70](https://github.com/SAP/ssi-dim-middle-layer/issues/70)) ([2853060](https://github.com/SAP/ssi-dim-middle-layer/commit/2853060e08ce93cabd5cfde34dda024e47c8c8a1)), closes [#59](https://github.com/SAP/ssi-dim-middle-layer/issues/59)
+* **dependencies:** fix high severity finding ([#65](https://github.com/SAP/ssi-dim-middle-layer/issues/65)) ([9616c52](https://github.com/SAP/ssi-dim-middle-layer/commit/9616c52fdfcb4a7d65135e3e36df029c37e8073e)), closes [#71](https://github.com/SAP/ssi-dim-middle-layer/issues/71)
+
 ## [1.2.0](https://github.com/SAP/ssi-dim-middle-layer/compare/v1.1.0...v1.2.0) (2024-07-17)
 
 
