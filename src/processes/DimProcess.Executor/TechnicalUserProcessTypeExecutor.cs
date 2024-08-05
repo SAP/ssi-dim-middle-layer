@@ -21,6 +21,7 @@
 using Dim.DbAccess;
 using Dim.DbAccess.Repositories;
 using Dim.Entities.Enums;
+using Dim.Entities.Extensions;
 using DimProcess.Library;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Processes.Worker.Library;
@@ -92,19 +93,19 @@ public class TechnicalUserProcessTypeExecutor(
         }
         catch (Exception ex) when (ex is not SystemException)
         {
-            (stepStatusId, processMessage, nextStepTypeIds) = ProcessError(ex);
+            (stepStatusId, processMessage, nextStepTypeIds) = ProcessError(ex, processStepTypeId);
             modified = true;
         }
 
         return new IProcessTypeExecutor.StepExecutionResult(modified, stepStatusId, nextStepTypeIds, null, processMessage);
     }
 
-    private static (ProcessStepStatusId StatusId, string? ProcessMessage, IEnumerable<ProcessStepTypeId>? nextSteps) ProcessError(Exception ex)
+    private static (ProcessStepStatusId StatusId, string? ProcessMessage, IEnumerable<ProcessStepTypeId>? nextSteps) ProcessError(Exception ex, ProcessStepTypeId processStepTypeId)
     {
         return ex switch
         {
             ServiceException { IsRecoverable: true } => (ProcessStepStatusId.TODO, ex.Message, null),
-            _ => (ProcessStepStatusId.FAILED, ex.Message, null)
+            _ => (ProcessStepStatusId.FAILED, ex.Message, Enumerable.Repeat(processStepTypeId.GetTechnicalRetriggerStep(), 1))
         };
     }
 }

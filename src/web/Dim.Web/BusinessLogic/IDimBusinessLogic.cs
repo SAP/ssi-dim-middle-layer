@@ -34,5 +34,5 @@ public interface IDimBusinessLogic : ITransient
     Task DeleteTechnicalUser(string bpn, TechnicalUserData technicalUserData);
     Task<ProcessData> GetSetupProcess(string bpn, string companyName);
     Task<ProcessData> GetTechnicalUserProcess(string technicalUserName);
-    Task RetriggerProcessStep(Guid processId, ProcessStepTypeId processStepTypeId);
+    Task RetriggerWalletProcessStep(Guid processId, ProcessStepTypeId processStepTypeId);
 }

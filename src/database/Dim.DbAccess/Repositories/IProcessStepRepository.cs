@@ -39,5 +39,5 @@ public interface IProcessStepRepository
     Task<ProcessData?> GetWalletProcessForTenant(string bpn, string companyName);
     Task<ProcessData?> GetTechnicalUserProcess(string technicalUserName);
     Task<(bool ProcessExists, VerifyProcessData ProcessData)> IsValidProcess(Guid processId, ProcessTypeId processTypeId, IEnumerable<ProcessStepTypeId> processSetpTypeIds);
-    
+
 }

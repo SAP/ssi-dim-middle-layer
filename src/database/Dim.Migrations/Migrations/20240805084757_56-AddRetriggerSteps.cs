@@ -65,7 +65,12 @@ namespace Dim.Migrations.Migrations
                     { 33, "RETRIGGER_CREATE_COMPANY_IDENTITY" },
                     { 34, "RETRIGGER_ASSIGN_COMPANY_APPLICATION" },
                     { 35, "RETRIGGER_CREATE_STATUS_LIST" },
-                    { 36, "RETRIGGER_SEND_CALLBACK" }
+                    { 36, "RETRIGGER_SEND_CALLBACK" },
+                    { 103, "RETRIGGER_CREATE_TECHNICAL_USER" },
+                    { 104, "RETRIGGER_GET_TECHNICAL_USER_DATA" },
+                    { 105, "RETRIGGER_SEND_TECHNICAL_USER_CREATION_CALLBACK" },
+                    { 202, "RETRIGGER_DELETE_TECHNICAL_USER" },
+                    { 203, "RETRIGGER_SEND_TECHNICAL_USER_DELETION_CALLBACK" }
                 });
 
             migrationBuilder.CreateIndex(
@@ -203,6 +208,36 @@ namespace Dim.Migrations.Migrations
                 table: "process_step_types",
                 keyColumn: "id",
                 keyValue: 36);
+
+            migrationBuilder.DeleteData(
+                schema: "dim",
+                table: "process_step_types",
+                keyColumn: "id",
+                keyValue: 103);
+
+            migrationBuilder.DeleteData(
+                schema: "dim",
+                table: "process_step_types",
+                keyColumn: "id",
+                keyValue: 104);
+
+            migrationBuilder.DeleteData(
+                schema: "dim",
+                table: "process_step_types",
+                keyColumn: "id",
+                keyValue: 105);
+
+            migrationBuilder.DeleteData(
+                schema: "dim",
+                table: "process_step_types",
+                keyColumn: "id",
+                keyValue: 202);
+
+            migrationBuilder.DeleteData(
+                schema: "dim",
+                table: "process_step_types",
+                keyColumn: "id",
+                keyValue: 203);
 
             migrationBuilder.CreateIndex(
                 name: "ix_tenants_process_id",

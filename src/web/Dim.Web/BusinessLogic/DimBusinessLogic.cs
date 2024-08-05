@@ -179,11 +179,28 @@ public class DimBusinessLogic(
         return processData;
     }
 
-    public async Task RetriggerProcessStep(Guid processId, ProcessStepTypeId processStepTypeId)
+    public async Task RetriggerWalletProcessStep(Guid processId, ProcessStepTypeId processStepTypeId)
     {
         var stepToTrigger = processStepTypeId.GetWalletStepForRetrigger();
 
         var (validProcessId, processData) = await dimRepositories.GetInstance<IProcessStepRepository>().IsValidProcess(processId, ProcessTypeId.SETUP_DIM, Enumerable.Repeat(processStepTypeId, 1)).ConfigureAwait(false);
+        if (!validProcessId)
+        {
+            throw new NotFoundException($"process {processId} does not exist");
+        }
+
+        var context = processData.CreateManualProcessData(stepToTrigger, dimRepositories, () => $"processId {processId}");
+
+        context.ScheduleProcessSteps(Enumerable.Repeat(stepToTrigger, 1));
+        context.FinalizeProcessStep();
+        await dimRepositories.SaveAsync().ConfigureAwait(ConfigureAwaitOptions.None);
+    }
+
+    public async Task RetriggerTechnicalUserProcessStep(Guid processId, ProcessStepTypeId processStepTypeId)
+    {
+        var stepToTrigger = processStepTypeId.GetTechnicalStepForRetrigger();
+
+        var (validProcessId, processData) = await dimRepositories.GetInstance<IProcessStepRepository>().IsValidProcess(processId, ProcessTypeId.TECHNICAL_USER, Enumerable.Repeat(processStepTypeId, 1)).ConfigureAwait(false);
         if (!validProcessId)
         {
             throw new NotFoundException($"process {processId} does not exist");

@@ -32,7 +32,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Dim.Migrations.Migrations
 {
     [DbContext(typeof(DimDbContext))]
-    [Migration("20240801133205_56-AddRetriggerSteps")]
+    [Migration("20240805084757_56-AddRetriggerSteps")]
     partial class _56AddRetriggerSteps
     {
         /// <inheritdoc />
@@ -382,6 +382,21 @@ namespace Dim.Migrations.Migrations
                         },
                         new
                         {
+                            Id = 103,
+                            Label = "RETRIGGER_CREATE_TECHNICAL_USER"
+                        },
+                        new
+                        {
+                            Id = 104,
+                            Label = "RETRIGGER_GET_TECHNICAL_USER_DATA"
+                        },
+                        new
+                        {
+                            Id = 105,
+                            Label = "RETRIGGER_SEND_TECHNICAL_USER_CREATION_CALLBACK"
+                        },
+                        new
+                        {
                             Id = 200,
                             Label = "DELETE_TECHNICAL_USER"
                         },
@@ -389,6 +404,16 @@ namespace Dim.Migrations.Migrations
                         {
                             Id = 201,
                             Label = "SEND_TECHNICAL_USER_DELETION_CALLBACK"
+                        },
+                        new
+                        {
+                            Id = 202,
+                            Label = "RETRIGGER_DELETE_TECHNICAL_USER"
+                        },
+                        new
+                        {
+                            Id = 203,
+                            Label = "RETRIGGER_SEND_TECHNICAL_USER_DELETION_CALLBACK"
                         });
                 });
 

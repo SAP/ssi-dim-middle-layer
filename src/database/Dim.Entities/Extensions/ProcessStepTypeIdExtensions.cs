@@ -47,7 +47,7 @@ public static class ProcessStepTypeIdExtensions
             ProcessStepTypeId.CREATE_STATUS_LIST => ProcessStepTypeId.RETRIGGER_CREATE_STATUS_LIST,
             _ => throw new ArgumentOutOfRangeException(nameof(processStepTypeId), processStepTypeId, null)
         };
-    
+
     public static ProcessStepTypeId GetWalletStepForRetrigger(this ProcessStepTypeId processStepTypeId) =>
         processStepTypeId switch
         {
@@ -69,6 +69,28 @@ public static class ProcessStepTypeIdExtensions
             ProcessStepTypeId.RETRIGGER_CREATE_COMPANY_IDENTITY => ProcessStepTypeId.CREATE_COMPANY_IDENTITY,
             ProcessStepTypeId.RETRIGGER_ASSIGN_COMPANY_APPLICATION => ProcessStepTypeId.ASSIGN_COMPANY_APPLICATION,
             ProcessStepTypeId.RETRIGGER_CREATE_STATUS_LIST => ProcessStepTypeId.CREATE_STATUS_LIST,
+            _ => throw new ArgumentOutOfRangeException(nameof(processStepTypeId), processStepTypeId, null)
+        };
+
+    public static ProcessStepTypeId GetTechnicalRetriggerStep(this ProcessStepTypeId processStepTypeId) =>
+        processStepTypeId switch
+        {
+            ProcessStepTypeId.CREATE_TECHNICAL_USER => ProcessStepTypeId.RETRIGGER_CREATE_TECHNICAL_USER,
+            ProcessStepTypeId.GET_TECHNICAL_USER_DATA => ProcessStepTypeId.RETRIGGER_GET_TECHNICAL_USER_DATA,
+            ProcessStepTypeId.SEND_TECHNICAL_USER_CREATION_CALLBACK => ProcessStepTypeId.RETRIGGER_SEND_TECHNICAL_USER_CREATION_CALLBACK,
+            ProcessStepTypeId.DELETE_TECHNICAL_USER => ProcessStepTypeId.RETRIGGER_DELETE_TECHNICAL_USER,
+            ProcessStepTypeId.SEND_TECHNICAL_USER_DELETION_CALLBACK => ProcessStepTypeId.RETRIGGER_SEND_TECHNICAL_USER_DELETION_CALLBACK,
+            _ => throw new ArgumentOutOfRangeException(nameof(processStepTypeId), processStepTypeId, null)
+        };
+
+    public static ProcessStepTypeId GetTechnicalStepForRetrigger(this ProcessStepTypeId processStepTypeId) =>
+        processStepTypeId switch
+        {
+            ProcessStepTypeId.RETRIGGER_CREATE_TECHNICAL_USER => ProcessStepTypeId.CREATE_TECHNICAL_USER,
+            ProcessStepTypeId.RETRIGGER_GET_TECHNICAL_USER_DATA => ProcessStepTypeId.GET_TECHNICAL_USER_DATA,
+            ProcessStepTypeId.RETRIGGER_SEND_TECHNICAL_USER_CREATION_CALLBACK => ProcessStepTypeId.SEND_TECHNICAL_USER_CREATION_CALLBACK,
+            ProcessStepTypeId.RETRIGGER_DELETE_TECHNICAL_USER => ProcessStepTypeId.DELETE_TECHNICAL_USER,
+            ProcessStepTypeId.RETRIGGER_SEND_TECHNICAL_USER_DELETION_CALLBACK => ProcessStepTypeId.SEND_TECHNICAL_USER_DELETION_CALLBACK,
             _ => throw new ArgumentOutOfRangeException(nameof(processStepTypeId), processStepTypeId, null)
         };
 }

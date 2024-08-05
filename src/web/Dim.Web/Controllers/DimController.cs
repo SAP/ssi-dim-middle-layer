@@ -105,14 +105,27 @@ public static class DimController
             .RequireAuthorization(r => r.RequireRole("get_process"))
             .Produces(StatusCodes.Status200OK, contentType: Constants.JsonContentType);
 
-        dim.MapGet("process/{processId}/retrigger", (
+        dim.MapGet("process/wallet/{processId}/retrigger", (
                     [FromRoute] Guid processId,
                     [FromQuery] ProcessStepTypeId processStepTypeId,
                     [FromServices] IDimBusinessLogic dimBusinessLogic)
-                => dimBusinessLogic.RetriggerProcessStep(processId, processStepTypeId)
+                => dimBusinessLogic.RetriggerWalletProcessStep(processId, processStepTypeId)
             )
-            .WithSwaggerDescription("Retriggers the given process step",
-                "Example: Post: api/dim/process/{processId}/retrigger?processStepTypeId={processStepTypeId}",
+            .WithSwaggerDescription("Retriggers the given process step of the wallet creation process",
+                "Example: Post: api/dim/process/wallet/{processId}/retrigger?processStepTypeId={processStepTypeId}",
+                "Id of the process",
+                "The process step that should be retriggered")
+            .RequireAuthorization(r => r.RequireRole("retrigger_process"))
+            .Produces(StatusCodes.Status200OK, contentType: Constants.JsonContentType);
+
+        dim.MapGet("process/technicalUser/{processId}/retrigger", (
+                    [FromRoute] Guid processId,
+                    [FromQuery] ProcessStepTypeId processStepTypeId,
+                    [FromServices] IDimBusinessLogic dimBusinessLogic)
+                => dimBusinessLogic.RetriggerWalletProcessStep(processId, processStepTypeId)
+            )
+            .WithSwaggerDescription("Retriggers the given process step of a technical user process",
+                "Example: Post: api/dim/process/technicalUser/{processId}/retrigger?processStepTypeId={processStepTypeId}",
                 "Id of the process",
                 "The process step that should be retriggered")
             .RequireAuthorization(r => r.RequireRole("retrigger_process"))
