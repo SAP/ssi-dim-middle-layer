@@ -28,20 +28,15 @@ using System.Text.RegularExpressions;
 
 namespace Dim.Clients.Api.SubAccounts;
 
-public class SubAccountClient : ISubAccountClient
+public class SubAccountClient(IBasicAuthTokenService basicAuthTokenService)
+    : ISubAccountClient
 {
     private static readonly Regex TenantName = new(@"(?<=[^\w-])|(?<=[^-])[\W_]+|(?<=[^-])$", RegexOptions.Compiled, new TimeSpan(0, 0, 0, 1));
-    private readonly IBasicAuthTokenService _basicAuthTokenService;
-
-    public SubAccountClient(IBasicAuthTokenService basicAuthTokenService)
-    {
-        _basicAuthTokenService = basicAuthTokenService;
-    }
 
     public async Task<Guid> CreateSubaccount(BasicAuthSettings basicAuthSettings, string adminMail, string tenantName, Guid directoryId, CancellationToken cancellationToken)
     {
         var subdomain = TenantName.Replace(tenantName, "-").ToLower().TrimStart('-').TrimEnd('-');
-        var client = await _basicAuthTokenService.GetBasicAuthorizedClient<SubAccountClient>(basicAuthSettings, cancellationToken).ConfigureAwait(false);
+        var client = await basicAuthTokenService.GetBasicAuthorizedClient<SubAccountClient>(basicAuthSettings, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
         var directory = new CreateSubAccountRequest(
             false,
             $"CX customer sub-account {tenantName}",
@@ -60,16 +55,12 @@ public class SubAccountClient : ISubAccountClient
         );
 
         var result = await client.PostAsJsonAsync("/accounts/v1/subaccounts", directory, JsonSerializerExtensions.Options, cancellationToken)
-            .CatchingIntoServiceExceptionFor("create-subaccount", HttpAsyncResponseMessageExtension.RecoverOptions.INFRASTRUCTURE, async message =>
-            {
-                var errorMessage = await message.Content.ReadAsStringAsync().ConfigureAwait(false);
-                return new(false, errorMessage);
-            }).ConfigureAwait(false);
+            .CatchingIntoServiceExceptionFor("create-subaccount", HttpAsyncResponseMessageExtension.RecoverOptions.INFRASTRUCTURE).ConfigureAwait(false);
         try
         {
             var response = await result.Content
                 .ReadFromJsonAsync<CreateSubaccountResponse>(JsonSerializerExtensions.Options, cancellationToken)
-                .ConfigureAwait(false);
+                .ConfigureAwait(ConfigureAwaitOptions.None);
 
             if (response == null)
             {
@@ -86,27 +77,27 @@ public class SubAccountClient : ISubAccountClient
 
     public async Task CreateServiceManagerBindings(BasicAuthSettings basicAuthSettings, Guid subAccountId, CancellationToken cancellationToken)
     {
-        var client = await _basicAuthTokenService.GetBasicAuthorizedClient<SubAccountClient>(basicAuthSettings, cancellationToken).ConfigureAwait(false);
+        var client = await basicAuthTokenService.GetBasicAuthorizedClient<SubAccountClient>(basicAuthSettings, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
         var data = new
         {
             name = "accessServiceManager"
         };
 
         await client.PostAsJsonAsync($"/accounts/v2/subaccounts/{subAccountId}/serviceManagerBindings", data, JsonSerializerExtensions.Options, cancellationToken)
-            .CatchingIntoServiceExceptionFor("create-subaccount", HttpAsyncResponseMessageExtension.RecoverOptions.ALLWAYS).ConfigureAwait(false);
+            .CatchingIntoServiceExceptionFor("create-subaccount", HttpAsyncResponseMessageExtension.RecoverOptions.INFRASTRUCTURE).ConfigureAwait(false);
     }
 
     public async Task<ServiceManagementBindingItem> GetServiceManagerBindings(BasicAuthSettings basicAuthSettings, Guid subAccountId, CancellationToken cancellationToken)
     {
-        var client = await _basicAuthTokenService.GetBasicAuthorizedClient<SubAccountClient>(basicAuthSettings, cancellationToken).ConfigureAwait(false);
+        var client = await basicAuthTokenService.GetBasicAuthorizedClient<SubAccountClient>(basicAuthSettings, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
 
         var result = await client.GetAsync($"/accounts/v2/subaccounts/{subAccountId}/serviceManagerBindings", cancellationToken)
-            .CatchingIntoServiceExceptionFor("create-subaccount", HttpAsyncResponseMessageExtension.RecoverOptions.ALLWAYS).ConfigureAwait(false);
+            .CatchingIntoServiceExceptionFor("create-subaccount", HttpAsyncResponseMessageExtension.RecoverOptions.INFRASTRUCTURE).ConfigureAwait(false);
         try
         {
             var response = await result.Content
                 .ReadFromJsonAsync<ServiceManagementBindingResponse>(JsonSerializerExtensions.Options, cancellationToken)
-                .ConfigureAwait(false);
+                .ConfigureAwait(ConfigureAwaitOptions.None);
 
             if (response == null || response.Items.Count() != 1)
             {

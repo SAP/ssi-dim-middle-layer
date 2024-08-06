@@ -29,20 +29,14 @@ using System.Text.Json;
 
 namespace Dim.Clients.Api.Directories;
 
-public class DirectoryClient : IDirectoryClient
+public class DirectoryClient(IBasicAuthTokenService basicAuthTokenService, IOptions<DirectorySettings> settings)
+    : IDirectoryClient
 {
-    private readonly DirectorySettings _settings;
-    private readonly IBasicAuthTokenService _basicAuthTokenService;
-
-    public DirectoryClient(IBasicAuthTokenService basicAuthTokenService, IOptions<DirectorySettings> settings)
-    {
-        _basicAuthTokenService = basicAuthTokenService;
-        _settings = settings.Value;
-    }
+    private readonly DirectorySettings _settings = settings.Value;
 
     public async Task<Guid> CreateDirectory(string description, string bpnl, Guid parentId, CancellationToken cancellationToken)
     {
-        var client = await _basicAuthTokenService.GetBasicAuthorizedClient<DirectoryClient>(_settings, cancellationToken).ConfigureAwait(false);
+        var client = await basicAuthTokenService.GetBasicAuthorizedClient<DirectoryClient>(_settings, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
         var directory = new DirectoryRequest(
             description,
             Enumerable.Repeat("phil.schneider@digitalnativesolutions.de", 1),
@@ -59,7 +53,7 @@ public class DirectoryClient : IDirectoryClient
         {
             var response = await result.Content
                 .ReadFromJsonAsync<DirectoryResponse>(JsonSerializerExtensions.Options, cancellationToken)
-                .ConfigureAwait(false);
+                .ConfigureAwait(ConfigureAwaitOptions.None);
 
             if (response == null)
             {

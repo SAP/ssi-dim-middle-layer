@@ -24,7 +24,6 @@ using Dim.Entities.Entities;
 using Dim.Entities.Enums;
 using Microsoft.Extensions.Logging;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
-using Org.Eclipse.TractusX.Portal.Backend.Processes.Worker.Library;
 using System.Collections.Immutable;
 using ProcessTypeId = Dim.Entities.Enums.ProcessTypeId;
 

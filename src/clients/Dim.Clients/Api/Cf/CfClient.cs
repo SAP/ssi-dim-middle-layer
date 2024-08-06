@@ -30,33 +30,27 @@ using System.Web;
 
 namespace Dim.Clients.Api.Cf;
 
-public class CfClient : ICfClient
+public class CfClient(IBasicAuthTokenService basicAuthTokenService, IOptions<CfSettings> settings)
+    : ICfClient
 {
-    private readonly CfSettings _settings;
-    private readonly IBasicAuthTokenService _basicAuthTokenService;
-
-    public CfClient(IBasicAuthTokenService basicAuthTokenService, IOptions<CfSettings> settings)
-    {
-        _basicAuthTokenService = basicAuthTokenService;
-        _settings = settings.Value;
-    }
+    private readonly CfSettings _settings = settings.Value;
 
     public async Task<Guid> CreateCloudFoundrySpace(string tenantName, CancellationToken cancellationToken)
     {
-        var client = await _basicAuthTokenService.GetBasicAuthorizedLegacyClient<CfClient>(_settings, cancellationToken).ConfigureAwait(false);
-        var cfEnvironmentId = await GetEnvironmentId(tenantName, cancellationToken, client).ConfigureAwait(false);
+        var client = await basicAuthTokenService.GetBasicAuthorizedLegacyClient<CfClient>(_settings, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
+        var cfEnvironmentId = await GetEnvironmentId(tenantName, cancellationToken, client).ConfigureAwait(ConfigureAwaitOptions.None);
         var data = new CreateSpaceRequest(
             $"{tenantName}-space",
             new SpaceRelationship(new SpaceOrganization(new SpaceRelationshipData(cfEnvironmentId)))
         );
 
         var result = await client.PostAsJsonAsync("/v3/spaces", data, JsonSerializerExtensions.Options, cancellationToken)
-            .CatchingIntoServiceExceptionFor("create-cfe", HttpAsyncResponseMessageExtension.RecoverOptions.ALLWAYS).ConfigureAwait(false);
+            .CatchingIntoServiceExceptionFor("create-cfe", HttpAsyncResponseMessageExtension.RecoverOptions.INFRASTRUCTURE).ConfigureAwait(false);
         try
         {
             var response = await result.Content
                 .ReadFromJsonAsync<CreateSpaceResponse>(JsonSerializerExtensions.Options, cancellationToken)
-                .ConfigureAwait(false);
+                .ConfigureAwait(ConfigureAwaitOptions.None);
 
             if (response == null)
             {
@@ -77,7 +71,7 @@ public class CfClient : ICfClient
             .CatchingIntoServiceExceptionFor("get-organizations", HttpAsyncResponseMessageExtension.RecoverOptions.INFRASTRUCTURE);
         var environments = await environmentsResponse.Content
             .ReadFromJsonAsync<GetEnvironmentsResponse>(JsonSerializerExtensions.Options, cancellationToken)
-            .ConfigureAwait(false);
+            .ConfigureAwait(ConfigureAwaitOptions.None);
 
         var tenantEnvironment = environments?.Resources.Where(x => x.Name == tenantName);
         if (tenantEnvironment == null || tenantEnvironment.Count() > 1)
@@ -90,7 +84,7 @@ public class CfClient : ICfClient
 
     public async Task AddSpaceRoleToUser(string type, string user, Guid spaceId, CancellationToken cancellationToken)
     {
-        var client = await _basicAuthTokenService.GetBasicAuthorizedLegacyClient<CfClient>(_settings, cancellationToken).ConfigureAwait(false);
+        var client = await basicAuthTokenService.GetBasicAuthorizedLegacyClient<CfClient>(_settings, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
         var data = new AddSpaceRoleToUserRequest(
             type,
             new SpaceRoleRelationship(
@@ -105,14 +99,14 @@ public class CfClient : ICfClient
 
     public async Task<Guid> GetServicePlan(string servicePlanName, string servicePlanType, CancellationToken cancellationToken)
     {
-        var client = await _basicAuthTokenService.GetBasicAuthorizedLegacyClient<CfClient>(_settings, cancellationToken).ConfigureAwait(false);
+        var client = await basicAuthTokenService.GetBasicAuthorizedLegacyClient<CfClient>(_settings, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
         var result = await client.GetAsync("/v3/service_plans", cancellationToken)
-            .CatchingIntoServiceExceptionFor("get-service-plan", HttpAsyncResponseMessageExtension.RecoverOptions.ALLWAYS).ConfigureAwait(false);
+            .CatchingIntoServiceExceptionFor("get-service-plan", HttpAsyncResponseMessageExtension.RecoverOptions.INFRASTRUCTURE).ConfigureAwait(false);
         try
         {
             var response = await result.Content
                 .ReadFromJsonAsync<ServicePlanResponse>(JsonSerializerExtensions.Options, cancellationToken)
-                .ConfigureAwait(false);
+                .ConfigureAwait(ConfigureAwaitOptions.None);
 
             if (response == null)
             {
@@ -137,14 +131,14 @@ public class CfClient : ICfClient
     public async Task<Guid> GetSpace(string tenantName, CancellationToken cancellationToken)
     {
         var spaceName = $"{tenantName}-space";
-        var client = await _basicAuthTokenService.GetBasicAuthorizedLegacyClient<CfClient>(_settings, cancellationToken).ConfigureAwait(false);
+        var client = await basicAuthTokenService.GetBasicAuthorizedLegacyClient<CfClient>(_settings, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
         var result = await client.GetAsync($"/v3/spaces?names={HttpUtility.UrlEncode(spaceName)}", cancellationToken)
-            .CatchingIntoServiceExceptionFor("get-space", HttpAsyncResponseMessageExtension.RecoverOptions.ALLWAYS).ConfigureAwait(false);
+            .CatchingIntoServiceExceptionFor("get-space", HttpAsyncResponseMessageExtension.RecoverOptions.INFRASTRUCTURE).ConfigureAwait(false);
         try
         {
             var response = await result.Content
                 .ReadFromJsonAsync<SpaceResponse>(JsonSerializerExtensions.Options, cancellationToken)
-                .ConfigureAwait(false);
+                .ConfigureAwait(ConfigureAwaitOptions.None);
 
             if (response == null)
             {
@@ -167,7 +161,7 @@ public class CfClient : ICfClient
 
     public async Task CreateDimServiceInstance(string tenantName, Guid spaceId, Guid servicePlanId, CancellationToken cancellationToken)
     {
-        var client = await _basicAuthTokenService.GetBasicAuthorizedLegacyClient<CfClient>(_settings, cancellationToken).ConfigureAwait(false);
+        var client = await basicAuthTokenService.GetBasicAuthorizedLegacyClient<CfClient>(_settings, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
         var data = new CreateDimServiceInstance(
             "managed",
             $"{tenantName}-dim-instance",
@@ -177,20 +171,20 @@ public class CfClient : ICfClient
         );
 
         await client.PostAsJsonAsync("/v3/service_instances", data, JsonSerializerExtensions.Options, cancellationToken)
-            .CatchingIntoServiceExceptionFor("create-dim-si", HttpAsyncResponseMessageExtension.RecoverOptions.ALLWAYS).ConfigureAwait(false);
+            .CatchingIntoServiceExceptionFor("create-dim-si", HttpAsyncResponseMessageExtension.RecoverOptions.INFRASTRUCTURE).ConfigureAwait(false);
     }
 
     private async Task<Guid> GetServiceInstances(string tenantName, Guid? spaceId, CancellationToken cancellationToken)
     {
         var name = $"{tenantName}-dim-instance";
-        var client = await _basicAuthTokenService.GetBasicAuthorizedLegacyClient<CfClient>(_settings, cancellationToken).ConfigureAwait(false);
+        var client = await basicAuthTokenService.GetBasicAuthorizedLegacyClient<CfClient>(_settings, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
         var result = await client.GetAsync($"/v3/service_instances?names={HttpUtility.UrlEncode(name)}", cancellationToken)
             .CatchingIntoServiceExceptionFor("get-si", HttpAsyncResponseMessageExtension.RecoverOptions.INFRASTRUCTURE).ConfigureAwait(false);
         try
         {
             var response = await result.Content
                 .ReadFromJsonAsync<ServiceInstanceResponse>(JsonSerializerExtensions.Options, cancellationToken)
-                .ConfigureAwait(false);
+                .ConfigureAwait(ConfigureAwaitOptions.None);
             if (response == null)
             {
                 throw new ServiceException("Response must not be null");
@@ -212,8 +206,8 @@ public class CfClient : ICfClient
 
     public async Task CreateServiceInstanceBindings(string tenantName, string? keyName, Guid spaceId, CancellationToken cancellationToken)
     {
-        var serviceInstanceId = await GetServiceInstances(tenantName, spaceId, cancellationToken).ConfigureAwait(false);
-        var client = await _basicAuthTokenService.GetBasicAuthorizedLegacyClient<CfClient>(_settings, cancellationToken).ConfigureAwait(false);
+        var serviceInstanceId = await GetServiceInstances(tenantName, spaceId, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
+        var client = await basicAuthTokenService.GetBasicAuthorizedLegacyClient<CfClient>(_settings, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
         var data = new CreateServiceCredentialBindingRequest(
             "key",
             $"{keyName ?? tenantName}-dim-key01",
@@ -221,20 +215,20 @@ public class CfClient : ICfClient
                 new DimServiceInstance(new DimData(serviceInstanceId)))
         );
         await client.PostAsJsonAsync("/v3/service_credential_bindings", data, JsonSerializerOptions.Default, cancellationToken)
-            .CatchingIntoServiceExceptionFor("create-si-bindings", HttpAsyncResponseMessageExtension.RecoverOptions.ALLWAYS);
+            .CatchingIntoServiceExceptionFor("create-si-bindings", HttpAsyncResponseMessageExtension.RecoverOptions.INFRASTRUCTURE);
     }
 
     public async Task<Guid> GetServiceBinding(string tenantName, Guid spaceId, string bindingName, CancellationToken cancellationToken)
     {
-        var client = await _basicAuthTokenService.GetBasicAuthorizedLegacyClient<CfClient>(_settings, cancellationToken).ConfigureAwait(false);
-        var serviceInstanceId = await GetServiceInstances(tenantName, spaceId, cancellationToken).ConfigureAwait(false);
+        var client = await basicAuthTokenService.GetBasicAuthorizedLegacyClient<CfClient>(_settings, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
+        var serviceInstanceId = await GetServiceInstances(tenantName, spaceId, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
         var result = await client.GetAsync($"/v3/service_credential_bindings?names={HttpUtility.UrlEncode(bindingName)}", cancellationToken)
             .CatchingIntoServiceExceptionFor("get-credential-binding", HttpAsyncResponseMessageExtension.RecoverOptions.INFRASTRUCTURE).ConfigureAwait(false);
         try
         {
             var response = await result.Content
                 .ReadFromJsonAsync<ServiceCredentialBindingResponse>(JsonSerializerExtensions.Options, cancellationToken)
-                .ConfigureAwait(false);
+                .ConfigureAwait(ConfigureAwaitOptions.None);
             if (response == null)
             {
                 throw new ServiceException("Response must not be null");
@@ -256,14 +250,14 @@ public class CfClient : ICfClient
 
     public async Task<ServiceCredentialBindingDetailResponse> GetServiceBindingDetails(Guid id, CancellationToken cancellationToken)
     {
-        var client = await _basicAuthTokenService.GetBasicAuthorizedLegacyClient<CfClient>(_settings, cancellationToken).ConfigureAwait(false);
+        var client = await basicAuthTokenService.GetBasicAuthorizedLegacyClient<CfClient>(_settings, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
         var result = await client.GetAsync($"/v3/service_credential_bindings/{id}/details", cancellationToken)
             .CatchingIntoServiceExceptionFor("get-credential-binding-name", HttpAsyncResponseMessageExtension.RecoverOptions.INFRASTRUCTURE).ConfigureAwait(false);
         try
         {
             var response = await result.Content
                 .ReadFromJsonAsync<ServiceCredentialBindingDetailResponse>(JsonSerializerExtensions.Options, cancellationToken)
-                .ConfigureAwait(false);
+                .ConfigureAwait(ConfigureAwaitOptions.None);
 
             if (response == null)
             {
@@ -280,8 +274,8 @@ public class CfClient : ICfClient
 
     public async Task DeleteServiceInstanceBindings(Guid serviceBindingId, CancellationToken cancellationToken)
     {
-        var client = await _basicAuthTokenService.GetBasicAuthorizedLegacyClient<CfClient>(_settings, cancellationToken).ConfigureAwait(false);
+        var client = await basicAuthTokenService.GetBasicAuthorizedLegacyClient<CfClient>(_settings, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
         await client.DeleteAsync($"/v3/service_credential_bindings/{serviceBindingId}", cancellationToken)
-            .CatchingIntoServiceExceptionFor("delete-si-bindings", HttpAsyncResponseMessageExtension.RecoverOptions.ALLWAYS);
+            .CatchingIntoServiceExceptionFor("delete-si-bindings", HttpAsyncResponseMessageExtension.RecoverOptions.INFRASTRUCTURE);
     }
 }

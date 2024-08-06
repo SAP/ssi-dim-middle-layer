@@ -26,15 +26,9 @@ using System.Net.Http.Json;
 
 namespace Dim.Clients.Api.Subscriptions;
 
-public class SubscriptionClient : ISubscriptionClient
+public class SubscriptionClient(IBasicAuthTokenService basicAuthTokenService)
+    : ISubscriptionClient
 {
-    private readonly IBasicAuthTokenService _basicAuthTokenService;
-
-    public SubscriptionClient(IBasicAuthTokenService basicAuthTokenService)
-    {
-        _basicAuthTokenService = basicAuthTokenService;
-    }
-
     public async Task SubscribeApplication(string authUrl, BindingItem bindingData, string applicationName, string planName, CancellationToken cancellationToken)
     {
         var authSettings = new BasicAuthSettings
@@ -43,7 +37,7 @@ public class SubscriptionClient : ISubscriptionClient
             ClientId = bindingData.Credentials.Uaa.ClientId,
             ClientSecret = bindingData.Credentials.Uaa.ClientSecret
         };
-        var client = await _basicAuthTokenService.GetBasicAuthorizedClient<SubscriptionClient>(authSettings, cancellationToken).ConfigureAwait(false);
+        var client = await basicAuthTokenService.GetBasicAuthorizedClient<SubscriptionClient>(authSettings, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
         var data = new
         {
             planName = planName

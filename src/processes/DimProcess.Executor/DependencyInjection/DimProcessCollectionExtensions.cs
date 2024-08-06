@@ -21,7 +21,7 @@
 using DimProcess.Library.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Org.Eclipse.TractusX.Portal.Backend.Processes.Worker.Library;
+using Processes.Worker.Library;
 
 namespace DimProcess.Executor.DependencyInjection;
 

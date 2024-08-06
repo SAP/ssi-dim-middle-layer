@@ -24,7 +24,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Logging;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Token;
-using Org.Eclipse.TractusX.Portal.Backend.Processes.Worker.Library;
+using Processes.Worker.Library;
 using Serilog;
 
 LoggingExtensions.EnsureInitialized();
@@ -56,7 +56,7 @@ try
 
     Log.Information("Start processing");
     var workerInstance = host.Services.GetRequiredService<ProcessExecutionService>();
-    await workerInstance.ExecuteAsync(tokenSource.Token).ConfigureAwait(false);
+    await workerInstance.ExecuteAsync(tokenSource.Token).ConfigureAwait(ConfigureAwaitOptions.None);
     Log.Information("Execution finished shutting down");
 }
 catch (Exception ex) when (!ex.GetType().Name.Equals("StopTheHostException", StringComparison.Ordinal))

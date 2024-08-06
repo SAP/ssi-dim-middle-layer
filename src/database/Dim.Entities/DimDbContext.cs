@@ -89,16 +89,16 @@ public class DimDbContext : DbContext
         modelBuilder.Entity<Tenant>(t =>
             {
                 t.HasOne(d => d.Process)
-                    .WithMany(p => p.Tenants)
-                    .HasForeignKey(d => d.ProcessId)
+                    .WithOne(p => p.Tenant)
+                    .HasForeignKey<Tenant>(d => d.ProcessId)
                     .OnDelete(DeleteBehavior.ClientSetNull);
             });
 
         modelBuilder.Entity<TechnicalUser>(tu =>
         {
             tu.HasOne(d => d.Process)
-                .WithMany(p => p.TechnicalUsers)
-                .HasForeignKey(d => d.ProcessId)
+                .WithOne(p => p.TechnicalUser)
+                .HasForeignKey<TechnicalUser>(d => d.ProcessId)
                 .OnDelete(DeleteBehavior.ClientSetNull);
 
             tu.HasOne(t => t.Tenant)

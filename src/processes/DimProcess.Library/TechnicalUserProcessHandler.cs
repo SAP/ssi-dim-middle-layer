@@ -41,13 +41,13 @@ public class TechnicalUserProcessHandler(
 
     public async Task<(IEnumerable<ProcessStepTypeId>? nextStepTypeIds, ProcessStepStatusId stepStatusId, bool modified, string? processMessage)> CreateServiceInstanceBindings(string tenantName, Guid technicalUserId, CancellationToken cancellationToken)
     {
-        var (spaceId, technicalUserName) = await dimRepositories.GetInstance<ITenantRepository>().GetSpaceIdAndTechnicalUserName(technicalUserId).ConfigureAwait(false);
+        var (spaceId, technicalUserName) = await dimRepositories.GetInstance<ITenantRepository>().GetSpaceIdAndTechnicalUserName(technicalUserId).ConfigureAwait(ConfigureAwaitOptions.None);
         if (spaceId == null)
         {
             throw new ConflictException("SpaceId must not be null.");
         }
 
-        await cfClient.CreateServiceInstanceBindings(tenantName, technicalUserName, spaceId.Value, cancellationToken).ConfigureAwait(false);
+        await cfClient.CreateServiceInstanceBindings(tenantName, technicalUserName, spaceId.Value, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
 
         return new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(
             Enumerable.Repeat(ProcessStepTypeId.GET_TECHNICAL_USER_DATA, 1),
@@ -58,14 +58,14 @@ public class TechnicalUserProcessHandler(
 
     public async Task<(IEnumerable<ProcessStepTypeId>? nextStepTypeIds, ProcessStepStatusId stepStatusId, bool modified, string? processMessage)> GetTechnicalUserData(string tenantName, Guid technicalUserId, CancellationToken cancellationToken)
     {
-        var (spaceId, technicalUserName) = await dimRepositories.GetInstance<ITenantRepository>().GetSpaceIdAndTechnicalUserName(technicalUserId).ConfigureAwait(false);
+        var (spaceId, technicalUserName) = await dimRepositories.GetInstance<ITenantRepository>().GetSpaceIdAndTechnicalUserName(technicalUserId).ConfigureAwait(ConfigureAwaitOptions.None);
         if (spaceId == null)
         {
             throw new ConflictException("SpaceId must not be null.");
         }
 
-        var dimInstanceId = await cfClient.GetServiceBinding(tenantName, spaceId.Value, $"{technicalUserName}-dim-key01", cancellationToken).ConfigureAwait(false);
-        var dimDetails = await cfClient.GetServiceBindingDetails(dimInstanceId, cancellationToken).ConfigureAwait(false);
+        var dimInstanceId = await cfClient.GetServiceBinding(tenantName, spaceId.Value, $"{technicalUserName}-dim-key01", cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
+        var dimDetails = await cfClient.GetServiceBindingDetails(dimInstanceId, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
 
         var cryptoHelper = _settings.EncryptionConfigs.GetCryptoHelper(_settings.EncryptionConfigIndex);
         var (secret, initializationVector) = cryptoHelper.Encrypt(dimDetails.Credentials.Uaa.ClientSecret);
@@ -95,7 +95,7 @@ public class TechnicalUserProcessHandler(
 
     public async Task<(IEnumerable<ProcessStepTypeId>? nextStepTypeIds, ProcessStepStatusId stepStatusId, bool modified, string? processMessage)> SendCreateCallback(Guid technicalUserId, CancellationToken cancellationToken)
     {
-        var (externalId, tokenAddress, clientId, clientSecret, initializationVector, _) = await dimRepositories.GetInstance<ITenantRepository>().GetTechnicalUserCallbackData(technicalUserId).ConfigureAwait(false);
+        var (externalId, tokenAddress, clientId, clientSecret, initializationVector, _) = await dimRepositories.GetInstance<ITenantRepository>().GetTechnicalUserCallbackData(technicalUserId).ConfigureAwait(ConfigureAwaitOptions.None);
 
         if (string.IsNullOrWhiteSpace(clientId))
         {
@@ -115,7 +115,7 @@ public class TechnicalUserProcessHandler(
         var cryptoHelper = _settings.EncryptionConfigs.GetCryptoHelper(_settings.EncryptionConfigIndex);
         var secret = cryptoHelper.Decrypt(clientSecret, initializationVector);
 
-        await callbackService.SendTechnicalUserCallback(externalId, tokenAddress, clientId, secret, cancellationToken).ConfigureAwait(false);
+        await callbackService.SendTechnicalUserCallback(externalId, tokenAddress, clientId, secret, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
 
         return new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(
             null,
@@ -126,14 +126,14 @@ public class TechnicalUserProcessHandler(
 
     public async Task<(IEnumerable<ProcessStepTypeId>? nextStepTypeIds, ProcessStepStatusId stepStatusId, bool modified, string? processMessage)> DeleteServiceInstanceBindings(string tenantName, Guid technicalUserId, CancellationToken cancellationToken)
     {
-        var (spaceId, technicalUserName) = await dimRepositories.GetInstance<ITenantRepository>().GetSpaceIdAndTechnicalUserName(technicalUserId).ConfigureAwait(false);
+        var (spaceId, technicalUserName) = await dimRepositories.GetInstance<ITenantRepository>().GetSpaceIdAndTechnicalUserName(technicalUserId).ConfigureAwait(ConfigureAwaitOptions.None);
         if (spaceId == null)
         {
             throw new ConflictException("SpaceId must not be null.");
         }
 
-        var serviceBindingId = await cfClient.GetServiceBinding(tenantName, spaceId.Value, $"{technicalUserName}-dim-key01", cancellationToken).ConfigureAwait(false);
-        await cfClient.DeleteServiceInstanceBindings(serviceBindingId, cancellationToken).ConfigureAwait(false);
+        var serviceBindingId = await cfClient.GetServiceBinding(tenantName, spaceId.Value, $"{technicalUserName}-dim-key01", cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
+        await cfClient.DeleteServiceInstanceBindings(serviceBindingId, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
 
         return new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(
             Enumerable.Repeat(ProcessStepTypeId.SEND_TECHNICAL_USER_DELETION_CALLBACK, 1),
@@ -146,9 +146,9 @@ public class TechnicalUserProcessHandler(
     {
         var tenantRepository = dimRepositories.GetInstance<ITenantRepository>();
 
-        var externalId = await tenantRepository.GetExternalIdForTechnicalUser(technicalUserId).ConfigureAwait(false);
+        var externalId = await tenantRepository.GetExternalIdForTechnicalUser(technicalUserId).ConfigureAwait(ConfigureAwaitOptions.None);
         tenantRepository.RemoveTechnicalUser(technicalUserId);
-        await callbackService.SendTechnicalUserDeletionCallback(externalId, cancellationToken).ConfigureAwait(false);
+        await callbackService.SendTechnicalUserDeletionCallback(externalId, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
 
         return new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(
             null,
