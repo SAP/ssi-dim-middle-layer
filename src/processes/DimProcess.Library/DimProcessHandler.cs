@@ -62,7 +62,8 @@ public class DimProcessHandler(
             ClientSecret = _settings.ClientsecretCisCentral
         };
 
-        var subAccountId = await subAccountClient.CreateSubaccount(subAccountAuth, adminMail, tenantName, parentDirectoryId, cancellationToken).ConfigureAwait(false);
+        var bpn = await dimRepositories.GetInstance<ITenantRepository>().GetTenantBpn(tenantId);
+        var subAccountId = await subAccountClient.CreateSubaccount(subAccountAuth, adminMail, tenantName, parentDirectoryId, bpn, cancellationToken).ConfigureAwait(false);
         dimRepositories.GetInstance<ITenantRepository>().AttachAndModifyTenant(tenantId, tenant =>
             {
                 tenant.SubAccountId = null;

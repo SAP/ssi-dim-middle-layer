@@ -28,6 +28,7 @@ using Dim.Web.ErrorHandling;
 using Dim.Web.Models;
 using Microsoft.Extensions.Options;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
+using System.Text.RegularExpressions;
 
 namespace Dim.Web.BusinessLogic;
 
@@ -38,10 +39,12 @@ public class DimBusinessLogic(
     IOptions<DimSettings> options)
     : IDimBusinessLogic
 {
+    private static readonly Regex TenantName = new(@"(?<=[^\w-])|(?<=[^-])[\W_]+|(?<=[^-])$", RegexOptions.Compiled, new TimeSpan(0, 0, 0, 1));
     private readonly DimSettings _settings = options.Value;
 
     public async Task StartSetupDim(string companyName, string bpn, string didDocumentLocation, bool isIssuer)
     {
+        var tenant = TenantName.Replace(companyName, string.Empty).TrimStart('-').TrimEnd('-').ToLower();
         if (await dimRepositories.GetInstance<ITenantRepository>().IsTenantExisting(companyName, bpn).ConfigureAwait(ConfigureAwaitOptions.None))
         {
             throw new ConflictException($"Tenant {companyName} with Bpn {bpn} already exists");
@@ -51,7 +54,7 @@ public class DimBusinessLogic(
         var processId = processStepRepository.CreateProcess(ProcessTypeId.SETUP_DIM).Id;
         processStepRepository.CreateProcessStep(ProcessStepTypeId.CREATE_SUBACCOUNT, ProcessStepStatusId.TODO, processId);
 
-        dimRepositories.GetInstance<ITenantRepository>().CreateTenant(companyName, bpn, didDocumentLocation, isIssuer, processId, _settings.OperatorId);
+        dimRepositories.GetInstance<ITenantRepository>().CreateTenant(tenant, bpn, didDocumentLocation, isIssuer, processId, _settings.OperatorId);
 
         await dimRepositories.SaveAsync().ConfigureAwait(false);
     }

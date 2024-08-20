@@ -109,7 +109,7 @@ public class DimProcessHandlerTests
                 initialize?.Invoke(tenant);
                 modify(tenant);
             });
-        A.CallTo(() => _subAccountClient.CreateSubaccount(A<BasicAuthSettings>._, A<string>._, _tenantName, A<Guid>._, A<CancellationToken>._))
+        A.CallTo(() => _subAccountClient.CreateSubaccount(A<BasicAuthSettings>._, A<string>._, _tenantName, A<Guid>._, A<string>._, A<CancellationToken>._))
             .Returns(subAccountId);
 
         // Act
