@@ -24,7 +24,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Logging;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Token;
-using Org.Eclipse.TractusX.Portal.Backend.Processes.Worker.Library;
+using Processes.Worker.Library;
 using Serilog;
 
 LoggingExtensions.EnsureInitialized();

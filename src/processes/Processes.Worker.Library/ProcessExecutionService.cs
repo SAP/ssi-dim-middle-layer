@@ -27,7 +27,7 @@ using Org.Eclipse.TractusX.Portal.Backend.Framework.DateTimeProvider;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 
-namespace Org.Eclipse.TractusX.Portal.Backend.Processes.Worker.Library;
+namespace Processes.Worker.Library;
 
 /// <summary>
 /// Service that reads all open/pending processSteps of a checklist and triggers their execution.

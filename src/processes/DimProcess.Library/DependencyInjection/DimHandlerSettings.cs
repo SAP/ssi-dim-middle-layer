@@ -18,6 +18,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using Org.Eclipse.TractusX.Portal.Backend.Framework.Models.Configuration;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.Models.Validation;
 using System.ComponentModel.DataAnnotations;
 
 namespace DimProcess.Library.DependencyInjection;
@@ -25,20 +27,12 @@ namespace DimProcess.Library.DependencyInjection;
 public class DimHandlerSettings
 {
     [Required(AllowEmptyStrings = false)]
-    public string AdminMail { get; set; } = null!;
+    public string ApplicationName { get; set; } = null!;
 
     [Required]
-    public Guid RootDirectoryId { get; set; }
+    public int EncryptionConfigIndex { get; set; }
 
-    [Required(AllowEmptyStrings = false)]
-    public string AuthUrl { get; set; } = null!;
-
-    [Required(AllowEmptyStrings = false)]
-    public string ClientidCisCentral { get; set; } = null!;
-
-    [Required(AllowEmptyStrings = false)]
-    public string ClientsecretCisCentral { get; set; } = null!;
-
-    [Required(AllowEmptyStrings = false)]
-    public string EncryptionKey { get; set; } = null!;
+    [Required]
+    [DistinctValues("x => x.Index")]
+    public IEnumerable<EncryptionModeConfig> EncryptionConfigs { get; set; } = null!;
 }

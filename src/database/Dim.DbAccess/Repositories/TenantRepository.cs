@@ -18,21 +18,21 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using Dim.DbAccess.Models;
 using Dim.Entities;
 using Dim.Entities.Entities;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Threading.Tasks;
 
 namespace Dim.DbAccess.Repositories;
 
-public class TenantRepository(DimDbContext context) : ITenantRepository
+public class TenantRepository(DimDbContext dbContext)
+    : ITenantRepository
 {
     public Tenant CreateTenant(string companyName, string bpn, string didDocumentLocation, bool isIssuer, Guid processId, Guid operatorId) =>
-        context.Tenants.Add(new Tenant(Guid.NewGuid(), companyName, bpn, didDocumentLocation, isIssuer, processId, operatorId)).Entity;
+        dbContext.Tenants.Add(new Tenant(Guid.NewGuid(), companyName, bpn, didDocumentLocation, isIssuer, processId, operatorId)).Entity;
 
     public Task<(bool Exists, Guid TenantId, string CompanyName, string Bpn)> GetTenantDataForProcessId(Guid processId) =>
-        context.Tenants
+        dbContext.Tenants
             .Where(x => x.ProcessId == processId)
             .Select(x => new ValueTuple<bool, Guid, string, string>(true, x.Id, x.CompanyName, x.Bpn))
             .SingleOrDefaultAsync();
@@ -41,136 +41,148 @@ public class TenantRepository(DimDbContext context) : ITenantRepository
     {
         var tenant = new Tenant(tenantId, null!, null!, null!, default, Guid.Empty, Guid.Empty);
         initialize?.Invoke(tenant);
-        context.Tenants.Attach(tenant);
+        dbContext.Tenants.Attach(tenant);
         modify(tenant);
     }
 
-    public Task<Guid?> GetSubAccountIdByTenantId(Guid tenantId)
-        => context.Tenants
+    public Task<(bool IsIssuer, string? HostingUrl)> GetHostingUrlAndIsIssuer(Guid tenantId)
+        => dbContext.Tenants
             .Where(x => x.Id == tenantId)
-            .Select(x => x.SubAccountId)
-            .SingleOrDefaultAsync();
-
-    public Task<(Guid? SubAccountId, string? ServiceInstanceId)> GetSubAccountAndServiceInstanceIdsByTenantId(Guid tenantId)
-        => context.Tenants
-            .Where(x => x.Id == tenantId)
-            .Select(x => new ValueTuple<Guid?, string?>(x.SubAccountId, x.ServiceInstanceId))
-            .SingleOrDefaultAsync();
-
-    public Task<(Guid? SubAccountId, string? ServiceBindingName)> GetSubAccountIdAndServiceBindingNameByTenantId(Guid tenantId)
-        => context.Tenants
-            .Where(x => x.Id == tenantId)
-            .Select(x => new ValueTuple<Guid?, string?>(x.SubAccountId, x.ServiceBindingName))
-            .SingleOrDefaultAsync();
-
-    public Task<Guid?> GetSpaceId(Guid tenantId)
-        => context.Tenants
-            .Where(x => x.Id == tenantId)
-            .Select(x => x.SpaceId)
-            .SingleOrDefaultAsync();
-
-    public Task<Guid?> GetDimInstanceId(Guid tenantId)
-        => context.Tenants
-            .Where(x => x.Id == tenantId)
-            .Select(x => x.DimInstanceId)
-            .SingleOrDefaultAsync();
-
-    public Task<(string bpn, string? DownloadUrl, string? Did, Guid? DimInstanceId)> GetCallbackData(Guid tenantId)
-        => context.Tenants
-            .Where(x => x.Id == tenantId)
-            .Select(x => new ValueTuple<string, string?, string?, Guid?>(x.Bpn, x.DidDownloadUrl, x.Did, x.DimInstanceId))
-            .SingleOrDefaultAsync();
-
-    public Task<(Guid? DimInstanceId, string HostingUrl, bool IsIssuer)> GetDimInstanceIdAndHostingUrl(Guid tenantId)
-        => context.Tenants
-            .Where(x => x.Id == tenantId)
-            .Select(x => new ValueTuple<Guid?, string, bool>(x.DimInstanceId, x.DidDocumentLocation, x.IsIssuer))
-            .SingleOrDefaultAsync();
-
-    public Task<(string? ApplicationId, Guid? CompanyId, Guid? DimInstanceId, bool IsIssuer)> GetApplicationAndCompanyId(Guid tenantId) =>
-        context.Tenants
-            .Where(x => x.Id == tenantId)
-            .Select(x => new ValueTuple<string?, Guid?, Guid?, bool>(
-                x.ApplicationId,
-                x.CompanyId,
-                x.DimInstanceId,
-                x.IsIssuer))
-            .SingleOrDefaultAsync();
-
-    public Task<(bool Exists, Guid? CompanyId, Guid? InstanceId)> GetCompanyAndInstanceIdForBpn(string bpn) =>
-        context.Tenants.Where(x => x.Bpn == bpn)
-            .Select(x => new ValueTuple<bool, Guid?, Guid?>(true, x.CompanyId, x.DimInstanceId))
+            .Select(x => new ValueTuple<bool, string?>(x.IsIssuer, x.DidDocumentLocation))
             .SingleOrDefaultAsync();
 
     public void CreateTenantTechnicalUser(Guid tenantId, string technicalUserName, Guid externalId, Guid processId) =>
-        context.TechnicalUsers.Add(new TechnicalUser(Guid.NewGuid(), tenantId, externalId, technicalUserName, processId));
+        dbContext.TechnicalUsers.Add(new TechnicalUser(Guid.NewGuid(), tenantId, externalId, technicalUserName, processId));
 
     public void AttachAndModifyTechnicalUser(Guid technicalUserId, Action<TechnicalUser>? initialize, Action<TechnicalUser> modify)
     {
         var technicalUser = new TechnicalUser(technicalUserId, Guid.Empty, Guid.Empty, null!, Guid.Empty);
         initialize?.Invoke(technicalUser);
-        context.TechnicalUsers.Attach(technicalUser);
+        dbContext.TechnicalUsers.Attach(technicalUser);
         modify(technicalUser);
     }
 
     public Task<(bool Exists, Guid TenantId)> GetTenantForBpn(string bpn) =>
-        context.Tenants.Where(x => x.Bpn == bpn)
+        dbContext.Tenants.Where(x => x.Bpn == bpn)
             .Select(x => new ValueTuple<bool, Guid>(true, x.Id))
             .SingleOrDefaultAsync();
 
     public Task<(bool Exists, Guid TechnicalUserId, string CompanyName, string Bpn)> GetTenantDataForTechnicalUserProcessId(Guid processId) =>
-        context.TechnicalUsers
+        dbContext.TechnicalUsers
             .Where(x => x.ProcessId == processId)
             .Select(x => new ValueTuple<bool, Guid, string, string>(true, x.Id, x.Tenant!.CompanyName, x.Tenant.Bpn))
             .SingleOrDefaultAsync();
 
-    public Task<(Guid? spaceId, string technicalUserName)> GetSpaceIdAndTechnicalUserName(Guid technicalUserId) =>
-        context.TechnicalUsers
+    public Task<(Guid ExternalId, WalletData WalletData)> GetTechnicalUserCallbackData(Guid technicalUserId) =>
+        dbContext.TechnicalUsers
             .Where(x => x.Id == technicalUserId)
-            .Select(x => new ValueTuple<Guid?, string>(x.Tenant!.SpaceId, x.TechnicalUserName))
-            .SingleOrDefaultAsync();
-
-    public Task<(Guid ExternalId, string? TokenAddress, string? ClientId, byte[]? ClientSecret, byte[]? InitializationVector, int? EncryptionMode)> GetTechnicalUserCallbackData(Guid technicalUserId) =>
-        context.TechnicalUsers
-            .Where(x => x.Id == technicalUserId)
-            .Select(x => new ValueTuple<Guid, string?, string?, byte[]?, byte[]?, int?>(
+            .Select(x => new ValueTuple<Guid, WalletData>(
                 x.ExternalId,
-                x.TokenAddress,
-                x.ClientId,
-                x.ClientSecret,
-                x.InitializationVector,
-                x.EncryptionMode))
-            .SingleOrDefaultAsync();
-
-    public Task<(Guid? DimInstanceId, Guid? CompanyId)> GetDimInstanceIdAndDid(Guid tenantId) =>
-        context.Tenants
-            .Where(x => x.Id == tenantId)
-            .Select(x => new ValueTuple<Guid?, Guid?>(x.DimInstanceId, x.CompanyId))
+                new WalletData(
+                    x.TokenAddress,
+                    x.ClientId,
+                    x.ClientSecret,
+                    x.InitializationVector,
+                    x.EncryptionMode)))
             .SingleOrDefaultAsync();
 
     public Task<(bool Exists, Guid TechnicalUserId, Guid ProcessId)> GetTechnicalUserForBpn(string bpn, string technicalUserName) =>
-        context.TechnicalUsers
+        dbContext.TechnicalUsers
             .Where(x => x.TechnicalUserName == technicalUserName && x.Tenant!.Bpn == bpn)
             .Select(x => new ValueTuple<bool, Guid, Guid>(true, x.Id, x.ProcessId))
             .SingleOrDefaultAsync();
 
     public Task<Guid> GetExternalIdForTechnicalUser(Guid technicalUserId) =>
-        context.TechnicalUsers
+        dbContext.TechnicalUsers
             .Where(x => x.Id == technicalUserId)
             .Select(x => x.ExternalId)
             .SingleOrDefaultAsync();
 
     public void RemoveTechnicalUser(Guid technicalUserId) =>
-        context.TechnicalUsers
+        dbContext.TechnicalUsers
             .Remove(new TechnicalUser(technicalUserId, Guid.Empty, Guid.Empty, null!, Guid.Empty));
 
     public Task<bool> IsTenantExisting(string companyName, string bpn) =>
-        context.Tenants
+        dbContext.Tenants
             .AnyAsync(x => x.CompanyName == companyName && x.Bpn == bpn);
 
     public Task<string> GetTenantBpn(Guid tenantId) =>
-        context.Tenants
+        dbContext.Tenants
             .Where(x => x.Id == tenantId)
             .Select(x => x.Bpn)
             .SingleAsync();
+
+    public Task<Guid?> GetOperationId(Guid tenantId) =>
+        dbContext.Tenants
+            .Where(x => x.Id == tenantId)
+            .Select(x => x.OperationId)
+            .SingleOrDefaultAsync();
+
+    public Task<(string? BaseUrl, WalletData WalletData)> GetCompanyRequestData(Guid tenantId) =>
+        dbContext.Tenants
+            .Where(x => x.Id == tenantId)
+            .Select(x => new ValueTuple<string?, WalletData>(
+                x.BaseUrl,
+                new WalletData(
+                    x.TokenAddress,
+                    x.ClientId,
+                    x.ClientSecret,
+                    x.InitializationVector,
+                    x.EncryptionMode
+                )))
+            .SingleOrDefaultAsync();
+
+    public Task<(bool Exists, Guid? CompanyId, string? BaseUrl, WalletData WalletData)> GetCompanyAndWalletDataForBpn(string bpn) =>
+        dbContext.Tenants
+            .Where(x => x.Bpn == bpn)
+            .Select(x => new ValueTuple<bool, Guid?, string?, WalletData>(
+                true,
+                x.CompanyId,
+                x.BaseUrl,
+                new WalletData(
+                    x.TokenAddress,
+                    x.ClientId,
+                    x.ClientSecret,
+                    x.InitializationVector,
+                    x.EncryptionMode
+                )))
+            .SingleOrDefaultAsync();
+
+    public Task<(Guid? CompanyId, string? BaseUrl, WalletData WalletData)> GetStatusListCreationData(Guid tenantId) =>
+        dbContext.Tenants
+            .Where(x => x.Id == tenantId)
+            .Select(x => new ValueTuple<Guid?, string?, WalletData>(
+                x.CompanyId,
+                x.BaseUrl,
+                new WalletData(
+                    x.TokenAddress,
+                    x.ClientId,
+                    x.ClientSecret,
+                    x.InitializationVector,
+                    x.EncryptionMode
+                )))
+            .SingleOrDefaultAsync();
+
+    public Task<(string Bpn, string? BaseUrl, WalletData WalletData, string? Did, string? DownloadUrl)> GetCallbackData(Guid tenantId) =>
+        dbContext.Tenants
+            .Where(x => x.Id == tenantId)
+            .Select(x => new ValueTuple<string, string?, WalletData, string?, string?>(
+                x.Bpn,
+                x.BaseUrl,
+                new WalletData(
+                    x.TokenAddress,
+                    x.ClientId,
+                    x.ClientSecret,
+                    x.InitializationVector,
+                    x.EncryptionMode
+                ),
+                x.Did,
+                x.DidDownloadUrl))
+            .SingleOrDefaultAsync();
+
+    public Task<(string? DownloadUrl, bool IsIssuer)> GetDownloadUrlAndIsIssuer(Guid tenantId) =>
+        dbContext.Tenants
+            .Where(x => x.Id == tenantId)
+            .Select(x => new ValueTuple<string?, bool>(x.DidDownloadUrl, x.IsIssuer))
+            .SingleOrDefaultAsync();
 }

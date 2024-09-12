@@ -80,10 +80,21 @@ spec:
           value: "{{ .Values.dim.healthChecks.liveness.path}}"
         - name: "SWAGGERENABLED"
           value: "{{ .Values.dim.swaggerEnabled }}"
-        - name: "DIM__ROOTDIRECTORYID"
-          value: "{{ .Values.dim.rootDirectoryId }}"
         - name: "DIM__OPERATORID"
           value: "{{ .Values.dim.operatorId }}"
+        - name: "DIM__ENCRYPTIONCONFIGINDEX"
+          value: "{{ .Values.processesworker.provisioning.encryptionConfigIndex }}"
+        - name: "DIM__ENCRYPTIONCONFIGS__0__INDEX"
+          value: "{{ .Values.processesworker.provisioning.encryptionConfigs.index0.index }}"
+        - name: "DIM__ENCRYPTIONCONFIGS__0__ENCRYPTIONKEY"
+          valueFrom:
+            secretKeyRef:
+              name: "{{ template "dim.secretName" . }}"
+              key: "provisioning-encryption-key0"
+        - name: "DIM__ENCRYPTIONCONFIGS__0__CIPHERMODE"
+          value: "{{ .Values.processesworker.provisioning.encryptionConfigs.index0.cipherMode }}"
+        - name: "DIM__ENCRYPTIONCONFIGS__0__PADDINGMODE"
+          value: "{{ .Values.processesworker.provisioning.encryptionConfigs.index0.paddingMode }}"
         - name: "JWTBEAREROPTIONS__METADATAADDRESS"
           value: "{{ .Values.idp.address }}{{ .Values.idp.jwtBearerOptions.metadataPath }}"
         - name: "JWTBEAREROPTIONS__REQUIREHTTPSMETADATA"
@@ -94,19 +105,6 @@ spec:
           value: "{{ .Values.idp.address }}{{ .Values.idp.jwtBearerOptions.tokenValidationParameters.validIssuerPath }}"
         - name: "JWTBEAREROPTIONS__REFRESHINTERVAL"
           value: "{{ .Values.idp.jwtBearerOptions.refreshInterval }}"
-        - name: "CF__CLIENTID"
-          value: "{{ .Values.processesworker.cf.clientId }}"
-        - name: "CF__CLIENTSECRET"
-          valueFrom:
-            secretKeyRef:
-              name: "{{ template "dim.secretName" . }}"
-              key: "client-secret-cf"
-        - name: "CF__TOKENADDRESS"
-          value: "{{ .Values.processesworker.cf.tokenAddress }}"
-        - name: "CF__BASEURL"
-          value: "{{ .Values.processesworker.cf.baseUrl }}"
-        - name: "CF__GRANTTYPE"
-          value: "{{ .Values.processesworker.cf.grantType }}"
         ports:
         - name: http
           containerPort: {{ .Values.portContainer }}

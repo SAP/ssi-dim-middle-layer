@@ -27,7 +27,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.DateTimeProvider;
-using Org.Eclipse.TractusX.Portal.Backend.Processes.Worker.Library;
 using System.Collections.Immutable;
 
 namespace Processes.Worker.Library.Tests;

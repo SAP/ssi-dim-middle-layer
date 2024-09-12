@@ -18,464 +18,168 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using Dim.Clients.Api.Cf;
 using Dim.Clients.Api.Dim;
-using Dim.Clients.Api.Entitlements;
-using Dim.Clients.Api.Provisioning;
-using Dim.Clients.Api.Services;
-using Dim.Clients.Api.SubAccounts;
-using Dim.Clients.Api.Subscriptions;
+using Dim.Clients.Api.Div;
+using Dim.Clients.Api.Div.Models;
 using Dim.Clients.Token;
 using Dim.DbAccess;
+using Dim.DbAccess.Extensions;
 using Dim.DbAccess.Repositories;
 using Dim.Entities.Enums;
 using DimProcess.Library.Callback;
 using DimProcess.Library.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.Models.Configuration;
+using System.Text.Json;
 
 namespace DimProcess.Library;
 
 public class DimProcessHandler(
     IDimRepositories dimRepositories,
-    ISubAccountClient subAccountClient,
-    IServiceClient serviceClient,
-    ISubscriptionClient subscriptionClient,
-    IEntitlementClient entitlementClient,
     IProvisioningClient provisioningClient,
-    ICfClient cfClient,
     IDimClient dimClient,
     ICallbackService callbackService,
+    IHttpClientFactory httpClientFactory,
     IOptions<DimHandlerSettings> options)
     : IDimProcessHandler
 {
     private readonly DimHandlerSettings _settings = options.Value;
 
-    public async Task<(IEnumerable<ProcessStepTypeId>? nextStepTypeIds, ProcessStepStatusId stepStatusId, bool modified, string? processMessage)> CreateSubaccount(Guid tenantId, string tenantName, CancellationToken cancellationToken)
+    public async Task<(IEnumerable<ProcessStepTypeId>? nextStepTypeIds, ProcessStepStatusId stepStatusId, bool modified, string? processMessage)> CreateWallet(Guid tenantId, string tenantName, CancellationToken cancellationToken)
     {
-        var parentDirectoryId = _settings.RootDirectoryId;
-        var adminMail = _settings.AdminMail;
-        var subAccountAuth = new BasicAuthSettings
-        {
-            TokenAddress = $"{_settings.AuthUrl}/oauth/token",
-            ClientId = _settings.ClientidCisCentral,
-            ClientSecret = _settings.ClientsecretCisCentral
-        };
-
-        var bpn = await dimRepositories.GetInstance<ITenantRepository>().GetTenantBpn(tenantId);
-        var subAccountId = await subAccountClient.CreateSubaccount(subAccountAuth, adminMail, tenantName, parentDirectoryId, bpn, cancellationToken).ConfigureAwait(false);
-        dimRepositories.GetInstance<ITenantRepository>().AttachAndModifyTenant(tenantId, tenant =>
-            {
-                tenant.SubAccountId = null;
-            },
-            tenant =>
-            {
-                tenant.SubAccountId = subAccountId;
-            });
-        return new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(
-            Enumerable.Repeat(ProcessStepTypeId.CREATE_SERVICEMANAGER_BINDINGS, 1),
-            ProcessStepStatusId.DONE,
-            false,
-            null);
-    }
-
-    public async Task<(IEnumerable<ProcessStepTypeId>? nextStepTypeIds, ProcessStepStatusId stepStatusId, bool modified, string? processMessage)> CreateServiceManagerBindings(Guid tenantId, CancellationToken cancellationToken)
-    {
-        var subAccountAuth = new BasicAuthSettings
-        {
-            TokenAddress = $"{_settings.AuthUrl}/oauth/token",
-            ClientId = _settings.ClientidCisCentral,
-            ClientSecret = _settings.ClientsecretCisCentral
-        };
-
         var tenantRepository = dimRepositories.GetInstance<ITenantRepository>();
-        var subAccountId = await tenantRepository.GetSubAccountIdByTenantId(tenantId).ConfigureAwait(false);
-        if (subAccountId == null)
+        var (isIssuer, didDocumentLocation) = await tenantRepository.GetHostingUrlAndIsIssuer(tenantId).ConfigureAwait(ConfigureAwaitOptions.None);
+        if (didDocumentLocation == null)
         {
-            throw new ConflictException("SubAccountId must not be null.");
+            throw new UnexpectedConditionException("DidDocumentLocation must always be set");
         }
 
-        await subAccountClient.CreateServiceManagerBindings(subAccountAuth, subAccountId.Value, cancellationToken).ConfigureAwait(false);
+        var operationId = await provisioningClient.CreateOperation(tenantId, tenantName, _settings.ApplicationName, tenantName, didDocumentLocation, isIssuer, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
+        tenantRepository.AttachAndModifyTenant(tenantId, t => t.OperationId = null, t => t.OperationId = operationId);
 
         return new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(
-            Enumerable.Repeat(ProcessStepTypeId.ASSIGN_ENTITLEMENTS, 1),
+            Enumerable.Repeat(ProcessStepTypeId.CHECK_OPERATION, 1),
             ProcessStepStatusId.DONE,
             false,
             null);
     }
 
-    public async Task<(IEnumerable<ProcessStepTypeId>? nextStepTypeIds, ProcessStepStatusId stepStatusId, bool modified, string? processMessage)> AssignEntitlements(Guid tenantId, CancellationToken cancellationToken)
+    public async Task<(IEnumerable<ProcessStepTypeId>? nextStepTypeIds, ProcessStepStatusId stepStatusId, bool modified, string? processMessage)> CheckOperation(Guid tenantId, CancellationToken cancellationToken)
     {
-        var subAccountAuth = new BasicAuthSettings
+        var tenantRepository = dimRepositories.GetInstance<ITenantRepository>();
+        var operationId = await tenantRepository.GetOperationId(tenantId).ConfigureAwait(ConfigureAwaitOptions.None);
+        if (operationId == null)
         {
-            TokenAddress = $"{_settings.AuthUrl}/oauth/token",
-            ClientId = _settings.ClientidCisCentral,
-            ClientSecret = _settings.ClientsecretCisCentral
-        };
-        var subAccountId = await dimRepositories.GetInstance<ITenantRepository>().GetSubAccountIdByTenantId(tenantId).ConfigureAwait(false);
-        if (subAccountId == null)
-        {
-            throw new ConflictException("SubAccountId must not be null.");
+            throw new UnexpectedConditionException("OperationId must always be set");
         }
 
-        await entitlementClient.AssignEntitlements(subAccountAuth, subAccountId.Value, cancellationToken).ConfigureAwait(false);
-
-        return new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(
-            Enumerable.Repeat(ProcessStepTypeId.CREATE_SERVICE_INSTANCE, 1),
-            ProcessStepStatusId.DONE,
-            false,
-            null);
-    }
-
-    public async Task<(IEnumerable<ProcessStepTypeId>? nextStepTypeIds, ProcessStepStatusId stepStatusId, bool modified, string? processMessage)> CreateServiceInstance(Guid tenantId, CancellationToken cancellationToken)
-    {
-        var subAccountAuth = new BasicAuthSettings
+        var response = await provisioningClient.GetOperation(operationId.Value, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
+        if (response.Status == OperationResponseStatus.pending)
         {
-            TokenAddress = $"{_settings.AuthUrl}/oauth/token",
-            ClientId = _settings.ClientidCisCentral,
-            ClientSecret = _settings.ClientsecretCisCentral
-        };
-        var subAccountId = await dimRepositories.GetInstance<ITenantRepository>().GetSubAccountIdByTenantId(tenantId).ConfigureAwait(false);
-        if (subAccountId == null)
-        {
-            throw new ConflictException("SubAccountId must not be null.");
+            return new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(
+                null,
+                ProcessStepStatusId.TODO,
+                false,
+                null);
         }
 
-        var saBinding = await subAccountClient.GetServiceManagerBindings(subAccountAuth, subAccountId.Value, cancellationToken).ConfigureAwait(false);
-        var serviceInstance = await serviceClient.CreateServiceInstance(saBinding, cancellationToken).ConfigureAwait(false);
+        if (response is { Status: OperationResponseStatus.completed, Data: null })
+        {
+            throw new UnexpectedConditionException($"Data should never be null when in status {OperationResponseStatus.completed}");
+        }
 
-        dimRepositories.GetInstance<ITenantRepository>().AttachAndModifyTenant(tenantId, tenant =>
+        var serviceKey = response.Data!.ServiceKey;
+
+        var cryptoHelper = _settings.EncryptionConfigs.GetCryptoHelper(_settings.EncryptionConfigIndex);
+        var (secret, initializationVector) = cryptoHelper.Encrypt(serviceKey.Uaa.ClientSecret);
+
+        tenantRepository.AttachAndModifyTenant(tenantId,
+            t =>
             {
-                tenant.ServiceInstanceId = null;
+                t.TokenAddress = null;
+                t.BaseUrl = null;
+                t.ClientId = null;
+                t.ClientSecret = null;
             },
-            tenant =>
+            t =>
             {
-                tenant.ServiceInstanceId = serviceInstance.Id;
+                t.TokenAddress = serviceKey.Uaa.Url;
+                t.BaseUrl = serviceKey.Url;
+                t.ClientId = serviceKey.Uaa.ClientId;
+                t.ClientSecret = secret;
+                t.InitializationVector = initializationVector;
+                t.EncryptionMode = _settings.EncryptionConfigIndex;
             });
+
         return new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(
-            Enumerable.Repeat(ProcessStepTypeId.CREATE_SERVICE_BINDING, 1),
+            Enumerable.Repeat(ProcessStepTypeId.GET_COMPANY, 1),
             ProcessStepStatusId.DONE,
             false,
             null);
     }
 
-    public async Task<(IEnumerable<ProcessStepTypeId>? nextStepTypeIds, ProcessStepStatusId stepStatusId, bool modified, string? processMessage)> CreateServiceBindings(Guid tenantId, CancellationToken cancellationToken)
+    public async Task<(IEnumerable<ProcessStepTypeId>? nextStepTypeIds, ProcessStepStatusId stepStatusId, bool modified, string? processMessage)> GetCompany(Guid tenantId, string tenantName, CancellationToken cancellationToken)
     {
-        var subAccountAuth = new BasicAuthSettings
+        var tenantRepository = dimRepositories.GetInstance<ITenantRepository>();
+        var (baseUrl, walletData) = await tenantRepository.GetCompanyRequestData(tenantId).ConfigureAwait(ConfigureAwaitOptions.None);
+        var (tokenAddress, clientId, clientSecret, initializationVector, encryptionMode) = walletData.ValidateData();
+
+        if (string.IsNullOrWhiteSpace(baseUrl))
         {
-            TokenAddress = $"{_settings.AuthUrl}/oauth/token",
-            ClientId = _settings.ClientidCisCentral,
-            ClientSecret = _settings.ClientsecretCisCentral
-        };
-        var (subAccountId, serviceInstanceId) = await dimRepositories.GetInstance<ITenantRepository>().GetSubAccountAndServiceInstanceIdsByTenantId(tenantId).ConfigureAwait(false);
-        if (subAccountId == null)
-        {
-            throw new ConflictException("SubAccountId must not be null.");
+            throw new UnexpectedConditionException("BaseAddress must not be null");
         }
 
-        if (string.IsNullOrEmpty(serviceInstanceId))
-        {
-            throw new ConflictException("ServiceInstanceId must not be null.");
-        }
-
-        var saBinding = await subAccountClient.GetServiceManagerBindings(subAccountAuth, subAccountId.Value, cancellationToken).ConfigureAwait(false);
-        var serviceBinding = await serviceClient.CreateServiceBinding(saBinding, serviceInstanceId, cancellationToken).ConfigureAwait(false);
-
-        dimRepositories.GetInstance<ITenantRepository>().AttachAndModifyTenant(tenantId, tenant =>
-            {
-                tenant.ServiceBindingName = null;
-            },
-            tenant =>
-            {
-                tenant.ServiceBindingName = serviceBinding.Name;
-            });
-        return new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(
-            Enumerable.Repeat(ProcessStepTypeId.SUBSCRIBE_APPLICATION, 1),
-            ProcessStepStatusId.DONE,
-            false,
-            null);
-    }
-
-    public async Task<(IEnumerable<ProcessStepTypeId>? nextStepTypeIds, ProcessStepStatusId stepStatusId, bool modified, string? processMessage)> SubscribeApplication(Guid tenantId, CancellationToken cancellationToken)
-    {
-        var subAccountAuth = new BasicAuthSettings
-        {
-            TokenAddress = $"{_settings.AuthUrl}/oauth/token",
-            ClientId = _settings.ClientidCisCentral,
-            ClientSecret = _settings.ClientsecretCisCentral
-        };
-        var (subAccountId, serviceBindingName) = await dimRepositories.GetInstance<ITenantRepository>().GetSubAccountIdAndServiceBindingNameByTenantId(tenantId).ConfigureAwait(false);
-        if (subAccountId == null)
-        {
-            throw new ConflictException("SubAccountId must not be null.");
-        }
-
-        if (string.IsNullOrEmpty(serviceBindingName))
-        {
-            throw new ConflictException("ServiceBindingName must not be null.");
-        }
-
-        var saBinding = await subAccountClient.GetServiceManagerBindings(subAccountAuth, subAccountId.Value, cancellationToken).ConfigureAwait(false);
-        var bindingResponse = await serviceClient.GetServiceBinding(saBinding, serviceBindingName, cancellationToken).ConfigureAwait(false);
-        await subscriptionClient.SubscribeApplication(saBinding.Url, bindingResponse, "decentralized-identity-management-app", "standard", cancellationToken).ConfigureAwait(false);
-
-        return new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(
-            Enumerable.Repeat(ProcessStepTypeId.CREATE_CLOUD_FOUNDRY_ENVIRONMENT, 1),
-            ProcessStepStatusId.DONE,
-            false,
-            null);
-    }
-
-    public async Task<(IEnumerable<ProcessStepTypeId>? nextStepTypeIds, ProcessStepStatusId stepStatusId, bool modified, string? processMessage)> CreateCloudFoundryEnvironment(Guid tenantId, string tenantName, CancellationToken cancellationToken)
-    {
-        var adminMail = _settings.AdminMail;
-        var subAccountAuth = new BasicAuthSettings
-        {
-            TokenAddress = $"{_settings.AuthUrl}/oauth/token",
-            ClientId = _settings.ClientidCisCentral,
-            ClientSecret = _settings.ClientsecretCisCentral
-        };
-        var (subAccountId, serviceBindingName) = await dimRepositories.GetInstance<ITenantRepository>().GetSubAccountIdAndServiceBindingNameByTenantId(tenantId).ConfigureAwait(false);
-        if (subAccountId == null)
-        {
-            throw new ConflictException("SubAccountId must not be null.");
-        }
-
-        if (string.IsNullOrEmpty(serviceBindingName))
-        {
-            throw new ConflictException("ServiceBindingName must not be null.");
-        }
-
-        var saBinding = await subAccountClient.GetServiceManagerBindings(subAccountAuth, subAccountId.Value, cancellationToken).ConfigureAwait(false);
-        var bindingResponse = await serviceClient.GetServiceBinding(saBinding, serviceBindingName, cancellationToken).ConfigureAwait(false);
-        await provisioningClient.CreateCloudFoundryEnvironment(saBinding.Url, bindingResponse, tenantName, adminMail, cancellationToken)
-            .ConfigureAwait(false);
-
-        return new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(
-            Enumerable.Repeat(ProcessStepTypeId.CREATE_CLOUD_FOUNDRY_SPACE, 1),
-            ProcessStepStatusId.DONE,
-            false,
-            null);
-    }
-
-    public async Task<(IEnumerable<ProcessStepTypeId>? nextStepTypeIds, ProcessStepStatusId stepStatusId, bool modified, string? processMessage)> CreateCloudFoundrySpace(Guid tenantId, string tenantName, CancellationToken cancellationToken)
-    {
-        var spaceId = await cfClient.CreateCloudFoundrySpace(tenantName, cancellationToken).ConfigureAwait(false);
-
-        dimRepositories.GetInstance<ITenantRepository>().AttachAndModifyTenant(tenantId, tenant =>
-            {
-                tenant.SpaceId = null;
-            },
-            tenant =>
-            {
-                tenant.SpaceId = spaceId;
-            });
-        return new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(
-            Enumerable.Repeat(ProcessStepTypeId.ADD_SPACE_MANAGER_ROLE, 1),
-            ProcessStepStatusId.DONE,
-            false,
-            null);
-    }
-
-    public async Task<(IEnumerable<ProcessStepTypeId>? nextStepTypeIds, ProcessStepStatusId stepStatusId, bool modified, string? processMessage)> AddSpaceManagerRole(Guid tenantId, CancellationToken cancellationToken)
-    {
-        var adminMail = _settings.AdminMail;
-        var spaceId = await dimRepositories.GetInstance<ITenantRepository>().GetSpaceId(tenantId).ConfigureAwait(false);
-        if (spaceId == null)
-        {
-            throw new ConflictException("SpaceId must not be null.");
-        }
-
-        await cfClient.AddSpaceRoleToUser("space_manager", adminMail, spaceId.Value, cancellationToken).ConfigureAwait(false);
-
-        return new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(
-            Enumerable.Repeat(ProcessStepTypeId.ADD_SPACE_DEVELOPER_ROLE, 1),
-            ProcessStepStatusId.DONE,
-            false,
-            null);
-    }
-
-    public async Task<(IEnumerable<ProcessStepTypeId>? nextStepTypeIds, ProcessStepStatusId stepStatusId, bool modified, string? processMessage)> AddSpaceDeveloperRole(Guid tenantId, CancellationToken cancellationToken)
-    {
-        var adminMail = _settings.AdminMail;
-        var spaceId = await dimRepositories.GetInstance<ITenantRepository>().GetSpaceId(tenantId).ConfigureAwait(false);
-        if (spaceId == null)
-        {
-            throw new ConflictException("SpaceId must not be null.");
-        }
-
-        await cfClient.AddSpaceRoleToUser("space_developer", adminMail, spaceId.Value, cancellationToken).ConfigureAwait(false);
-
-        return new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(
-            Enumerable.Repeat(ProcessStepTypeId.CREATE_DIM_SERVICE_INSTANCE, 1),
-            ProcessStepStatusId.DONE,
-            false,
-            null);
-    }
-
-    public async Task<(IEnumerable<ProcessStepTypeId>? nextStepTypeIds, ProcessStepStatusId stepStatusId, bool modified, string? processMessage)> CreateDimServiceInstance(string tenantName, Guid tenantId, CancellationToken cancellationToken)
-    {
-        var servicePlanId = await cfClient.GetServicePlan("decentralized-identity-management", "standard", cancellationToken).ConfigureAwait(false);
-        var spaceId = await cfClient.GetSpace(tenantName, cancellationToken).ConfigureAwait(false);
-        await cfClient.CreateDimServiceInstance(tenantName, spaceId, servicePlanId, cancellationToken).ConfigureAwait(false);
-
-        return new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(
-            Enumerable.Repeat(ProcessStepTypeId.CREATE_SERVICE_INSTANCE_BINDING, 1),
-            ProcessStepStatusId.DONE,
-            false,
-            null);
-    }
-
-    public async Task<(IEnumerable<ProcessStepTypeId>? nextStepTypeIds, ProcessStepStatusId stepStatusId, bool modified, string? processMessage)> CreateServiceInstanceBindings(string tenantName, Guid tenantId, CancellationToken cancellationToken)
-    {
-        var spaceId = await dimRepositories.GetInstance<ITenantRepository>().GetSpaceId(tenantId).ConfigureAwait(false);
-        if (spaceId == null)
-        {
-            throw new ConflictException("SpaceId must not be null.");
-        }
-
-        await cfClient.CreateServiceInstanceBindings(tenantName, null, spaceId.Value, cancellationToken).ConfigureAwait(false);
-
-        return new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(
-            Enumerable.Repeat(ProcessStepTypeId.GET_DIM_DETAILS, 1),
-            ProcessStepStatusId.DONE,
-            false,
-            null);
-    }
-
-    public async Task<(IEnumerable<ProcessStepTypeId>? nextStepTypeIds, ProcessStepStatusId stepStatusId, bool modified, string? processMessage)> GetDimDetails(string tenantName, Guid tenantId, CancellationToken cancellationToken)
-    {
-        var spaceId = await dimRepositories.GetInstance<ITenantRepository>().GetSpaceId(tenantId).ConfigureAwait(false);
-        if (spaceId == null)
-        {
-            throw new ConflictException("SpaceId must not be null.");
-        }
-
-        var dimInstanceId = await cfClient.GetServiceBinding(tenantName, spaceId.Value, $"{tenantName}-dim-key01", cancellationToken).ConfigureAwait(false);
-
-        dimRepositories.GetInstance<ITenantRepository>().AttachAndModifyTenant(tenantId, tenant =>
-            {
-                tenant.DimInstanceId = null;
-            },
-            tenant =>
-            {
-                tenant.DimInstanceId = dimInstanceId;
-            });
-        return new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(
-            Enumerable.Repeat(ProcessStepTypeId.CREATE_APPLICATION, 1),
-            ProcessStepStatusId.DONE,
-            false,
-            null);
-    }
-
-    public async Task<(IEnumerable<ProcessStepTypeId>? nextStepTypeIds, ProcessStepStatusId stepStatusId, bool modified, string? processMessage)> CreateApplication(string tenantName, Guid tenantId, CancellationToken cancellationToken)
-    {
-        var (dimInstanceId, _, _) = await dimRepositories.GetInstance<ITenantRepository>().GetDimInstanceIdAndHostingUrl(tenantId).ConfigureAwait(false);
-        if (dimInstanceId == null)
-        {
-            throw new ConflictException("DimInstanceId must not be null.");
-        }
-
-        var dimDetails = await cfClient.GetServiceBindingDetails(dimInstanceId.Value, cancellationToken).ConfigureAwait(false);
+        var cryptoHelper = _settings.EncryptionConfigs.GetCryptoHelper(encryptionMode);
+        var secret = cryptoHelper.Decrypt(clientSecret, initializationVector);
 
         var dimAuth = new BasicAuthSettings
         {
-            TokenAddress = $"{dimDetails.Credentials.Uaa.Url}/oauth/token",
-            ClientId = dimDetails.Credentials.Uaa.ClientId,
-            ClientSecret = dimDetails.Credentials.Uaa.ClientSecret
+            TokenAddress = $"{tokenAddress}/oauth/token",
+            ClientId = clientId,
+            ClientSecret = secret
         };
-        var dimBaseUrl = dimDetails.Credentials.Url;
-        var applicationId = await dimClient.CreateApplication(dimAuth, dimBaseUrl, tenantName, cancellationToken).ConfigureAwait(false);
-        dimRepositories.GetInstance<ITenantRepository>().AttachAndModifyTenant(tenantId, tenant =>
-            {
-                tenant.ApplicationId = null;
-            },
-            tenant =>
-            {
-                tenant.ApplicationId = applicationId;
-            });
+        var companyData = await dimClient.GetCompanyData(dimAuth, baseUrl, tenantName, _settings.ApplicationName, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
+
+        tenantRepository.AttachAndModifyTenant(tenantId, t =>
+        {
+            t.DidDownloadUrl = null;
+            t.CompanyId = null;
+        },
+        t =>
+        {
+            t.DidDownloadUrl = companyData.DownloadUrl;
+            t.CompanyId = companyData.CompanyId;
+        });
+
         return new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(
-            Enumerable.Repeat(ProcessStepTypeId.CREATE_COMPANY_IDENTITY, 1),
+            Enumerable.Repeat(ProcessStepTypeId.GET_DID_DOCUMENT, 1),
             ProcessStepStatusId.DONE,
             false,
             null);
     }
 
-    public async Task<(IEnumerable<ProcessStepTypeId>? nextStepTypeIds, ProcessStepStatusId stepStatusId, bool modified, string? processMessage)> CreateCompanyIdentity(Guid tenantId, CancellationToken cancellationToken)
+    public async Task<(IEnumerable<ProcessStepTypeId>? nextStepTypeIds, ProcessStepStatusId stepStatusId, bool modified, string? processMessage)> GetDidDocument(Guid tenantId, CancellationToken cancellationToken)
     {
-        var (dimInstanceId, hostingUrl, isIssuer) = await dimRepositories.GetInstance<ITenantRepository>().GetDimInstanceIdAndHostingUrl(tenantId).ConfigureAwait(false);
-        if (dimInstanceId == null)
+        var tenantRepository = dimRepositories.GetInstance<ITenantRepository>();
+        var (downloadUrl, isIssuer) = await tenantRepository.GetDownloadUrlAndIsIssuer(tenantId).ConfigureAwait(ConfigureAwaitOptions.None);
+        if (string.IsNullOrWhiteSpace(downloadUrl))
         {
-            throw new ConflictException("DimInstanceId must not be null.");
+            throw new UnexpectedConditionException("DownloadUrl must not be null");
         }
 
-        var dimDetails = await cfClient.GetServiceBindingDetails(dimInstanceId.Value, cancellationToken).ConfigureAwait(false);
+        var didDocument = await GetDidDocument(downloadUrl, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
+        var did = didDocument.RootElement.GetProperty("id").GetString();
 
-        var dimAuth = new BasicAuthSettings
-        {
-            TokenAddress = $"{dimDetails.Credentials.Uaa.Url}/oauth/token",
-            ClientId = dimDetails.Credentials.Uaa.ClientId,
-            ClientSecret = dimDetails.Credentials.Uaa.ClientSecret
-        };
-        var dimBaseUrl = dimDetails.Credentials.Url;
-        var result = await dimClient.CreateCompanyIdentity(dimAuth, tenantId, hostingUrl, dimBaseUrl, isIssuer, cancellationToken).ConfigureAwait(false);
-
-        dimRepositories.GetInstance<ITenantRepository>().AttachAndModifyTenant(tenantId, tenant =>
+        tenantRepository.AttachAndModifyTenant(tenantId, t =>
             {
-                tenant.DidDownloadUrl = null;
-                tenant.Did = null;
-                tenant.CompanyId = null;
+                t.Did = null;
             },
-            tenant =>
+            t =>
             {
-                tenant.DidDownloadUrl = result.DownloadUrl;
-                tenant.Did = result.Did;
-                tenant.CompanyId = result.CompanyId;
+                t.Did = did;
             });
-        return new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(
-            Enumerable.Repeat(ProcessStepTypeId.ASSIGN_COMPANY_APPLICATION, 1),
-            ProcessStepStatusId.DONE,
-            false,
-            null);
-    }
 
-    public async Task<(IEnumerable<ProcessStepTypeId>? nextStepTypeIds, ProcessStepStatusId stepStatusId, bool modified, string? processMessage)> AssignCompanyApplication(Guid tenantId, CancellationToken cancellationToken)
-    {
-        var (applicationId, companyId, dimInstanceId, isIssuer) = await dimRepositories.GetInstance<ITenantRepository>().GetApplicationAndCompanyId(tenantId).ConfigureAwait(false);
-        if (applicationId == null)
-        {
-            throw new ConflictException("ApplicationId must always be set here");
-        }
-
-        if (companyId == null)
-        {
-            throw new ConflictException("CompanyId must always be set here");
-        }
-
-        if (dimInstanceId == null)
-        {
-            throw new ConflictException("DimInstanceId must not be null.");
-        }
-
-        var dimDetails = await cfClient.GetServiceBindingDetails(dimInstanceId.Value, cancellationToken).ConfigureAwait(false);
-        var dimAuth = new BasicAuthSettings
-        {
-            TokenAddress = $"{dimDetails.Credentials.Uaa.Url}/oauth/token",
-            ClientId = dimDetails.Credentials.Uaa.ClientId,
-            ClientSecret = dimDetails.Credentials.Uaa.ClientSecret
-        };
-        var dimBaseUrl = dimDetails.Credentials.Url;
-        var applicationKey = await dimClient.GetApplication(dimAuth, dimBaseUrl, applicationId, cancellationToken);
-        await dimClient.AssignApplicationToCompany(dimAuth, dimBaseUrl, applicationKey, companyId.Value, cancellationToken).ConfigureAwait(false);
-
-        dimRepositories.GetInstance<ITenantRepository>().AttachAndModifyTenant(tenantId, tenant =>
-            {
-                tenant.ApplicationKey = null;
-            },
-            tenant =>
-            {
-                tenant.ApplicationKey = applicationKey;
-            });
         return new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(
             Enumerable.Repeat(isIssuer ? ProcessStepTypeId.CREATE_STATUS_LIST : ProcessStepTypeId.SEND_CALLBACK, 1),
             ProcessStepStatusId.DONE,
@@ -485,26 +189,29 @@ public class DimProcessHandler(
 
     public async Task<(IEnumerable<ProcessStepTypeId>? nextStepTypeIds, ProcessStepStatusId stepStatusId, bool modified, string? processMessage)> CreateStatusList(Guid tenantId, CancellationToken cancellationToken)
     {
-        var (_, companyId, dimInstanceId, _) = await dimRepositories.GetInstance<ITenantRepository>().GetApplicationAndCompanyId(tenantId).ConfigureAwait(false);
+        var (companyId, baseUrl, walletData) = await dimRepositories.GetInstance<ITenantRepository>().GetStatusListCreationData(tenantId).ConfigureAwait(ConfigureAwaitOptions.None);
+        var (tokenAddress, clientId, clientSecret, initializationVector, encryptionMode) = walletData.ValidateData();
+
         if (companyId == null)
         {
-            throw new ConflictException("CompanyId must always be set here");
+            throw new UnexpectedConditionException("CompanyId must not be null");
         }
 
-        if (dimInstanceId == null)
+        if (baseUrl == null)
         {
-            throw new ConflictException("DimInstanceId must not be null.");
+            throw new UnexpectedConditionException("BaseUrl must not be null");
         }
 
-        var dimDetails = await cfClient.GetServiceBindingDetails(dimInstanceId.Value, cancellationToken).ConfigureAwait(false);
+        var cryptoHelper = _settings.EncryptionConfigs.GetCryptoHelper(encryptionMode);
+        var secret = cryptoHelper.Decrypt(clientSecret, initializationVector);
+
         var dimAuth = new BasicAuthSettings
         {
-            TokenAddress = $"{dimDetails.Credentials.Uaa.Url}/oauth/token",
-            ClientId = dimDetails.Credentials.Uaa.ClientId,
-            ClientSecret = dimDetails.Credentials.Uaa.ClientSecret
+            TokenAddress = $"{tokenAddress}/oauth/token",
+            ClientId = clientId,
+            ClientSecret = secret
         };
-        var dimBaseUrl = dimDetails.Credentials.Url;
-        await dimClient.CreateStatusList(dimAuth, dimBaseUrl, companyId.Value, cancellationToken).ConfigureAwait(false);
+        await dimClient.CreateStatusList(dimAuth, baseUrl, companyId.Value, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
 
         return new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(
             Enumerable.Repeat(ProcessStepTypeId.SEND_CALLBACK, 1),
@@ -515,31 +222,41 @@ public class DimProcessHandler(
 
     public async Task<(IEnumerable<ProcessStepTypeId>? nextStepTypeIds, ProcessStepStatusId stepStatusId, bool modified, string? processMessage)> SendCallback(Guid tenantId, CancellationToken cancellationToken)
     {
-        var (bpn, downloadUrl, did, dimInstanceId) = await dimRepositories.GetInstance<ITenantRepository>().GetCallbackData(tenantId).ConfigureAwait(false);
-        if (downloadUrl == null)
+        var (bpn, baseUrl, walletData, did, downloadUrl) = await dimRepositories.GetInstance<ITenantRepository>().GetCallbackData(tenantId).ConfigureAwait(ConfigureAwaitOptions.None);
+        var (tokenAddress, clientId, clientSecret, initializationVector, encryptionMode) = walletData.ValidateData();
+        if (baseUrl == null)
         {
-            throw new ConflictException("DownloadUrl must not be null.");
+            throw new UnexpectedConditionException("BaseUrl must always be set");
         }
 
         if (did == null)
         {
-            throw new ConflictException("Did must not be null.");
+            throw new UnexpectedConditionException("Did must always be set");
         }
 
-        if (dimInstanceId == null)
+        if (downloadUrl == null)
         {
-            throw new ConflictException("DimInstanceId must not be null.");
+            throw new UnexpectedConditionException("DownloadUrl must always be set");
         }
 
-        var dimDetails = await cfClient.GetServiceBindingDetails(dimInstanceId.Value, cancellationToken).ConfigureAwait(false);
-        var didDocument = await dimClient.GetDidDocument(downloadUrl, cancellationToken).ConfigureAwait(false);
+        var cryptoHelper = _settings.EncryptionConfigs.GetCryptoHelper(encryptionMode);
+        var secret = cryptoHelper.Decrypt(clientSecret, initializationVector);
 
-        await callbackService.SendCallback(bpn, dimDetails, didDocument, did, cancellationToken).ConfigureAwait(false);
+        var didDocument = await GetDidDocument(downloadUrl, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
+        var uaa = new AuthenticationDetail(tokenAddress, clientId, secret);
+        await callbackService.SendCallback(bpn, uaa, didDocument, did, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
 
         return new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(
             null,
             ProcessStepStatusId.DONE,
             false,
             null);
+    }
+
+    private async Task<JsonDocument> GetDidDocument(string downloadUrl, CancellationToken cancellationToken)
+    {
+        var client = httpClientFactory.CreateClient("didDocumentDownload");
+        using var result = await client.GetStreamAsync(downloadUrl, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
+        return await JsonDocument.ParseAsync(result, cancellationToken: cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
     }
 }

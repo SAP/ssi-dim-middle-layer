@@ -23,7 +23,7 @@ using Dim.DbAccess.Repositories;
 using Dim.Entities.Enums;
 using DimProcess.Library;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
-using Org.Eclipse.TractusX.Portal.Backend.Processes.Worker.Library;
+using Processes.Worker.Library;
 using System.Collections.Immutable;
 
 namespace DimProcess.Executor;
@@ -34,23 +34,10 @@ public class DimProcessTypeExecutor(
     : IProcessTypeExecutor
 {
     private readonly IEnumerable<ProcessStepTypeId> _executableProcessSteps = ImmutableArray.Create(
-        ProcessStepTypeId.CREATE_SUBACCOUNT,
-        ProcessStepTypeId.CREATE_SERVICEMANAGER_BINDINGS,
-        ProcessStepTypeId.ASSIGN_ENTITLEMENTS,
-        ProcessStepTypeId.CREATE_SERVICE_INSTANCE,
-        ProcessStepTypeId.CREATE_SERVICE_BINDING,
-        ProcessStepTypeId.SUBSCRIBE_APPLICATION,
-        ProcessStepTypeId.CREATE_CLOUD_FOUNDRY_ENVIRONMENT,
-        ProcessStepTypeId.CREATE_CLOUD_FOUNDRY_SPACE,
-        ProcessStepTypeId.ADD_SPACE_MANAGER_ROLE,
-        ProcessStepTypeId.ADD_SPACE_DEVELOPER_ROLE,
-        ProcessStepTypeId.CREATE_DIM_SERVICE_INSTANCE,
-        ProcessStepTypeId.CREATE_SERVICE_INSTANCE_BINDING,
-        ProcessStepTypeId.GET_DIM_DETAILS,
-        ProcessStepTypeId.CREATE_APPLICATION,
-        ProcessStepTypeId.CREATE_COMPANY_IDENTITY,
-        ProcessStepTypeId.CREATE_STATUS_LIST,
-        ProcessStepTypeId.ASSIGN_COMPANY_APPLICATION,
+        ProcessStepTypeId.CREATE_WALLET,
+        ProcessStepTypeId.CHECK_OPERATION,
+        ProcessStepTypeId.GET_COMPANY,
+        ProcessStepTypeId.GET_DID_DOCUMENT,
         ProcessStepTypeId.SEND_CALLBACK);
 
     private Guid _tenantId;
@@ -70,7 +57,7 @@ public class DimProcessTypeExecutor(
         }
 
         _tenantId = tenantId;
-        _tenantName = $"{bpn}_{companyName}";
+        _tenantName = $"{bpn}{companyName}";
         return new IProcessTypeExecutor.InitializationResult(false, null);
     }
 
@@ -90,37 +77,13 @@ public class DimProcessTypeExecutor(
         {
             (nextStepTypeIds, stepStatusId, modified, processMessage) = processStepTypeId switch
             {
-                ProcessStepTypeId.CREATE_SUBACCOUNT => await dimProcessHandler.CreateSubaccount(_tenantId, _tenantName, cancellationToken)
+                ProcessStepTypeId.CREATE_WALLET => await dimProcessHandler.CreateWallet(_tenantId, _tenantName, cancellationToken)
                     .ConfigureAwait(false),
-                ProcessStepTypeId.CREATE_SERVICEMANAGER_BINDINGS => await dimProcessHandler.CreateServiceManagerBindings(_tenantId, cancellationToken)
+                ProcessStepTypeId.CHECK_OPERATION => await dimProcessHandler.CheckOperation(_tenantId, cancellationToken)
                     .ConfigureAwait(false),
-                ProcessStepTypeId.ASSIGN_ENTITLEMENTS => await dimProcessHandler.AssignEntitlements(_tenantId, cancellationToken)
+                ProcessStepTypeId.GET_COMPANY => await dimProcessHandler.GetCompany(_tenantId, _tenantName, cancellationToken)
                     .ConfigureAwait(false),
-                ProcessStepTypeId.CREATE_SERVICE_INSTANCE => await dimProcessHandler.CreateServiceInstance(_tenantId, cancellationToken)
-                    .ConfigureAwait(false),
-                ProcessStepTypeId.CREATE_SERVICE_BINDING => await dimProcessHandler.CreateServiceBindings(_tenantId, cancellationToken)
-                    .ConfigureAwait(false),
-                ProcessStepTypeId.SUBSCRIBE_APPLICATION => await dimProcessHandler.SubscribeApplication(_tenantId, cancellationToken)
-                    .ConfigureAwait(false),
-                ProcessStepTypeId.CREATE_CLOUD_FOUNDRY_ENVIRONMENT => await dimProcessHandler.CreateCloudFoundryEnvironment(_tenantId, _tenantName, cancellationToken)
-                    .ConfigureAwait(false),
-                ProcessStepTypeId.CREATE_CLOUD_FOUNDRY_SPACE => await dimProcessHandler.CreateCloudFoundrySpace(_tenantId, _tenantName, cancellationToken)
-                    .ConfigureAwait(false),
-                ProcessStepTypeId.ADD_SPACE_MANAGER_ROLE => await dimProcessHandler.AddSpaceManagerRole(_tenantId, cancellationToken)
-                    .ConfigureAwait(false),
-                ProcessStepTypeId.ADD_SPACE_DEVELOPER_ROLE => await dimProcessHandler.AddSpaceDeveloperRole(_tenantId, cancellationToken)
-                    .ConfigureAwait(false),
-                ProcessStepTypeId.CREATE_DIM_SERVICE_INSTANCE => await dimProcessHandler.CreateDimServiceInstance(_tenantName, _tenantId, cancellationToken)
-                    .ConfigureAwait(false),
-                ProcessStepTypeId.CREATE_SERVICE_INSTANCE_BINDING => await dimProcessHandler.CreateServiceInstanceBindings(_tenantName, _tenantId, cancellationToken)
-                    .ConfigureAwait(false),
-                ProcessStepTypeId.GET_DIM_DETAILS => await dimProcessHandler.GetDimDetails(_tenantName, _tenantId, cancellationToken)
-                    .ConfigureAwait(false),
-                ProcessStepTypeId.CREATE_APPLICATION => await dimProcessHandler.CreateApplication(_tenantName, _tenantId, cancellationToken)
-                    .ConfigureAwait(false),
-                ProcessStepTypeId.CREATE_COMPANY_IDENTITY => await dimProcessHandler.CreateCompanyIdentity(_tenantId, cancellationToken)
-                    .ConfigureAwait(false),
-                ProcessStepTypeId.ASSIGN_COMPANY_APPLICATION => await dimProcessHandler.AssignCompanyApplication(_tenantId, cancellationToken)
+                ProcessStepTypeId.GET_DID_DOCUMENT => await dimProcessHandler.GetDidDocument(_tenantId, cancellationToken)
                     .ConfigureAwait(false),
                 ProcessStepTypeId.CREATE_STATUS_LIST => await dimProcessHandler.CreateStatusList(_tenantId, cancellationToken)
                     .ConfigureAwait(false),

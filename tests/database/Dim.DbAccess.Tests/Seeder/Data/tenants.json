@@ -1,0 +1,23 @@
+[
+  {
+    "id": "5c9a4f56-0609-49a5-ab86-dd8f93dfd3fa",
+    "company_name": "issuer company",
+    "bpn": "BPNL000001ISSUER",
+    "did_document_location": "https://example.org/BPNL000001ISSUER",
+    "process_id": "dd371565-9489-4907-a2e4-b8cbfe7a8cd1",
+    "is_issuer": true,
+    "operator_id": "a7444c10-5b07-430d-a3c1-c52675c4fa5a",
+    "operation_id": "6dcac248-57ab-4309-9477-ee21586b3738",
+    "company_id": "6dcac248-57ab-4309-9477-ee21586b3666",
+    "base_url": "https://example.org/base"
+  },
+  {
+    "id": "5ced499f-7e7a-4e3c-aee6-41ae96df6d40",
+    "company_name": "test corp",
+    "bpn": "BPNL0000001CORP",
+    "did_document_location": "https://example.org/BPNL0000001CORP",
+    "process_id": "dd371565-9489-4907-a2e4-b8cbfe7a8cd2",
+    "is_issuer": false,
+    "operator_id": "a7444c10-5b07-430d-a3c1-c52675c4fa5a"
+  }
+]

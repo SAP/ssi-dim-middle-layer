@@ -42,7 +42,6 @@ dim:
     readyness:
       path: "/ready"
   swaggerEnabled: false
-  rootDirectoryId: "00000000-0000-0000-0000-000000000000"
   operatorId: "00000000-0000-0000-0000-000000000000"
 
 migrations:
@@ -80,23 +79,23 @@ processesworker:
       cpu: 45m
       memory: 300M
   dim:
-    adminMail: "mail@example.org"
-    clientIdCisCentral: ""
-    clientSecretCisCentral: ""
-    authUrl: ""
-  subaccount:
-    # -- Url to the subaccount service api
-    baseUrl: ""
-  entitlement:
-    # -- Url to the entitlement service api
-    baseUrl: ""
-  cf:
+    applicationName: ""
+  provisioning:
     clientId: ""
     clientSecret: ""
     tokenAddress: ""
     # -- Url to the cf service api
     baseUrl: ""
     grantType: "client_credentials"
+    encryptionConfigIndex: 0
+    encryptionConfigs:
+      index0:
+        index: 0
+        cipherMode: "CBC"
+        paddingMode: "PKCS7"
+        # -- EncryptionKey to encrypt the provisioning client-secret. Secret-key 'provisioning-encryption-key0'.
+        # Expected format is 256 bit (64 digits) hex.
+        encryptionKey: ""
   callback:
     scope: "openid"
     grantType: "client_credentials"

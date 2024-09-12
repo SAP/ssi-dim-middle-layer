@@ -22,26 +22,22 @@ using Dim.Entities.Enums;
 
 namespace Dim.Entities.Entities;
 
-public class ProcessStep
+public class ProcessStep(
+    Guid id,
+    ProcessStepTypeId processStepTypeId,
+    ProcessStepStatusId processStepStatusId,
+    Guid processId,
+    DateTimeOffset dateCreated)
 {
-    public ProcessStep(Guid id, ProcessStepTypeId processStepTypeId, ProcessStepStatusId processStepStatusId, Guid processId, DateTimeOffset dateCreated)
-    {
-        Id = id;
-        ProcessStepTypeId = processStepTypeId;
-        ProcessStepStatusId = processStepStatusId;
-        ProcessId = processId;
-        DateCreated = dateCreated;
-    }
+    public Guid Id { get; private set; } = id;
 
-    public Guid Id { get; private set; }
+    public ProcessStepTypeId ProcessStepTypeId { get; private set; } = processStepTypeId;
 
-    public ProcessStepTypeId ProcessStepTypeId { get; private set; }
+    public ProcessStepStatusId ProcessStepStatusId { get; set; } = processStepStatusId;
 
-    public ProcessStepStatusId ProcessStepStatusId { get; set; }
+    public Guid ProcessId { get; private set; } = processId;
 
-    public Guid ProcessId { get; private set; }
-
-    public DateTimeOffset DateCreated { get; private set; }
+    public DateTimeOffset DateCreated { get; private set; } = dateCreated;
 
     public DateTimeOffset? DateLastChanged { get; set; }
 

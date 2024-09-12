@@ -18,156 +18,53 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using Dim.Clients.Api.Dim.Models;
 using Dim.Clients.Extensions;
 using Dim.Clients.Token;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.HttpClientExtensions;
 using System.Net.Http.Json;
 using System.Text.Json;
+using System.Web;
 
 namespace Dim.Clients.Api.Dim;
 
-public class DimClient(IBasicAuthTokenService basicAuthTokenService, IHttpClientFactory clientFactory)
+public class DimClient(IBasicAuthTokenService basicAuthTokenService)
     : IDimClient
 {
-    public async Task<CreateCompanyIdentityResponse> CreateCompanyIdentity(BasicAuthSettings dimBasicAuth, Guid tenantId, string hostingUrl, string baseUrl, bool isIssuer, CancellationToken cancellationToken)
+    public async Task<CompanyData> GetCompanyData(BasicAuthSettings dimAuth, string dimBaseUrl, string tenantName, string application, CancellationToken cancellationToken)
     {
-        var client = await basicAuthTokenService.GetBasicAuthorizedClient<DimClient>(dimBasicAuth, cancellationToken).ConfigureAwait(false);
-        var data = new CreateCompanyIdentityRequest(new Payload(
-            hostingUrl,
-            new Network("web", "production"),
-            [new Service($"dim:web:{tenantId}", "CredentialService", "https://dis-agent-prod.eu10.dim.cloud.sap/api/v1.0.0/iatp")],
-            isIssuer ?
-                [
-                    new("SIGNING"),
-                    new("SIGNING_VC")
-                ] :
-                new Key[]
-                {
-                    new("SIGNING")
-                },
-            "holder iatp"));
-        var result = await client.PostAsJsonAsync($"{baseUrl}/api/v2.0.0/companyIdentities", data, JsonSerializerExtensions.Options, cancellationToken)
-            .CatchingIntoServiceExceptionFor("create-company-identity", HttpAsyncResponseMessageExtension.RecoverOptions.INFRASTRUCTURE,
-                async m =>
-                {
-                    var message = await m.Content.ReadAsStringAsync().ConfigureAwait(false);
-                    return (false, message);
-                }).ConfigureAwait(false);
+        var client = await basicAuthTokenService.GetBasicAuthorizedClient<DimClient>(dimAuth, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
+        var filterString = $"name eq {tenantName} and application eq {application}";
+        var result = await client.GetAsync($"{dimBaseUrl}/api/v2.0.0/companyIdentities?$filter={HttpUtility.UrlEncode(filterString)}", cancellationToken);
         try
         {
             var response = await result.Content
-                .ReadFromJsonAsync<CreateCompanyIdentityResponse>(JsonSerializerExtensions.Options, cancellationToken)
+                .ReadFromJsonAsync<CompanyIdentitiesResponse>(JsonSerializerExtensions.Options, cancellationToken)
                 .ConfigureAwait(false);
-            if (response == null)
+            if (response?.Data == null || response.Data.Count() != 1)
             {
-                throw new ServiceException("Response was empty", true);
+                throw new ConflictException("There is no matching company");
             }
 
-            return response;
+            return response.Data.Single();
         }
         catch (JsonException je)
         {
             throw new ServiceException(je.Message);
         }
-    }
-
-    public async Task<JsonDocument> GetDidDocument(string url, CancellationToken cancellationToken)
-    {
-        var client = clientFactory.CreateClient("didDocumentDownload");
-        using var result = await client.GetStreamAsync(url, cancellationToken).ConfigureAwait(false);
-        var document = await JsonDocument.ParseAsync(result, cancellationToken: cancellationToken).ConfigureAwait(false);
-        return document;
-    }
-
-    public async Task<string> CreateApplication(BasicAuthSettings dimAuth, string dimBaseUrl, string tenantName, CancellationToken cancellationToken)
-    {
-        var client = await basicAuthTokenService.GetBasicAuthorizedClient<DimClient>(dimAuth, cancellationToken).ConfigureAwait(false);
-        var data = new CreateApplicationRequest(new ApplicationPayload(
-            "catena-x-portal",
-            $"Catena-X Portal MIW for {tenantName}",
-            6));
-        var result = await client.PostAsJsonAsync($"{dimBaseUrl}/api/v2.0.0/applications", data, JsonSerializerExtensions.Options, cancellationToken)
-            .CatchingIntoServiceExceptionFor("create-application", HttpAsyncResponseMessageExtension.RecoverOptions.INFRASTRUCTURE,
-                async m =>
-                {
-                    var message = await m.Content.ReadAsStringAsync().ConfigureAwait(false);
-                    return (false, message);
-                }).ConfigureAwait(false);
-        try
-        {
-            var response = await result.Content
-                .ReadFromJsonAsync<CreateApplicationResponse>(JsonSerializerExtensions.Options, cancellationToken)
-                .ConfigureAwait(false);
-            if (response == null)
-            {
-                throw new ServiceException("Response was empty", true);
-            }
-
-            return response.Id;
-        }
-        catch (JsonException je)
-        {
-            throw new ServiceException(je.Message);
-        }
-    }
-
-    public async Task<string> GetApplication(BasicAuthSettings dimAuth, string dimBaseUrl, string applicationId, CancellationToken cancellationToken)
-    {
-        var client = await basicAuthTokenService.GetBasicAuthorizedClient<DimClient>(dimAuth, cancellationToken).ConfigureAwait(false);
-        var result = await client.GetAsync($"{dimBaseUrl}/api/v2.0.0/applications/{applicationId}", cancellationToken)
-            .CatchingIntoServiceExceptionFor("get-application", HttpAsyncResponseMessageExtension.RecoverOptions.INFRASTRUCTURE,
-                async m =>
-                {
-                    var message = await m.Content.ReadAsStringAsync().ConfigureAwait(false);
-                    return (false, message);
-                }).ConfigureAwait(false);
-        try
-        {
-            var response = await result.Content
-                .ReadFromJsonAsync<ApplicationResponse>(JsonSerializerExtensions.Options, cancellationToken)
-                .ConfigureAwait(false);
-            if (response == null)
-            {
-                throw new ServiceException("Response must not be null");
-            }
-
-            return response.ApplicaitonKey;
-        }
-        catch (JsonException je)
-        {
-            throw new ServiceException(je.Message);
-        }
-    }
-
-    public async Task AssignApplicationToCompany(BasicAuthSettings dimAuth, string dimBaseUrl, string applicationKey, Guid companyId, CancellationToken cancellationToken)
-    {
-        var client = await basicAuthTokenService.GetBasicAuthorizedClient<DimClient>(dimAuth, cancellationToken).ConfigureAwait(false);
-        var data = new CompanyIdentityPatch(new ApplicationUpdates(Enumerable.Repeat(applicationKey, 1)));
-        await client.PatchAsJsonAsync($"{dimBaseUrl}/api/v2.0.0/companyIdentities/{companyId}", data, JsonSerializerExtensions.Options, cancellationToken)
-            .CatchingIntoServiceExceptionFor("assign-application", HttpAsyncResponseMessageExtension.RecoverOptions.INFRASTRUCTURE,
-                async m =>
-                {
-                    var message = await m.Content.ReadAsStringAsync().ConfigureAwait(false);
-                    return (false, message);
-                }).ConfigureAwait(false);
     }
 
     public async Task<string> GetStatusList(BasicAuthSettings dimAuth, string dimBaseUrl, Guid companyId, CancellationToken cancellationToken)
     {
-        var client = await basicAuthTokenService.GetBasicAuthorizedClient<DimClient>(dimAuth, cancellationToken).ConfigureAwait(false);
+        var client = await basicAuthTokenService.GetBasicAuthorizedClient<DimClient>(dimAuth, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
         var result = await client.GetAsync($"{dimBaseUrl}/api/v2.0.0/companyIdentities/{companyId}/revocationLists", cancellationToken);
         try
         {
             var response = await result.Content
                 .ReadFromJsonAsync<StatusListListResponse>(JsonSerializerExtensions.Options, cancellationToken)
-                .ConfigureAwait(false);
-            if (response == null)
-            {
-                throw new ServiceException("Response must not be null");
-            }
-
-            if (!response.Data.Any(x => x.RemainingSpace > 0))
+                .ConfigureAwait(ConfigureAwaitOptions.None);
+            if (response?.Data == null || !response.Data.Any(x => x.RemainingSpace > 0))
             {
                 throw new ConflictException("There is no status list with remaining space, please create a new one.");
             }
@@ -182,7 +79,7 @@ public class DimClient(IBasicAuthTokenService basicAuthTokenService, IHttpClient
 
     public async Task<string> CreateStatusList(BasicAuthSettings dimAuth, string dimBaseUrl, Guid companyId, CancellationToken cancellationToken)
     {
-        var client = await basicAuthTokenService.GetBasicAuthorizedClient<DimClient>(dimAuth, cancellationToken).ConfigureAwait(false);
+        var client = await basicAuthTokenService.GetBasicAuthorizedClient<DimClient>(dimAuth, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
         var data = new CreateStatusListRequest(new CreateStatusListPaypload(new CreateStatusList("StatusList2021", DateTimeOffset.UtcNow.ToString("yyyyMMdd"), "New revocation list", 2097152)));
         var result = await client.PostAsJsonAsync($"{dimBaseUrl}/api/v2.0.0/companyIdentities/{companyId}/revocationLists", data, JsonSerializerExtensions.Options, cancellationToken)
             .CatchingIntoServiceExceptionFor("assign-application", HttpAsyncResponseMessageExtension.RecoverOptions.INFRASTRUCTURE,
@@ -195,7 +92,7 @@ public class DimClient(IBasicAuthTokenService basicAuthTokenService, IHttpClient
         {
             var response = await result.Content
                 .ReadFromJsonAsync<CreateStatusListResponse>(JsonSerializerExtensions.Options, cancellationToken)
-                .ConfigureAwait(false);
+                .ConfigureAwait(ConfigureAwaitOptions.None);
             if (response == null)
             {
                 throw new ServiceException("Response must not be null");

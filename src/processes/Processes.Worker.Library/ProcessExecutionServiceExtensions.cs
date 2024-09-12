@@ -22,7 +22,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.DateTimeProvider;
 
-namespace Org.Eclipse.TractusX.Portal.Backend.Processes.Worker.Library;
+namespace Processes.Worker.Library;
 
 public static class ProcessExecutionServiceExtensions
 {
