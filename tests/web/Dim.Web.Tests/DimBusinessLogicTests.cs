@@ -77,8 +77,14 @@ public class DimBusinessLogicTests
         result.Message.Should().Be($"Tenant testCompany with Bpn BPNL00000001TEST already exists");
     }
 
-    [Fact]
-    public async Task StartSetupDim_WithNewData_CreatesExpected()
+    [Theory]
+    [InlineData("testCompany", "testcompany")]
+    [InlineData("-abc123", "abc123")]
+    [InlineData("abc-123", "abc123")]
+    [InlineData("abc#123", "abc123")]
+    [InlineData("abc'123", "abc123")]
+    [InlineData("abc\"123", "abc123")]
+    public async Task StartSetupDim_WithNewData_CreatesExpected(string companyName, string expectedCompanyName)
     {
         // Arrange
         var processId = Guid.NewGuid();
@@ -106,7 +112,7 @@ public class DimBusinessLogicTests
             });
 
         // Act
-        await _sut.StartSetupDim("testCompany", "BPNL00000001TEST", "https://example.org/test", false);
+        await _sut.StartSetupDim(companyName, "BPNL00000001TEST", "https://example.org/test", false);
 
         // Assert
         processes.Should().ContainSingle()
@@ -114,6 +120,6 @@ public class DimBusinessLogicTests
         processSteps.Should().ContainSingle()
             .And.Satisfy(x => x.ProcessId == processId && x.ProcessStepTypeId == ProcessStepTypeId.CREATE_SUBACCOUNT);
         tenants.Should().ContainSingle()
-            .And.Satisfy(x => x.CompanyName == "testCompany" && x.Bpn == "BPNL00000001TEST");
+            .And.Satisfy(x => x.CompanyName == expectedCompanyName && x.Bpn == "BPNL00000001TEST");
     }
 }

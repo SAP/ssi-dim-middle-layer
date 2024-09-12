@@ -28,20 +28,11 @@ using System.Text.RegularExpressions;
 
 namespace Dim.Clients.Api.SubAccounts;
 
-public class SubAccountClient : ISubAccountClient
+public class SubAccountClient(IBasicAuthTokenService basicAuthTokenService) : ISubAccountClient
 {
-    private static readonly Regex TenantName = new(@"(?<=[^\w-])|(?<=[^-])[\W_]+|(?<=[^-])$", RegexOptions.Compiled, new TimeSpan(0, 0, 0, 1));
-    private readonly IBasicAuthTokenService _basicAuthTokenService;
-
-    public SubAccountClient(IBasicAuthTokenService basicAuthTokenService)
+    public async Task<Guid> CreateSubaccount(BasicAuthSettings basicAuthSettings, string adminMail, string tenantName, Guid directoryId, string bpn, CancellationToken cancellationToken)
     {
-        _basicAuthTokenService = basicAuthTokenService;
-    }
-
-    public async Task<Guid> CreateSubaccount(BasicAuthSettings basicAuthSettings, string adminMail, string tenantName, Guid directoryId, CancellationToken cancellationToken)
-    {
-        var subdomain = TenantName.Replace(tenantName, "-").ToLower().TrimStart('-').TrimEnd('-');
-        var client = await _basicAuthTokenService.GetBasicAuthorizedClient<SubAccountClient>(basicAuthSettings, cancellationToken).ConfigureAwait(false);
+        var client = await basicAuthTokenService.GetBasicAuthorizedClient<SubAccountClient>(basicAuthSettings, cancellationToken).ConfigureAwait(false);
         var directory = new CreateSubAccountRequest(
             false,
             $"CX customer sub-account {tenantName}",
@@ -55,7 +46,7 @@ public class SubAccountClient : ISubAccountClient
             directoryId,
             "eu10",
             Enumerable.Repeat(adminMail, 1),
-            subdomain,
+            bpn,
             UsedForProduction.USED_FOR_PRODUCTION
         );
 
@@ -86,7 +77,7 @@ public class SubAccountClient : ISubAccountClient
 
     public async Task CreateServiceManagerBindings(BasicAuthSettings basicAuthSettings, Guid subAccountId, CancellationToken cancellationToken)
     {
-        var client = await _basicAuthTokenService.GetBasicAuthorizedClient<SubAccountClient>(basicAuthSettings, cancellationToken).ConfigureAwait(false);
+        var client = await basicAuthTokenService.GetBasicAuthorizedClient<SubAccountClient>(basicAuthSettings, cancellationToken).ConfigureAwait(false);
         var data = new
         {
             name = "accessServiceManager"
@@ -98,7 +89,7 @@ public class SubAccountClient : ISubAccountClient
 
     public async Task<ServiceManagementBindingItem> GetServiceManagerBindings(BasicAuthSettings basicAuthSettings, Guid subAccountId, CancellationToken cancellationToken)
     {
-        var client = await _basicAuthTokenService.GetBasicAuthorizedClient<SubAccountClient>(basicAuthSettings, cancellationToken).ConfigureAwait(false);
+        var client = await basicAuthTokenService.GetBasicAuthorizedClient<SubAccountClient>(basicAuthSettings, cancellationToken).ConfigureAwait(false);
 
         var result = await client.GetAsync($"/accounts/v2/subaccounts/{subAccountId}/serviceManagerBindings", cancellationToken)
             .CatchingIntoServiceExceptionFor("create-subaccount", HttpAsyncResponseMessageExtension.RecoverOptions.ALLWAYS).ConfigureAwait(false);

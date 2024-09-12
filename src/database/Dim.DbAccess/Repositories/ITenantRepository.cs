@@ -19,6 +19,8 @@
  ********************************************************************************/
 
 using Dim.Entities.Entities;
+using System;
+using System.Threading.Tasks;
 
 namespace Dim.DbAccess.Repositories;
 
@@ -47,4 +49,5 @@ public interface ITenantRepository
     Task<Guid> GetExternalIdForTechnicalUser(Guid technicalUserId);
     void RemoveTechnicalUser(Guid technicalUserId);
     Task<bool> IsTenantExisting(string companyName, string bpn);
+    Task<string> GetTenantBpn(Guid tenantId);
 }

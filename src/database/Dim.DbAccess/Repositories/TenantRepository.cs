@@ -21,6 +21,8 @@
 using Dim.Entities;
 using Dim.Entities.Entities;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Threading.Tasks;
 
 namespace Dim.DbAccess.Repositories;
 
@@ -165,4 +167,10 @@ public class TenantRepository(DimDbContext context) : ITenantRepository
     public Task<bool> IsTenantExisting(string companyName, string bpn) =>
         context.Tenants
             .AnyAsync(x => x.CompanyName == companyName && x.Bpn == bpn);
+
+    public Task<string> GetTenantBpn(Guid tenantId) =>
+        context.Tenants
+            .Where(x => x.Id == tenantId)
+            .Select(x => x.Bpn)
+            .SingleAsync();
 }

@@ -24,7 +24,7 @@ namespace Dim.Clients.Api.SubAccounts;
 
 public interface ISubAccountClient
 {
-    Task<Guid> CreateSubaccount(BasicAuthSettings basicAuthSettings, string adminMail, string tenantName, Guid directoryId, CancellationToken cancellationToken);
+    Task<Guid> CreateSubaccount(BasicAuthSettings basicAuthSettings, string adminMail, string tenantName, Guid directoryId, string bpn, CancellationToken cancellationToken);
     Task CreateServiceManagerBindings(BasicAuthSettings basicAuthSettings, Guid subAccountId, CancellationToken cancellationToken);
     Task<ServiceManagementBindingItem> GetServiceManagerBindings(BasicAuthSettings basicAuthSettings, Guid subAccountId, CancellationToken cancellationToken);
 }
