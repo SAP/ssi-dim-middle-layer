@@ -80,9 +80,9 @@ public class CfClient : ICfClient
             .ConfigureAwait(false);
 
         var tenantEnvironment = environments?.Resources.Where(x => x.Name == tenantName);
-        if (tenantEnvironment == null || tenantEnvironment.Count() > 1)
+        if (tenantEnvironment == null || tenantEnvironment.Count() != 1)
         {
-            throw new ConflictException($"There should only be one cf environment for tenant {tenantName}");
+            throw new ServiceException($"There should only be one cf environment for tenant {tenantName}", true);
         }
 
         return tenantEnvironment.Single().EnvironmentId;

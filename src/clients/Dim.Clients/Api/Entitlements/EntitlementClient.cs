@@ -48,6 +48,6 @@ public class EntitlementClient : IEntitlementClient
             );
 
         await client.PutAsJsonAsync("/entitlements/v1/subaccountServicePlans", data, JsonSerializerExtensions.Options, cancellationToken)
-            .CatchingIntoServiceExceptionFor("assign-entitlements", HttpAsyncResponseMessageExtension.RecoverOptions.INFRASTRUCTURE).ConfigureAwait(false);
+            .CatchingIntoServiceExceptionFor("assign-entitlements", HttpAsyncResponseMessageExtension.RecoverOptions.ALLWAYS).ConfigureAwait(false);
     }
 }
