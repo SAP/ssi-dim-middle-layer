@@ -23,17 +23,7 @@ namespace Dim.DbAccess;
 public interface IDimRepositories
 {
     RepositoryType GetInstance<RepositoryType>();
-
-    /// <inheritdoc />
     TEntity Attach<TEntity>(TEntity entity, Action<TEntity>? setOptionalParameters = null) where TEntity : class;
-
-    void AttachRange<TEntity>(IEnumerable<TEntity> entities, Action<TEntity> setOptionalParameters) where TEntity : class;
-    IEnumerable<TEntity> AttachRange<TEntity>(IEnumerable<TEntity> entities) where TEntity : class;
-
-    /// <inheritdoc />
-    TEntity Remove<TEntity>(TEntity entity) where TEntity : class;
-
-    void RemoveRange<TEntity>(IEnumerable<TEntity> entities) where TEntity : class;
     Task<int> SaveAsync();
     void Clear();
 }

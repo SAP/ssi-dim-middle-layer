@@ -26,27 +26,21 @@ using System.Collections.Immutable;
 
 namespace Dim.DbAccess;
 
-public class DimRepositories : IDimRepositories
+public class DimRepositories(DimDbContext dbContext)
+    : IDimRepositories
 {
-    private readonly DimDbContext _dbContext;
-
-    private static readonly IReadOnlyDictionary<Type, Func<DimDbContext, Object>> _types = new Dictionary<Type, Func<DimDbContext, Object>> {
+    private static readonly IReadOnlyDictionary<Type, Func<DimDbContext, object>> Types = new Dictionary<Type, Func<DimDbContext, object>> {
         { typeof(IProcessStepRepository), context => new ProcessStepRepository(context) },
         { typeof(ITenantRepository), context => new TenantRepository(context) }
     }.ToImmutableDictionary();
 
-    public DimRepositories(DimDbContext dimDbContext)
-    {
-        _dbContext = dimDbContext;
-    }
-
     public RepositoryType GetInstance<RepositoryType>()
     {
-        Object? repository = default;
+        object? repository = default;
 
-        if (_types.TryGetValue(typeof(RepositoryType), out var createFunc))
+        if (Types.TryGetValue(typeof(RepositoryType), out var createFunc))
         {
-            repository = createFunc(_dbContext);
+            repository = createFunc(dbContext);
         }
 
         return (RepositoryType)(repository ?? throw new ArgumentException($"unexpected type {typeof(RepositoryType).Name}", nameof(RepositoryType)));
@@ -55,41 +49,17 @@ public class DimRepositories : IDimRepositories
     /// <inheritdoc />
     public TEntity Attach<TEntity>(TEntity entity, Action<TEntity>? setOptionalParameters = null) where TEntity : class
     {
-        var attachedEntity = _dbContext.Attach(entity).Entity;
+        var attachedEntity = dbContext.Attach(entity).Entity;
         setOptionalParameters?.Invoke(attachedEntity);
 
         return attachedEntity;
     }
 
-    public void AttachRange<TEntity>(IEnumerable<TEntity> entities, Action<TEntity> setOptionalParameters) where TEntity : class
-    {
-        foreach (var entity in entities)
-        {
-            var attachedEntity = _dbContext.Attach(entity).Entity;
-            setOptionalParameters.Invoke(attachedEntity);
-        }
-    }
-
-    public IEnumerable<TEntity> AttachRange<TEntity>(IEnumerable<TEntity> entities) where TEntity : class
-    {
-        foreach (var entity in entities)
-        {
-            yield return _dbContext.Attach(entity).Entity;
-        }
-    }
-
-    /// <inheritdoc />
-    public TEntity Remove<TEntity>(TEntity entity) where TEntity : class
-        => _dbContext.Remove(entity).Entity;
-
-    public void RemoveRange<TEntity>(IEnumerable<TEntity> entities) where TEntity : class
-        => _dbContext.RemoveRange(entities);
-
     public Task<int> SaveAsync()
     {
         try
         {
-            return _dbContext.SaveChangesAsync();
+            return dbContext.SaveChangesAsync();
         }
         catch (DbUpdateConcurrencyException e)
         {
@@ -97,5 +67,5 @@ public class DimRepositories : IDimRepositories
         }
     }
 
-    public void Clear() => _dbContext.ChangeTracker.Clear();
+    public void Clear() => dbContext.ChangeTracker.Clear();
 }

@@ -20,7 +20,7 @@
 
 using Dim.Entities.Enums;
 
-namespace Org.Eclipse.TractusX.Portal.Backend.Processes.Worker.Library;
+namespace Processes.Worker.Library;
 
 public interface IProcessExecutor
 {

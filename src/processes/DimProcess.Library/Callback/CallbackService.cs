@@ -18,7 +18,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using Dim.Clients.Api.Cf;
+using Dim.Clients.Api.Div.Models;
 using Dim.Clients.Extensions;
 using DimProcess.Library.Callback.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -34,17 +34,14 @@ public class CallbackService(ITokenService tokenService, IOptions<CallbackSettin
 {
     private readonly CallbackSettings _settings = options.Value;
 
-    public async Task SendCallback(string bpn, ServiceCredentialBindingDetailResponse dimDetails, JsonDocument didDocument, string did, CancellationToken cancellationToken)
+    public async Task SendCallback(string bpn, AuthenticationDetail authenticationDetail, JsonDocument didDocument, string did, CancellationToken cancellationToken)
     {
         var httpClient = await tokenService.GetAuthorizedClient<CallbackService>(_settings, cancellationToken)
             .ConfigureAwait(false);
         var data = new CallbackDataModel(
             did,
             didDocument,
-            new AuthenticationDetail(
-                dimDetails.Credentials.Uaa.Url,
-                dimDetails.Credentials.Uaa.ClientId,
-                dimDetails.Credentials.Uaa.ClientSecret)
+            authenticationDetail
         );
         await httpClient.PostAsJsonAsync($"/api/administration/registration/dim/{bpn}", data, JsonSerializerExtensions.Options, cancellationToken)
                 .CatchingIntoServiceExceptionFor("send-callback", HttpAsyncResponseMessageExtension.RecoverOptions.INFRASTRUCTURE)

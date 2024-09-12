@@ -18,6 +18,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using Dim.Clients.Api.Dim.Models;
 using Dim.Clients.Token;
 using System.Text.Json;
 
@@ -25,11 +26,7 @@ namespace Dim.Clients.Api.Dim;
 
 public interface IDimClient
 {
-    Task<CreateCompanyIdentityResponse> CreateCompanyIdentity(BasicAuthSettings dimBasicAuth, Guid tenantId, string hostingUrl, string baseUrl, bool isIssuer, CancellationToken cancellationToken);
-    Task<JsonDocument> GetDidDocument(string url, CancellationToken cancellationToken);
-    Task<string> CreateApplication(BasicAuthSettings dimAuth, string dimBaseUrl, string tenantName, CancellationToken cancellationToken);
-    Task<string> GetApplication(BasicAuthSettings dimAuth, string dimBaseUrl, string applicationId, CancellationToken cancellationToken);
-    Task AssignApplicationToCompany(BasicAuthSettings dimAuth, string dimBaseUrl, string applicationKey, Guid companyId, CancellationToken cancellationToken);
+    Task<CompanyData> GetCompanyData(BasicAuthSettings dimAuth, string dimBaseUrl, string tenantName, string application, CancellationToken cancellationToken);
     Task<string> GetStatusList(BasicAuthSettings dimAuth, string dimBaseUrl, Guid companyId, CancellationToken cancellationToken);
     Task<string> CreateStatusList(BasicAuthSettings dimAuth, string dimBaseUrl, Guid companyId, CancellationToken cancellationToken);
 }

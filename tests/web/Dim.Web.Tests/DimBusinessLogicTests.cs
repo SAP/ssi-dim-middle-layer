@@ -18,15 +18,20 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using Dim.Clients.Api.Cf;
 using Dim.Clients.Api.Dim;
+using Dim.Clients.Token;
 using Dim.DbAccess;
+using Dim.DbAccess.Models;
 using Dim.DbAccess.Repositories;
 using Dim.Entities.Entities;
 using Dim.Entities.Enums;
 using Dim.Web.BusinessLogic;
+using Dim.Web.ErrorHandling;
+using Dim.Web.Models;
 using Microsoft.Extensions.Options;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.Models.Configuration;
+using System.Security.Cryptography;
 
 namespace Dim.Web.Tests;
 
@@ -34,21 +39,21 @@ public class DimBusinessLogicTests
 {
     private static readonly Guid OperatorId = Guid.NewGuid();
     private readonly IDimBusinessLogic _sut;
-    private readonly ICfClient _cfClient;
     private readonly IDimClient _dimClient;
     private readonly ITenantRepository _tenantRepository;
     private readonly IProcessStepRepository _processStepRepository;
+    private readonly DimSettings _settings;
+    private readonly IFixture _fixture;
 
     public DimBusinessLogicTests()
     {
-        var fixture = new Fixture().Customize(new AutoFakeItEasyCustomization { ConfigureMembers = true });
-        fixture.Behaviors.OfType<ThrowingRecursionBehavior>().ToList()
-            .ForEach(b => fixture.Behaviors.Remove(b));
-        fixture.Behaviors.Add(new OmitOnRecursionBehavior());
+        _fixture = new Fixture().Customize(new AutoFakeItEasyCustomization { ConfigureMembers = true });
+        _fixture.Behaviors.OfType<ThrowingRecursionBehavior>().ToList()
+            .ForEach(b => _fixture.Behaviors.Remove(b));
+        _fixture.Behaviors.Add(new OmitOnRecursionBehavior());
 
         var repositories = A.Fake<IDimRepositories>();
         _dimClient = A.Fake<IDimClient>();
-        _cfClient = A.Fake<ICfClient>();
 
         _tenantRepository = A.Fake<ITenantRepository>();
         _processStepRepository = A.Fake<IProcessStepRepository>();
@@ -56,11 +61,24 @@ public class DimBusinessLogicTests
         A.CallTo(() => repositories.GetInstance<ITenantRepository>()).Returns(_tenantRepository);
         A.CallTo(() => repositories.GetInstance<IProcessStepRepository>()).Returns(_processStepRepository);
 
-        _sut = new DimBusinessLogic(repositories, _cfClient, _dimClient, Options.Create(new DimSettings
+        _settings = new DimSettings
         {
-            OperatorId = OperatorId
-        }));
+            OperatorId = OperatorId,
+            EncryptionConfigs = new[]
+            {
+                new EncryptionModeConfig
+                {
+                    Index = 0,
+                    CipherMode = CipherMode.CBC,
+                    PaddingMode = PaddingMode.PKCS7,
+                    EncryptionKey = "2c68516f23467028602524534824437e417e253c29546c563c2f5e3d485e7667"
+                }
+            }
+        };
+        _sut = new DimBusinessLogic(repositories, _dimClient, Options.Create(_settings));
     }
+
+    #region StartSetupDim
 
     [Fact]
     public async Task StartSetupDim_WithExisting_ThrowsConflictException()
@@ -74,7 +92,7 @@ public class DimBusinessLogicTests
         var result = await Assert.ThrowsAsync<ConflictException>(Act);
 
         // Assert
-        result.Message.Should().Be($"Tenant testCompany with Bpn BPNL00000001TEST already exists");
+        result.Message.Should().Be(DimErrors.TENANT_ALREADY_EXISTS.ToString());
     }
 
     [Theory]
@@ -97,11 +115,12 @@ public class DimBusinessLogicTests
             .Invokes((ProcessTypeId processTypeId) =>
             {
                 processes.Add(new Process(processId, processTypeId, Guid.NewGuid()));
-            });
+            })
+            .Returns(new Process(processId, ProcessTypeId.TECHNICAL_USER, Guid.NewGuid()));
         A.CallTo(() => _processStepRepository.CreateProcessStep(A<ProcessStepTypeId>._, A<ProcessStepStatusId>._, A<Guid>._))
             .Invokes((ProcessStepTypeId processStepTypeId, ProcessStepStatusId processStepStatusId, Guid pId) =>
             {
-                processSteps.Add(new ProcessStep(Guid.NewGuid(), processStepTypeId, processStepStatusId, processId, DateTimeOffset.UtcNow));
+                processSteps.Add(new ProcessStep(Guid.NewGuid(), processStepTypeId, processStepStatusId, pId, DateTimeOffset.UtcNow));
             });
         A.CallTo(() =>
                 _tenantRepository.CreateTenant(A<string>._, A<string>._, A<string>._, A<bool>._, A<Guid>._, A<Guid>._))
@@ -118,8 +137,276 @@ public class DimBusinessLogicTests
         processes.Should().ContainSingle()
             .Which.ProcessTypeId.Should().Be(ProcessTypeId.SETUP_DIM);
         processSteps.Should().ContainSingle()
-            .And.Satisfy(x => x.ProcessId == processId && x.ProcessStepTypeId == ProcessStepTypeId.CREATE_SUBACCOUNT);
+            .And.Satisfy(x => x.ProcessId == processId && x.ProcessStepTypeId == ProcessStepTypeId.CREATE_WALLET);
         tenants.Should().ContainSingle()
             .And.Satisfy(x => x.CompanyName == expectedCompanyName && x.Bpn == "BPNL00000001TEST");
+    }
+
+    #endregion
+
+    #region GetStatusList
+
+    [Fact]
+    public async Task GetStatusList_WithNotExisting_ThrowsNotFoundException()
+    {
+        // Arrange
+        var bpn = "BPNL00000001TEST";
+        A.CallTo(() => _tenantRepository.GetCompanyAndWalletDataForBpn(bpn))
+            .Returns((false, null, null, GetWalletData()));
+        Task Act() => _sut.GetStatusList(bpn, CancellationToken.None);
+
+        // Act
+        var result = await Assert.ThrowsAsync<NotFoundException>(Act);
+
+        // Assert
+        result.Message.Should().Be(DimErrors.NO_COMPANY_FOR_BPN.ToString());
+    }
+
+    [Fact]
+    public async Task GetStatusList_WithoutCompanyId_ThrowsConflictException()
+    {
+        // Arrange
+        const string Bpn = "BPNL00000001TEST";
+        A.CallTo(() => _tenantRepository.GetCompanyAndWalletDataForBpn(Bpn))
+            .Returns((true, null, null, GetWalletData()));
+        Task Act() => _sut.GetStatusList(Bpn, CancellationToken.None);
+
+        // Act
+        var result = await Assert.ThrowsAsync<ConflictException>(Act);
+
+        // Assert
+        result.Message.Should().Be(DimErrors.NO_COMPANY_ID_SET.ToString());
+    }
+
+    [Fact]
+    public async Task GetStatusList_WithBaseUrlNotSet_ThrowsConflictException()
+    {
+        // Arrange
+        const string Bpn = "BPNL00000001TEST";
+        var companyId = Guid.NewGuid();
+        A.CallTo(() => _tenantRepository.GetCompanyAndWalletDataForBpn(Bpn))
+            .Returns((true, companyId, null, GetWalletData()));
+        Task Act() => _sut.GetStatusList(Bpn, CancellationToken.None);
+
+        // Act
+        var result = await Assert.ThrowsAsync<ConflictException>(Act);
+
+        // Assert
+        result.Message.Should().Be(DimErrors.NO_BASE_URL_SET.ToString());
+    }
+
+    [Fact]
+    public async Task GetStatusList_WithValid_ReturnsExpected()
+    {
+        // Arrange
+        const string Bpn = "BPNL00000001TEST";
+        const string BaseUrl = "https://example.org/base";
+        var companyId = Guid.NewGuid();
+        A.CallTo(() => _tenantRepository.GetCompanyAndWalletDataForBpn(Bpn))
+            .Returns((true, companyId, BaseUrl, GetWalletData()));
+        A.CallTo(() => _dimClient.GetStatusList(A<BasicAuthSettings>._, BaseUrl, companyId, A<CancellationToken>._))
+            .Returns("https://example.org/statuslist");
+
+        // Act
+        var result = await _sut.GetStatusList(Bpn, CancellationToken.None);
+
+        // Assert
+        result.Should().Be("https://example.org/statuslist");
+    }
+
+    #endregion
+
+    #region CreateStatusList
+
+    [Fact]
+    public async Task CreateStatusList_WithNotExisting_ThrowsNotFoundException()
+    {
+        // Arrange
+        var bpn = "BPNL00000001TEST";
+        A.CallTo(() => _tenantRepository.GetCompanyAndWalletDataForBpn(bpn))
+            .Returns((false, null, null, GetWalletData()));
+        Task Act() => _sut.CreateStatusList(bpn, CancellationToken.None);
+
+        // Act
+        var result = await Assert.ThrowsAsync<NotFoundException>(Act);
+
+        // Assert
+        result.Message.Should().Be(DimErrors.NO_COMPANY_FOR_BPN.ToString());
+    }
+
+    [Fact]
+    public async Task CreateStatusList_WithoutCompanyId_ThrowsConflictException()
+    {
+        // Arrange
+        const string Bpn = "BPNL00000001TEST";
+        A.CallTo(() => _tenantRepository.GetCompanyAndWalletDataForBpn(Bpn))
+            .Returns((true, null, null, GetWalletData()));
+        Task Act() => _sut.CreateStatusList(Bpn, CancellationToken.None);
+
+        // Act
+        var result = await Assert.ThrowsAsync<ConflictException>(Act);
+
+        // Assert
+        result.Message.Should().Be(DimErrors.NO_COMPANY_ID_SET.ToString());
+    }
+
+    [Fact]
+    public async Task CreateStatusList_WithBaseUrlNotSet_ThrowsConflictException()
+    {
+        // Arrange
+        const string Bpn = "BPNL00000001TEST";
+        var companyId = Guid.NewGuid();
+        A.CallTo(() => _tenantRepository.GetCompanyAndWalletDataForBpn(Bpn))
+            .Returns((true, companyId, null, GetWalletData()));
+        Task Act() => _sut.CreateStatusList(Bpn, CancellationToken.None);
+
+        // Act
+        var result = await Assert.ThrowsAsync<ConflictException>(Act);
+
+        // Assert
+        result.Message.Should().Be(DimErrors.NO_BASE_URL_SET.ToString());
+    }
+
+    [Fact]
+    public async Task CreateStatusList_WithValid_ReturnsExpected()
+    {
+        // Arrange
+        const string Bpn = "BPNL00000001TEST";
+        const string BaseUrl = "https://example.org/base";
+        var companyId = Guid.NewGuid();
+        A.CallTo(() => _tenantRepository.GetCompanyAndWalletDataForBpn(Bpn))
+            .Returns((true, companyId, BaseUrl, GetWalletData()));
+        A.CallTo(() => _dimClient.CreateStatusList(A<BasicAuthSettings>._, BaseUrl, companyId, A<CancellationToken>._))
+            .Returns("https://example.org/statuslist");
+
+        // Act
+        var result = await _sut.CreateStatusList(Bpn, CancellationToken.None);
+
+        // Assert
+        result.Should().Be("https://example.org/statuslist");
+    }
+
+    #endregion
+
+    #region StartSetupDim
+
+    [Fact]
+    public async Task CreateTechnicalUser_WithExisting_ThrowsNotFoundException()
+    {
+        // Arrange
+        const string Bpn = "BPNL00000001TEST";
+        A.CallTo(() => _tenantRepository.GetTenantForBpn(Bpn))
+            .Returns((false, Guid.NewGuid()));
+        async Task Act() => await _sut.CreateTechnicalUser(Bpn, _fixture.Create<TechnicalUserData>());
+
+        // Act
+        var result = await Assert.ThrowsAsync<NotFoundException>(Act);
+
+        // Assert
+        result.Message.Should().Be(DimErrors.NO_COMPANY_FOR_BPN.ToString());
+    }
+
+    [Fact]
+    public async Task CreateTechnicalUser_WithNewData_CreatesExpected()
+    {
+        // Arrange
+        const string Bpn = "BPNL00001Test";
+        var processId = Guid.NewGuid();
+        var processes = new List<Process>();
+        var processSteps = new List<ProcessStep>();
+        var technicalUsers = new List<TechnicalUser>();
+        A.CallTo(() => _tenantRepository.GetTenantForBpn(Bpn))
+            .Returns((true, Guid.NewGuid()));
+        A.CallTo(() => _processStepRepository.CreateProcess(A<ProcessTypeId>._))
+            .Invokes((ProcessTypeId processTypeId) =>
+            {
+                processes.Add(new Process(processId, processTypeId, Guid.NewGuid()));
+            })
+            .Returns(new Process(processId, ProcessTypeId.TECHNICAL_USER, Guid.NewGuid()));
+        A.CallTo(() => _processStepRepository.CreateProcessStep(A<ProcessStepTypeId>._, A<ProcessStepStatusId>._, A<Guid>._))
+            .Invokes((ProcessStepTypeId processStepTypeId, ProcessStepStatusId processStepStatusId, Guid pId) =>
+            {
+                processSteps.Add(new ProcessStep(Guid.NewGuid(), processStepTypeId, processStepStatusId, pId, DateTimeOffset.UtcNow));
+            });
+        A.CallTo(() =>
+                _tenantRepository.CreateTenantTechnicalUser(A<Guid>._, A<string>._, A<Guid>._, A<Guid>._))
+            .Invokes((Guid tenantId, string name, Guid externalId, Guid pId) =>
+            {
+                technicalUsers.Add(new TechnicalUser(Guid.NewGuid(), tenantId, externalId, name, pId));
+            });
+
+        // Act
+        await _sut.CreateTechnicalUser(Bpn, _fixture.Create<TechnicalUserData>());
+
+        // Assert
+        processes.Should().ContainSingle()
+            .Which.ProcessTypeId.Should().Be(ProcessTypeId.TECHNICAL_USER);
+        processSteps.Should().ContainSingle()
+            .And.Satisfy(x => x.ProcessId == processId && x.ProcessStepTypeId == ProcessStepTypeId.CREATE_TECHNICAL_USER);
+        technicalUsers.Should().ContainSingle();
+    }
+
+    #endregion
+
+    #region StartSetupDim
+
+    [Fact]
+    public async Task DeleteTechnicalUser_WithExisting_ThrowsNotFoundException()
+    {
+        // Arrange
+        const string Bpn = "BPNL00000001TEST";
+        var technicalUserData = new TechnicalUserData(Guid.NewGuid(), "test");
+        A.CallTo(() => _tenantRepository.GetTechnicalUserForBpn(Bpn, technicalUserData.Name))
+            .Returns((false, Guid.NewGuid(), Guid.NewGuid()));
+        async Task Act() => await _sut.DeleteTechnicalUser(Bpn, technicalUserData);
+
+        // Act
+        var result = await Assert.ThrowsAsync<NotFoundException>(Act);
+
+        // Assert
+        result.Message.Should().Be(DimErrors.NO_TECHNICAL_USER_FOUND.ToString());
+    }
+
+    [Fact]
+    public async Task DeleteTechnicalUser_WithValid_DeletesExpected()
+    {
+        // Arrange
+        const string Bpn = "BPNL00001Test";
+        var processId = Guid.NewGuid();
+        var processSteps = new List<ProcessStep>();
+        var technicalUserData = new TechnicalUserData(Guid.NewGuid(), "test");
+        var technicalUser = new TechnicalUser(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), "test", processId);
+        A.CallTo(() => _tenantRepository.GetTechnicalUserForBpn(Bpn, technicalUserData.Name))
+            .Returns((true, technicalUser.Id, technicalUser.ProcessId));
+        A.CallTo(() => _processStepRepository.CreateProcessStep(A<ProcessStepTypeId>._, A<ProcessStepStatusId>._, A<Guid>._))
+            .Invokes((ProcessStepTypeId processStepTypeId, ProcessStepStatusId processStepStatusId, Guid pId) =>
+            {
+                processSteps.Add(new ProcessStep(Guid.NewGuid(), processStepTypeId, processStepStatusId, pId, DateTimeOffset.UtcNow));
+            });
+        A.CallTo(() => _tenantRepository.AttachAndModifyTechnicalUser(A<Guid>._, A<Action<TechnicalUser>>._, A<Action<TechnicalUser>>._))
+            .Invokes((Guid _, Action<TechnicalUser>? initialize, Action<TechnicalUser> modify) =>
+            {
+                initialize?.Invoke(technicalUser);
+                modify(technicalUser);
+            });
+
+        // Act
+        await _sut.DeleteTechnicalUser(Bpn, technicalUserData);
+
+        // Assert
+        processSteps.Should().ContainSingle()
+            .And.Satisfy(x => x.ProcessId == processId && x.ProcessStepTypeId == ProcessStepTypeId.DELETE_TECHNICAL_USER);
+        technicalUser.ProcessId.Should().Be(processId);
+        technicalUser.ExternalId.Should().Be(technicalUserData.ExternalId);
+    }
+
+    #endregion
+
+    private WalletData GetWalletData()
+    {
+        var cryptoHelper = _settings.EncryptionConfigs.GetCryptoHelper(0);
+        var (secret, initializationVector) = cryptoHelper.Encrypt("test123");
+
+        return new WalletData("https://example.org/token", "cl1", secret, initializationVector, 0);
     }
 }

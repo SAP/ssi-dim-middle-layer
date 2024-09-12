@@ -18,8 +18,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using Dim.Clients.Api.Cf;
 using Dim.DbAccess;
+using Dim.DbAccess.Models;
 using Dim.DbAccess.Repositories;
 using Dim.Entities.Entities;
 using Dim.Entities.Enums;
@@ -35,9 +35,9 @@ namespace DimProcess.Library.Tests;
 public class TechnicalUserProcessHandlerTests
 {
     private readonly ITenantRepository _tenantRepositories;
-    private readonly ICfClient _cfClient;
     private readonly ICallbackService _callbackService;
     private readonly TechnicalUserProcessHandler _sut;
+    private readonly TechnicalUserSettings _settings;
 
     public TechnicalUserProcessHandlerTests()
     {
@@ -51,9 +51,8 @@ public class TechnicalUserProcessHandlerTests
 
         A.CallTo(() => repositories.GetInstance<ITenantRepository>()).Returns(_tenantRepositories);
 
-        _cfClient = A.Fake<ICfClient>();
         _callbackService = A.Fake<ICallbackService>();
-        var options = Options.Create(new TechnicalUserSettings
+        _settings = new TechnicalUserSettings
         {
             EncryptionConfigIndex = 0,
             EncryptionConfigs = new[]
@@ -66,43 +65,72 @@ public class TechnicalUserProcessHandlerTests
                     EncryptionKey = "2c68516f23467028602524534824437e417e253c29546c563c2f5e3d485e7667"
                 }
             }
-        });
+        };
+        var options = Options.Create(_settings);
 
-        _sut = new TechnicalUserProcessHandler(repositories, _cfClient, _callbackService, options);
+        _sut = new TechnicalUserProcessHandler(repositories, _callbackService, options);
     }
 
-    #region CreateSubaccount
+    #region CreateServiceInstanceBindings
 
     [Fact]
-    public async Task CreateSubaccount_WithValidData_ReturnsExpected()
+    public async Task CreateServiceInstanceBindings_WithValidData_ReturnsExpected()
     {
         // Arrange
         var technicalUserId = Guid.NewGuid();
-        var serviceBindingId = Guid.NewGuid();
-        var technicalUser = new TechnicalUser(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), "test", Guid.NewGuid());
-        A.CallTo(() => _tenantRepositories.GetSpaceIdAndTechnicalUserName(technicalUserId))
-            .Returns(new ValueTuple<Guid?, string>(Guid.NewGuid(), "test"));
-        A.CallTo(() => _cfClient.GetServiceBinding("test", A<Guid>._, A<string>._, A<CancellationToken>._))
-            .Returns(serviceBindingId);
-        A.CallTo(() => _cfClient.GetServiceBindingDetails(serviceBindingId, A<CancellationToken>._))
-            .Returns(new ServiceCredentialBindingDetailResponse(new Credentials("https://example.org", new Uaa("cl1", "test123", "https://example.org/test", "https://example.org/api"))));
-        A.CallTo(() => _tenantRepositories.AttachAndModifyTechnicalUser(A<Guid>._, A<Action<TechnicalUser>>._, A<Action<TechnicalUser>>._))
-            .Invokes((Guid _, Action<TechnicalUser>? initialize, Action<TechnicalUser> modify) =>
-            {
-                initialize?.Invoke(technicalUser);
-                modify(technicalUser);
-            });
 
+        // Act
+        var result = await _sut.CreateServiceInstanceBindings("test", technicalUserId, CancellationToken.None);
+
+        // Assert
+        result.modified.Should().BeFalse();
+        result.processMessage.Should().Be("Technical User Creation is currently not supported");
+        result.stepStatusId.Should().Be(ProcessStepStatusId.FAILED);
+        result.nextStepTypeIds.Should().BeNull();
+    }
+
+    #endregion
+
+    #region GetTechnicalUserData
+
+    [Fact]
+    public async Task GetTechnicalUserData_WithValidData_ReturnsExpected()
+    {
+        // Arrange
+        var technicalUserId = Guid.NewGuid();
         // Act
         var result = await _sut.GetTechnicalUserData("test", technicalUserId, CancellationToken.None);
 
         // Assert
         result.modified.Should().BeFalse();
+        result.processMessage.Should().Be("Technical User Creation is currently not supported");
+        result.stepStatusId.Should().Be(ProcessStepStatusId.FAILED);
+        result.nextStepTypeIds.Should().BeNull();
+    }
+
+    #endregion
+
+    #region SendCreateCallback
+
+    [Fact]
+    public async Task SendCreateCallback_WithValidData_ReturnsExpected()
+    {
+        // Arrange
+        var technicalUserId = Guid.NewGuid();
+        A.CallTo(() => _tenantRepositories.GetTechnicalUserCallbackData(technicalUserId))
+            .Returns((Guid.NewGuid(), GetWalletData()));
+
+        // Act
+        var result = await _sut.SendCreateCallback(technicalUserId, CancellationToken.None);
+
+        // Assert
+        A.CallTo(() => _callbackService.SendTechnicalUserCallback(A<Guid>._, A<string>._, A<string>._, A<string>._, A<CancellationToken>._))
+            .MustHaveHappenedOnceExactly();
+
+        result.modified.Should().BeFalse();
         result.processMessage.Should().BeNull();
         result.stepStatusId.Should().Be(ProcessStepStatusId.DONE);
-        result.nextStepTypeIds.Should().ContainSingle().Which.Should().Be(ProcessStepTypeId.SEND_TECHNICAL_USER_CREATION_CALLBACK);
-        technicalUser.EncryptionMode.Should().NotBeNull().And.Be(0);
-        technicalUser.ClientId.Should().Be("cl1");
+        result.nextStepTypeIds.Should().BeNull();
     }
 
     #endregion
@@ -114,43 +142,15 @@ public class TechnicalUserProcessHandlerTests
     {
         // Arrange
         var technicalUserId = Guid.NewGuid();
-        var serviceBindingId = Guid.NewGuid();
-        var spaceId = Guid.NewGuid();
-        A.CallTo(() => _tenantRepositories.GetSpaceIdAndTechnicalUserName(technicalUserId))
-            .Returns(new ValueTuple<Guid?, string>(spaceId, "test"));
-        A.CallTo(() => _cfClient.GetServiceBinding("test", spaceId, A<string>._, A<CancellationToken>._))
-            .Returns(serviceBindingId);
 
         // Act
         var result = await _sut.DeleteServiceInstanceBindings("test", technicalUserId, CancellationToken.None);
 
         // Assert
         result.modified.Should().BeFalse();
-        result.processMessage.Should().BeNull();
-        result.stepStatusId.Should().Be(ProcessStepStatusId.DONE);
-        result.nextStepTypeIds.Should().ContainSingle().Which.Should().Be(ProcessStepTypeId.SEND_TECHNICAL_USER_DELETION_CALLBACK);
-        A.CallTo(() => _cfClient.DeleteServiceInstanceBindings(A<Guid>._, A<CancellationToken>._))
-            .MustHaveHappenedOnceExactly();
-        A.CallTo(() => _cfClient.DeleteServiceInstanceBindings(serviceBindingId, A<CancellationToken>._))
-            .MustHaveHappenedOnceExactly();
-    }
-
-    [Fact]
-    public async Task DeleteServiceInstanceBindings_WithoutSpaceId_ThrowsConflictException()
-    {
-        // Arrange
-        var technicalUserId = Guid.NewGuid();
-        A.CallTo(() => _tenantRepositories.GetSpaceIdAndTechnicalUserName(technicalUserId))
-            .Returns(new ValueTuple<Guid?, string>(null, "test"));
-        async Task Act() => await _sut.DeleteServiceInstanceBindings("test", technicalUserId, CancellationToken.None);
-
-        // Act
-        var ex = await Assert.ThrowsAsync<ConflictException>(Act);
-
-        // Assert
-        ex.Message.Should().Be("SpaceId must not be null.");
-        A.CallTo(() => _cfClient.DeleteServiceInstanceBindings(A<Guid>._, A<CancellationToken>._))
-            .MustNotHaveHappened();
+        result.processMessage.Should().Be("Technical User deletion is currently not supported");
+        result.stepStatusId.Should().Be(ProcessStepStatusId.FAILED);
+        result.nextStepTypeIds.Should().BeNull();
     }
 
     #endregion
@@ -192,4 +192,12 @@ public class TechnicalUserProcessHandlerTests
     }
 
     #endregion
+
+    private WalletData GetWalletData()
+    {
+        var cryptoHelper = _settings.EncryptionConfigs.GetCryptoHelper(_settings.EncryptionConfigIndex);
+        var (secret, initializationVector) = cryptoHelper.Encrypt("test123");
+
+        return new WalletData("https://example.org/token", "cl1", secret, initializationVector, _settings.EncryptionConfigIndex);
+    }
 }

@@ -26,29 +26,19 @@ using ProcessTypeId = Dim.Entities.Enums.ProcessTypeId;
 
 namespace Dim.DbAccess.Repositories;
 
-public class ProcessStepRepository : IProcessStepRepository
+public class ProcessStepRepository(DimDbContext dbContext)
+    : IProcessStepRepository
 {
-    private readonly DimDbContext _context;
-
-    /// <summary>
-    /// Constructor
-    /// </summary>
-    /// <param name="dimDbContext">DimDb context.</param>
-    public ProcessStepRepository(DimDbContext dimDbContext)
-    {
-        _context = dimDbContext;
-    }
-
     public Process CreateProcess(ProcessTypeId processTypeId) =>
-        _context.Add(new Process(Guid.NewGuid(), processTypeId, Guid.NewGuid())).Entity;
+        dbContext.Add(new Process(Guid.NewGuid(), processTypeId, Guid.NewGuid())).Entity;
 
-    public ProcessStep CreateProcessStep(Dim.Entities.Enums.ProcessStepTypeId processStepTypeId, Dim.Entities.Enums.ProcessStepStatusId processStepStatusId, Guid processId) =>
-        _context.Add(new ProcessStep(Guid.NewGuid(), processStepTypeId, processStepStatusId, processId, DateTimeOffset.UtcNow)).Entity;
+    public ProcessStep CreateProcessStep(ProcessStepTypeId processStepTypeId, ProcessStepStatusId processStepStatusId, Guid processId) =>
+        dbContext.Add(new ProcessStep(Guid.NewGuid(), processStepTypeId, processStepStatusId, processId, DateTimeOffset.UtcNow)).Entity;
 
-    public IEnumerable<ProcessStep> CreateProcessStepRange(IEnumerable<(Dim.Entities.Enums.ProcessStepTypeId ProcessStepTypeId, Dim.Entities.Enums.ProcessStepStatusId ProcessStepStatusId, Guid ProcessId)> processStepTypeStatus)
+    public IEnumerable<ProcessStep> CreateProcessStepRange(IEnumerable<(ProcessStepTypeId ProcessStepTypeId, ProcessStepStatusId ProcessStepStatusId, Guid ProcessId)> processStepTypeStatus)
     {
         var processSteps = processStepTypeStatus.Select(x => new ProcessStep(Guid.NewGuid(), x.ProcessStepTypeId, x.ProcessStepStatusId, x.ProcessId, DateTimeOffset.UtcNow)).ToList();
-        _context.AddRange(processSteps);
+        dbContext.AddRange(processSteps);
         return processSteps;
     }
 
@@ -56,7 +46,7 @@ public class ProcessStepRepository : IProcessStepRepository
     {
         var step = new ProcessStep(processStepId, default, default, Guid.Empty, default);
         initialize?.Invoke(step);
-        _context.Attach(step);
+        dbContext.Attach(step);
         step.DateLastChanged = DateTimeOffset.UtcNow;
         modify(step);
     }
@@ -69,7 +59,7 @@ public class ProcessStepRepository : IProcessStepRepository
                 data.Initialize?.Invoke(step);
                 return (Step: step, data.Modify);
             }).ToList();
-        _context.AttachRange(stepModifyData.Select(data => data.Step));
+        dbContext.AttachRange(stepModifyData.Select(data => data.Step));
         stepModifyData.ForEach(data =>
             {
                 data.Step.DateLastChanged = DateTimeOffset.UtcNow;
@@ -78,7 +68,7 @@ public class ProcessStepRepository : IProcessStepRepository
     }
 
     public IAsyncEnumerable<Process> GetActiveProcesses(IEnumerable<ProcessTypeId> processTypeIds, IEnumerable<ProcessStepTypeId> processStepTypeIds, DateTimeOffset lockExpiryDate) =>
-        _context.Processes
+        dbContext.Processes
             .AsNoTracking()
             .Where(process =>
                 processTypeIds.Contains(process.ProcessTypeId) &&
@@ -87,7 +77,7 @@ public class ProcessStepRepository : IProcessStepRepository
             .AsAsyncEnumerable();
 
     public IAsyncEnumerable<(Guid ProcessStepId, ProcessStepTypeId ProcessStepTypeId)> GetProcessStepData(Guid processId) =>
-        _context.ProcessSteps
+        dbContext.ProcessSteps
             .AsNoTracking()
             .Where(step =>
                 step.ProcessId == processId &&

@@ -25,15 +25,9 @@ using System.Net.Http.Json;
 
 namespace Dim.Clients.Token;
 
-public class BasicAuthTokenService : IBasicAuthTokenService
+public class BasicAuthTokenService(IHttpClientFactory httpClientFactory)
+    : IBasicAuthTokenService
 {
-    private readonly IHttpClientFactory _httpClientFactory;
-
-    public BasicAuthTokenService(IHttpClientFactory httpClientFactory)
-    {
-        _httpClientFactory = httpClientFactory;
-    }
-
     public async Task<HttpClient> GetBasicAuthorizedClient<T>(BasicAuthSettings settings, CancellationToken cancellationToken)
     {
         var tokenParameters = new GetBasicTokenSettings(
@@ -42,24 +36,9 @@ public class BasicAuthTokenService : IBasicAuthTokenService
             settings.ClientSecret,
             settings.TokenAddress);
 
-        var token = await this.GetBasicTokenAsync(tokenParameters, cancellationToken).ConfigureAwait(false);
+        var token = await this.GetBasicTokenAsync(tokenParameters, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
 
-        var httpClient = _httpClientFactory.CreateClient(typeof(T).Name);
-        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-        return httpClient;
-    }
-
-    public async Task<HttpClient> GetBasicAuthorizedLegacyClient<T>(BasicAuthSettings settings, CancellationToken cancellationToken)
-    {
-        var tokenParameters = new GetBasicTokenSettings(
-            $"{typeof(T).Name}Auth",
-            settings.ClientId,
-            settings.ClientSecret,
-            settings.TokenAddress);
-
-        var token = await this.GetBasicLegacyToken(tokenParameters, cancellationToken).ConfigureAwait(false);
-
-        var httpClient = _httpClientFactory.CreateClient(typeof(T).Name);
+        var httpClient = httpClientFactory.CreateClient(typeof(T).Name);
         httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
         return httpClient;
     }
@@ -71,7 +50,7 @@ public class BasicAuthTokenService : IBasicAuthTokenService
             { "grant_type", "client_credentials" }
         };
         var content = new FormUrlEncodedContent(formParameters);
-        var authClient = _httpClientFactory.CreateClient(settings.HttpClientName);
+        var authClient = httpClientFactory.CreateClient(settings.HttpClientName);
         var authenticationString = $"{settings.ClientId}:{settings.ClientSecret}";
         var base64String = Convert.ToBase64String(System.Text.Encoding.ASCII.GetBytes(authenticationString));
 
@@ -80,29 +59,7 @@ public class BasicAuthTokenService : IBasicAuthTokenService
         var response = await authClient.PostAsync(settings.TokenAddress, content, cancellationToken)
             .CatchingIntoServiceExceptionFor("token-post", HttpAsyncResponseMessageExtension.RecoverOptions.INFRASTRUCTURE).ConfigureAwait(false);
 
-        var responseObject = await response.Content.ReadFromJsonAsync<AuthResponse>(JsonSerializerExtensions.Options, cancellationToken).ConfigureAwait(false);
-        return responseObject?.AccessToken;
-    }
-
-    private async Task<string?> GetBasicLegacyToken(GetBasicTokenSettings settings, CancellationToken cancellationToken)
-    {
-        var formParameters = new Dictionary<string, string>
-        {
-            { "username", settings.ClientId },
-            { "password", settings.ClientSecret },
-            { "client_id", "cf" },
-            { "grant_type", "password" },
-            { "response_type", "token" }
-        };
-        var content = new FormUrlEncodedContent(formParameters);
-        var authClient = _httpClientFactory.CreateClient(settings.HttpClientName);
-        var base64String = Convert.ToBase64String("cf:"u8.ToArray());
-        authClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", base64String);
-
-        var response = await authClient.PostAsync(settings.TokenAddress, content, cancellationToken)
-            .CatchingIntoServiceExceptionFor("token-post", HttpAsyncResponseMessageExtension.RecoverOptions.INFRASTRUCTURE).ConfigureAwait(false);
-
-        var responseObject = await response.Content.ReadFromJsonAsync<LegacyAuthResponse>(JsonSerializerExtensions.Options, cancellationToken).ConfigureAwait(false);
+        var responseObject = await response.Content.ReadFromJsonAsync<AuthResponse>(JsonSerializerExtensions.Options, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
         return responseObject?.AccessToken;
     }
 }

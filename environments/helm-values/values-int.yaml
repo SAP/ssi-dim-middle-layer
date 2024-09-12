@@ -41,7 +41,6 @@ ingress:
 
 dim:
   swaggerEnabled: true
-  rootDirectoryId: "d6cd4e2e-1053-4ba6-888e-1cd56509958a"
   operatorId: "d6cd4e2e-1053-4ba6-888e-1cd56509958a"
 
 migrations:
@@ -52,23 +51,17 @@ processesworker:
   logging:
     default: "Debug"
   dim:
-    adminMail: "<path:portal/data/dim/int/dim#adminMail>"
-    clientIdCisCentral: "<path:portal/data/dim/int/dim#cisClientId>"
-    clientSecretCisCentral: "<path:portal/data/dim/int/dim#cisClientSecret>"
-    authUrl: "https://catena-x-int-div.authentication.eu10.hana.ondemand.com"
-  subaccount:
-    # -- Url to the subaccount service api
-    baseUrl: "https://accounts-service.cfapps.eu10.hana.ondemand.com"
-  entitlement:
-    # -- Url to the entitlement service api
-    baseUrl: "https://entitlements-service.cfapps.eu10.hana.ondemand.com"
-  cf:
+    applicationName: "catena-x-portal"
+  provisioning:
     clientId: "<path:portal/data/dim/int/cf#clientId>"
     clientSecret: "<path:portal/data/dim/int/cf#clientSecret>"
     tokenAddress: "https://login.cf.eu10.hana.ondemand.com/oauth/token"
     # -- Url to the cf service api
     baseUrl: "https://api.cf.eu10.hana.ondemand.com"
     grantType: "client_credentials"
+    encryptionConfigs:
+      index0:
+        encryptionKey: "<path:portal/data/dim/int/provisioning#provisioning-encryption-key0>"
   callback:
     scope: "openid"
     grantType: "client_credentials"

@@ -18,9 +18,17 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using Org.Eclipse.TractusX.Portal.Backend.Framework.Models.Configuration;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.Models.Validation;
+using System.ComponentModel.DataAnnotations;
+
 namespace Dim.Web.BusinessLogic;
 
 public class DimSettings
 {
     public Guid OperatorId { get; set; }
+
+    [Required]
+    [DistinctValues("x => x.Index")]
+    public IEnumerable<EncryptionModeConfig> EncryptionConfigs { get; set; } = null!;
 }

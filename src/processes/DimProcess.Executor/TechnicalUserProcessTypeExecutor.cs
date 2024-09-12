@@ -23,7 +23,7 @@ using Dim.DbAccess.Repositories;
 using Dim.Entities.Enums;
 using DimProcess.Library;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
-using Org.Eclipse.TractusX.Portal.Backend.Processes.Worker.Library;
+using Processes.Worker.Library;
 using System.Collections.Immutable;
 
 namespace DimProcess.Executor;
@@ -57,7 +57,7 @@ public class TechnicalUserProcessTypeExecutor(
         }
 
         _technicalUserId = technicalUserId;
-        _tenantName = $"{bpn}_{companyName}";
+        _tenantName = $"{bpn}{companyName}";
         return new IProcessTypeExecutor.InitializationResult(false, null);
     }
 

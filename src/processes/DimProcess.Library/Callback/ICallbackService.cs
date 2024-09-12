@@ -18,14 +18,13 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using Dim.Clients.Api.Cf;
 using System.Text.Json;
 
 namespace DimProcess.Library.Callback;
 
 public interface ICallbackService
 {
-    Task SendCallback(string bpn, ServiceCredentialBindingDetailResponse dimDetails, JsonDocument didDocument, string did, CancellationToken cancellationToken);
+    Task SendCallback(string bpn, AuthenticationDetail authenticationDetail, JsonDocument didDocument, string did, CancellationToken cancellationToken);
 
     Task SendTechnicalUserCallback(Guid externalId, string tokenAddress, string clientId, string clientSecret, CancellationToken cancellationToken);
 

@@ -21,13 +21,3 @@
 namespace Dim.Clients.Token;
 
 public record GetBasicTokenSettings(string HttpClientName, string ClientId, string ClientSecret, string TokenAddress);
-
-public record GetTokenSettings(
-    string HttpClientName,
-    string Username,
-    string Password,
-    string ClientId,
-    string GrantType,
-    string ClientSecret,
-    string Scope,
-    string TokenUrl);
