@@ -37,6 +37,7 @@ public class Tenant(
     public Guid OperatorId { get; set; } = operatorId;
     public Guid ProcessId { get; set; } = processId;
     public Guid? OperationId { get; set; }
+    public Guid? WalletId { get; set; }
     public string? TokenAddress { get; set; }
     public string? BaseUrl { get; set; }
     public string? ClientId { get; set; }

@@ -18,7 +18,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using Dim.Clients.Api.Dim;
 using System.Text.Json.Serialization;
 
 namespace Dim.Clients.Api.Div.Models;

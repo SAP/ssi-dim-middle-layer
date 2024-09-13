@@ -26,4 +26,5 @@ public interface IProvisioningClient
 {
     public Task<Guid> CreateOperation(Guid customerId, string customerName, string applicationName, string companyName, string didDocumentLocation, bool isIssuer, CancellationToken cancellationToken);
     public Task<OperationResponse> GetOperation(Guid operationId, CancellationToken cancellationToken);
+    Task<Guid> CreateServiceKey(string technicalUserName, Guid walletId, CancellationToken cancellationToken);
 }

@@ -37,7 +37,7 @@ public class CallbackService(ITokenService tokenService, IOptions<CallbackSettin
     public async Task SendCallback(string bpn, AuthenticationDetail authenticationDetail, JsonDocument didDocument, string did, CancellationToken cancellationToken)
     {
         var httpClient = await tokenService.GetAuthorizedClient<CallbackService>(_settings, cancellationToken)
-            .ConfigureAwait(false);
+            .ConfigureAwait(ConfigureAwaitOptions.None);
         var data = new CallbackDataModel(
             did,
             didDocument,
@@ -51,7 +51,7 @@ public class CallbackService(ITokenService tokenService, IOptions<CallbackSettin
     public async Task SendTechnicalUserCallback(Guid externalId, string tokenAddress, string clientId, string clientSecret, CancellationToken cancellationToken)
     {
         var httpClient = await tokenService.GetAuthorizedClient<CallbackService>(_settings, cancellationToken)
-            .ConfigureAwait(false);
+            .ConfigureAwait(ConfigureAwaitOptions.None);
         var data = new AuthenticationDetail(
             tokenAddress,
             clientId,
@@ -64,7 +64,7 @@ public class CallbackService(ITokenService tokenService, IOptions<CallbackSettin
     public async Task SendTechnicalUserDeletionCallback(Guid externalId, CancellationToken cancellationToken)
     {
         var httpClient = await tokenService.GetAuthorizedClient<CallbackService>(_settings, cancellationToken)
-            .ConfigureAwait(false);
+            .ConfigureAwait(ConfigureAwaitOptions.None);
         await httpClient.PostAsync($"/api/administration/serviceAccount/callback/{externalId}/delete", null, cancellationToken)
             .CatchingIntoServiceExceptionFor("send-technical-user-deletion-callback", HttpAsyncResponseMessageExtension.RecoverOptions.INFRASTRUCTURE)
             .ConfigureAwait(false);

@@ -101,9 +101,11 @@ public class DimProcessHandler(
                 t.BaseUrl = null;
                 t.ClientId = null;
                 t.ClientSecret = null;
+                t.WalletId = null;
             },
             t =>
             {
+                t.WalletId = response.Data.CustomerWalletId;
                 t.TokenAddress = serviceKey.Uaa.Url;
                 t.BaseUrl = serviceKey.Url;
                 t.ClientId = serviceKey.Uaa.ClientId;

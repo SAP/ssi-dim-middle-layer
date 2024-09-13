@@ -78,6 +78,7 @@ public class ProcessExecutor : IProcessExecutor
             {
                 yield return IProcessExecutor.ProcessExecutionResult.LockRequested;
             }
+
             ProcessStepStatusId resultStepStatusId;
             IEnumerable<ProcessStepTypeId>? scheduleStepTypeIds;
             IEnumerable<ProcessStepTypeId>? skipStepTypeIds;

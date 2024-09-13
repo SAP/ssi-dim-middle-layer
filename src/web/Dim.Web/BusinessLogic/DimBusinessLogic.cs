@@ -22,8 +22,11 @@ using Dim.Clients.Api.Dim;
 using Dim.Clients.Token;
 using Dim.DbAccess;
 using Dim.DbAccess.Extensions;
+using Dim.DbAccess.Models;
 using Dim.DbAccess.Repositories;
 using Dim.Entities.Enums;
+using Dim.Entities.Extensions;
+using Dim.Processes.Library;
 using Dim.Web.ErrorHandling;
 using Dim.Web.Models;
 using Microsoft.Extensions.Options;
@@ -40,6 +43,7 @@ public class DimBusinessLogic(
     : IDimBusinessLogic
 {
     private static readonly Regex TenantName = new(@"(?<=[^\w-])|(?<=[^-])[\W_]+|(?<=[^-])$", RegexOptions.Compiled, new TimeSpan(0, 0, 0, 1));
+    private static readonly Regex TechnicalUserName = new("[^a-zA-Z0-9]+", RegexOptions.Compiled, new TimeSpan(0, 0, 0, 1));
     private readonly DimSettings _settings = options.Value;
 
     public async Task StartSetupDim(string companyName, string bpn, string didDocumentLocation, bool isIssuer)
@@ -56,12 +60,12 @@ public class DimBusinessLogic(
 
         dimRepositories.GetInstance<ITenantRepository>().CreateTenant(tenant, bpn, didDocumentLocation, isIssuer, processId, _settings.OperatorId);
 
-        await dimRepositories.SaveAsync().ConfigureAwait(false);
+        await dimRepositories.SaveAsync().ConfigureAwait(ConfigureAwaitOptions.None);
     }
 
     public async Task<string> GetStatusList(string bpn, CancellationToken cancellationToken)
     {
-        var (exists, companyId, baseUrl, walletData) = await dimRepositories.GetInstance<ITenantRepository>().GetCompanyAndWalletDataForBpn(bpn).ConfigureAwait(false);
+        var (exists, companyId, baseUrl, walletData) = await dimRepositories.GetInstance<ITenantRepository>().GetCompanyAndWalletDataForBpn(bpn).ConfigureAwait(ConfigureAwaitOptions.None);
         var (tokenAddress, clientId, clientSecret, initializationVector, encryptionMode) = walletData.ValidateData();
         if (!exists)
         {
@@ -87,12 +91,12 @@ public class DimBusinessLogic(
             ClientId = clientId,
             ClientSecret = secret
         };
-        return await dimClient.GetStatusList(dimAuth, baseUrl, companyId.Value, cancellationToken).ConfigureAwait(false);
+        return await dimClient.GetStatusList(dimAuth, baseUrl, companyId.Value, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
     }
 
     public async Task<string> CreateStatusList(string bpn, CancellationToken cancellationToken)
     {
-        var (exists, companyId, baseUrl, walletData) = await dimRepositories.GetInstance<ITenantRepository>().GetCompanyAndWalletDataForBpn(bpn).ConfigureAwait(false);
+        var (exists, companyId, baseUrl, walletData) = await dimRepositories.GetInstance<ITenantRepository>().GetCompanyAndWalletDataForBpn(bpn).ConfigureAwait(ConfigureAwaitOptions.None);
         var (tokenAddress, clientId, clientSecret, initializationVector, encryptionMode) = walletData.ValidateData();
         if (!exists)
         {
@@ -118,12 +122,12 @@ public class DimBusinessLogic(
             ClientId = clientId,
             ClientSecret = secret
         };
-        return await dimClient.CreateStatusList(dimAuth, baseUrl, companyId.Value, cancellationToken).ConfigureAwait(false);
+        return await dimClient.CreateStatusList(dimAuth, baseUrl, companyId.Value, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
     }
 
     public async Task CreateTechnicalUser(string bpn, TechnicalUserData technicalUserData)
     {
-        var (exists, tenantId) = await dimRepositories.GetInstance<ITenantRepository>().GetTenantForBpn(bpn).ConfigureAwait(false);
+        var (exists, tenantId) = await dimRepositories.GetInstance<ITenantRepository>().GetTenantForBpn(bpn).ConfigureAwait(ConfigureAwaitOptions.None);
 
         if (!exists)
         {
@@ -134,14 +138,16 @@ public class DimBusinessLogic(
         var processId = processStepRepository.CreateProcess(ProcessTypeId.TECHNICAL_USER).Id;
         processStepRepository.CreateProcessStep(ProcessStepTypeId.CREATE_TECHNICAL_USER, ProcessStepStatusId.TODO, processId);
 
-        dimRepositories.GetInstance<ITenantRepository>().CreateTenantTechnicalUser(tenantId, technicalUserData.Name, technicalUserData.ExternalId, processId);
+        var technicalUserName = TechnicalUserName.Replace(technicalUserData.Name, string.Empty).ToLower();
+        dimRepositories.GetInstance<ITenantRepository>().CreateTenantTechnicalUser(tenantId, technicalUserName, technicalUserData.ExternalId, processId);
 
-        await dimRepositories.SaveAsync().ConfigureAwait(false);
+        await dimRepositories.SaveAsync().ConfigureAwait(ConfigureAwaitOptions.None);
     }
 
     public async Task DeleteTechnicalUser(string bpn, TechnicalUserData technicalUserData)
     {
-        var (exists, technicalUserId, processId) = await dimRepositories.GetInstance<ITenantRepository>().GetTechnicalUserForBpn(bpn, technicalUserData.Name).ConfigureAwait(false);
+        var technicalUserName = TechnicalUserName.Replace(technicalUserData.Name, string.Empty).ToLower();
+        var (exists, technicalUserId, processId) = await dimRepositories.GetInstance<ITenantRepository>().GetTechnicalUserForBpn(bpn, technicalUserName).ConfigureAwait(ConfigureAwaitOptions.None);
         if (!exists)
         {
             throw NotFoundException.Create(DimErrors.NO_TECHNICAL_USER_FOUND, new ErrorParameter[] { new("bpn", bpn) });
@@ -162,6 +168,47 @@ public class DimBusinessLogic(
                 t.ProcessId = processId;
             });
 
-        await dimRepositories.SaveAsync().ConfigureAwait(false);
+        await dimRepositories.SaveAsync().ConfigureAwait(ConfigureAwaitOptions.None);
+    }
+
+    public async Task<ProcessData> GetSetupProcess(string bpn, string companyName)
+    {
+        var processData = await dimRepositories.GetInstance<IProcessStepRepository>().GetWalletProcessForTenant(bpn, companyName)
+            .ConfigureAwait(ConfigureAwaitOptions.None);
+        if (processData == null)
+        {
+            throw new NotFoundException($"No process data found for BPN {bpn} and company name {companyName}");
+        }
+
+        return processData;
+    }
+
+    public async Task<ProcessData> GetTechnicalUserProcess(string bpn, string companyName, string technicalUserName)
+    {
+        var processData = await dimRepositories.GetInstance<IProcessStepRepository>().GetTechnicalUserProcess(bpn, companyName, technicalUserName)
+            .ConfigureAwait(ConfigureAwaitOptions.None);
+        if (processData == null)
+        {
+            throw new NotFoundException($"No process data found for technical user {technicalUserName}");
+        }
+
+        return processData;
+    }
+
+    public async Task RetriggerProcess(ProcessTypeId processTypeId, Guid processId, ProcessStepTypeId processStepTypeId)
+    {
+        var stepToTrigger = processStepTypeId.GetStepForRetrigger(processTypeId);
+
+        var (validProcessId, processData) = await dimRepositories.GetInstance<IProcessStepRepository>().IsValidProcess(processId, processTypeId, Enumerable.Repeat(processStepTypeId, 1)).ConfigureAwait(ConfigureAwaitOptions.None);
+        if (!validProcessId)
+        {
+            throw new NotFoundException($"process {processId} does not exist");
+        }
+
+        var context = processData.CreateManualProcessData(stepToTrigger, dimRepositories, () => $"processId {processId}");
+
+        context.ScheduleProcessSteps(Enumerable.Repeat(stepToTrigger, 1));
+        context.FinalizeProcessStep();
+        await dimRepositories.SaveAsync().ConfigureAwait(ConfigureAwaitOptions.None);
     }
 }

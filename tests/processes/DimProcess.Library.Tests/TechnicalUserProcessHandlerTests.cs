@@ -18,6 +18,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using Dim.Clients.Api.Div;
+using Dim.Clients.Api.Div.Models;
 using Dim.DbAccess;
 using Dim.DbAccess.Models;
 using Dim.DbAccess.Repositories;
@@ -38,6 +40,7 @@ public class TechnicalUserProcessHandlerTests
     private readonly ICallbackService _callbackService;
     private readonly TechnicalUserProcessHandler _sut;
     private readonly TechnicalUserSettings _settings;
+    private readonly IProvisioningClient _provisioningClient;
 
     public TechnicalUserProcessHandlerTests()
     {
@@ -51,6 +54,7 @@ public class TechnicalUserProcessHandlerTests
 
         A.CallTo(() => repositories.GetInstance<ITenantRepository>()).Returns(_tenantRepositories);
 
+        _provisioningClient = A.Fake<IProvisioningClient>();
         _callbackService = A.Fake<ICallbackService>();
         _settings = new TechnicalUserSettings
         {
@@ -68,25 +72,51 @@ public class TechnicalUserProcessHandlerTests
         };
         var options = Options.Create(_settings);
 
-        _sut = new TechnicalUserProcessHandler(repositories, _callbackService, options);
+        _sut = new TechnicalUserProcessHandler(repositories, _provisioningClient, _callbackService, options);
     }
 
     #region CreateServiceInstanceBindings
 
     [Fact]
-    public async Task CreateServiceInstanceBindings_WithValidData_ReturnsExpected()
+    public async Task CreateServiceInstanceBindings_WithValid_SavesOperationId()
+    {
+        // Arrange
+        var operationId = Guid.NewGuid();
+        var technicalUser = new TechnicalUser(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), "saTest", Guid.NewGuid());
+        A.CallTo(() => _tenantRepositories.GetTechnicalUserNameAndWalletId(technicalUser.Id))
+            .Returns((Guid.NewGuid(), technicalUser.TechnicalUserName));
+        A.CallTo(() => _tenantRepositories.AttachAndModifyTechnicalUser(technicalUser.Id, A<Action<TechnicalUser>>._, A<Action<TechnicalUser>>._))
+            .Invokes((Guid _, Action<TechnicalUser>? initialize, Action<TechnicalUser> modify) =>
+            {
+                initialize!.Invoke(technicalUser);
+                modify(technicalUser);
+            });
+        A.CallTo(() => _provisioningClient.CreateServiceKey(technicalUser.TechnicalUserName, A<Guid>._, A<CancellationToken>._))
+            .Returns(operationId);
+
+        // Act
+        var result = await _sut.CreateServiceInstanceBindings("test", technicalUser.Id, CancellationToken.None);
+
+        // Assert
+        result.stepStatusId.Should().Be(ProcessStepStatusId.DONE);
+        result.processMessage.Should().BeNull();
+        result.modified.Should().BeFalse();
+        result.nextStepTypeIds.Should().ContainSingle().And.Satisfy(x => x == ProcessStepTypeId.GET_TECHNICAL_USER_DATA);
+        technicalUser.OperationId.Should().Be(operationId);
+    }
+
+    [Fact]
+    public async Task CreateServiceInstanceBindings_WithWalletIdNotSet_ThrowsConflictException()
     {
         // Arrange
         var technicalUserId = Guid.NewGuid();
+        Task Act() => _sut.CreateServiceInstanceBindings("test", technicalUserId, CancellationToken.None);
 
         // Act
-        var result = await _sut.CreateServiceInstanceBindings("test", technicalUserId, CancellationToken.None);
+        var ex = await Assert.ThrowsAsync<ConflictException>(Act);
 
         // Assert
-        result.modified.Should().BeFalse();
-        result.processMessage.Should().Be("Technical User Creation is currently not supported");
-        result.stepStatusId.Should().Be(ProcessStepStatusId.FAILED);
-        result.nextStepTypeIds.Should().BeNull();
+        ex.Message.Should().Be("WalletId must not be null");
     }
 
     #endregion
@@ -94,18 +124,95 @@ public class TechnicalUserProcessHandlerTests
     #region GetTechnicalUserData
 
     [Fact]
-    public async Task GetTechnicalUserData_WithValidData_ReturnsExpected()
+    public async Task GetTechnicalUserData_WithValid_SavesData()
     {
         // Arrange
+        var operationId = Guid.NewGuid();
+        var responseData = new OperationResponseData(
+            Guid.NewGuid(),
+            Guid.NewGuid().ToString(),
+            "test name",
+            new ServiceKey(
+                new ServiceUaa("https://example.org/api", "https://example.org", "cl1", "test123"),
+                "https://example.org/test",
+                "test"));
+        var technicalUser = new TechnicalUser(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), "saTest", Guid.NewGuid());
+        A.CallTo(() => _tenantRepositories.GetOperationIdForTechnicalUser(technicalUser.Id))
+            .Returns(operationId);
+        A.CallTo(() => _tenantRepositories.AttachAndModifyTechnicalUser(technicalUser.Id, A<Action<TechnicalUser>>._, A<Action<TechnicalUser>>._))
+            .Invokes((Guid _, Action<TechnicalUser>? initialize, Action<TechnicalUser> modify) =>
+            {
+                initialize!.Invoke(technicalUser);
+                modify(technicalUser);
+            });
+        A.CallTo(() => _provisioningClient.GetOperation(A<Guid>._, A<CancellationToken>._))
+            .Returns(new OperationResponse(operationId, OperationResponseStatus.completed, null, null, responseData));
+
+        // Act
+        var result = await _sut.GetTechnicalUserData("test", technicalUser.Id, CancellationToken.None);
+
+        // Assert
+        result.stepStatusId.Should().Be(ProcessStepStatusId.DONE);
+        result.processMessage.Should().BeNull();
+        result.modified.Should().BeFalse();
+        result.nextStepTypeIds.Should().ContainSingle().And.Satisfy(x => x == ProcessStepTypeId.SEND_TECHNICAL_USER_CREATION_CALLBACK);
+
+        technicalUser.TokenAddress.Should().Be(responseData.ServiceKey.Uaa.Url);
+        technicalUser.ClientId.Should().Be(responseData.ServiceKey.Uaa.ClientId);
+    }
+
+    [Fact]
+    public async Task GetTechnicalUserData_WithPending_StaysInTodo()
+    {
+        // Arrange
+        var operationId = Guid.NewGuid();
         var technicalUserId = Guid.NewGuid();
+        A.CallTo(() => _tenantRepositories.GetOperationIdForTechnicalUser(technicalUserId))
+            .Returns(operationId);
+        A.CallTo(() => _provisioningClient.GetOperation(A<Guid>._, A<CancellationToken>._))
+            .Returns(new OperationResponse(operationId, OperationResponseStatus.pending, null, null, null));
+
         // Act
         var result = await _sut.GetTechnicalUserData("test", technicalUserId, CancellationToken.None);
 
         // Assert
-        result.modified.Should().BeFalse();
-        result.processMessage.Should().Be("Technical User Creation is currently not supported");
-        result.stepStatusId.Should().Be(ProcessStepStatusId.FAILED);
+        result.stepStatusId.Should().Be(ProcessStepStatusId.TODO);
+        result.processMessage.Should().BeNull();
+        result.modified.Should().BeTrue();
         result.nextStepTypeIds.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GetTechnicalUserData_WithCompletedAndNoData_ThrowsUnexpectedConditionException()
+    {
+        // Arrange
+        var operationId = Guid.NewGuid();
+        var technicalUserId = Guid.NewGuid();
+        A.CallTo(() => _tenantRepositories.GetOperationIdForTechnicalUser(technicalUserId))
+            .Returns(operationId);
+        A.CallTo(() => _provisioningClient.GetOperation(A<Guid>._, A<CancellationToken>._))
+            .Returns(new OperationResponse(operationId, OperationResponseStatus.completed, null, null, null));
+        Task Act() => _sut.GetTechnicalUserData("test", technicalUserId, CancellationToken.None);
+
+        // Act
+        var ex = await Assert.ThrowsAsync<UnexpectedConditionException>(Act);
+
+        // Assert
+        ex.Message.Should().Be("Data should never be null when in status completed");
+    }
+
+    [Fact]
+    public async Task GetTechnicalUserData_WithOperationIdNotSet_ThrowsConflictException()
+    {
+        // Arrange
+        var technicalUserId = Guid.NewGuid();
+        Task Act() => _sut.GetTechnicalUserData("test", technicalUserId, CancellationToken.None);
+
+        // Act
+        var ex = await Assert.ThrowsAsync<ConflictException>(Act);
+
+        // Assert
+        ex.Message.Should().Be("OperationId must not be null");
     }
 
     #endregion

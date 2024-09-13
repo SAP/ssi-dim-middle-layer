@@ -38,11 +38,12 @@ public interface ITenantRepository
     Task<Guid> GetExternalIdForTechnicalUser(Guid technicalUserId);
     void RemoveTechnicalUser(Guid technicalUserId);
     Task<bool> IsTenantExisting(string companyName, string bpn);
-    Task<string> GetTenantBpn(Guid tenantId);
     Task<Guid?> GetOperationId(Guid tenantId);
     Task<(string? BaseUrl, WalletData WalletData)> GetCompanyRequestData(Guid tenantId);
     Task<(bool Exists, Guid? CompanyId, string? BaseUrl, WalletData WalletData)> GetCompanyAndWalletDataForBpn(string bpn);
     Task<(Guid? CompanyId, string? BaseUrl, WalletData WalletData)> GetStatusListCreationData(Guid tenantId);
     Task<(string Bpn, string? BaseUrl, WalletData WalletData, string? Did, string? DownloadUrl)> GetCallbackData(Guid tenantId);
     Task<(string? DownloadUrl, bool IsIssuer)> GetDownloadUrlAndIsIssuer(Guid tenantId);
+    Task<(Guid? WalletId, string TechnicalUserName)> GetTechnicalUserNameAndWalletId(Guid technicalUserId);
+    Task<Guid?> GetOperationIdForTechnicalUser(Guid technicalUserId);
 }

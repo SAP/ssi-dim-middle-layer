@@ -18,6 +18,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using Dim.DbAccess.Models;
 using Dim.Entities;
 using Dim.Entities.Entities;
 using Dim.Entities.Enums;
@@ -88,4 +89,46 @@ public class ProcessStepRepository(DimDbContext dbContext)
                     step.Id,
                     step.ProcessStepTypeId))
             .AsAsyncEnumerable();
+
+    public Task<ProcessData?> GetWalletProcessForTenant(string bpn, string companyName) =>
+        dbContext.Tenants
+            .Where(x =>
+                x.Bpn == bpn &&
+                x.CompanyName == companyName &&
+                x.Process!.ProcessTypeId == ProcessTypeId.SETUP_DIM)
+            .Select(x => new ProcessData(
+                x.ProcessId,
+                x.Process!.ProcessSteps.Select(ps => new ProcessStepData(
+                    ps.ProcessStepTypeId,
+                    ps.ProcessStepStatusId))))
+            .SingleOrDefaultAsync();
+
+    public Task<ProcessData?> GetTechnicalUserProcess(string bpn, string companyName, string technicalUserName) =>
+        dbContext.TechnicalUsers
+            .Where(x =>
+                x.TechnicalUserName == technicalUserName &&
+                x.Tenant!.Bpn == bpn &&
+                x.Tenant!.CompanyName == companyName &&
+                x.Process!.ProcessTypeId == ProcessTypeId.TECHNICAL_USER)
+            .Select(x => new ProcessData(
+                x.ProcessId,
+                x.Process!.ProcessSteps.Select(ps => new ProcessStepData(
+                    ps.ProcessStepTypeId,
+                    ps.ProcessStepStatusId))))
+            .SingleOrDefaultAsync();
+
+    public Task<(bool ProcessExists, VerifyProcessData ProcessData)> IsValidProcess(Guid processId, ProcessTypeId processTypeId, IEnumerable<ProcessStepTypeId> processStepTypeIds) =>
+        dbContext.Processes
+            .AsNoTracking()
+            .Where(x => x.Id == processId && x.ProcessTypeId == processTypeId)
+            .Select(x => new ValueTuple<bool, VerifyProcessData>(
+                true,
+                new VerifyProcessData(
+                    x,
+                    x.ProcessSteps
+                        .Where(step =>
+                            processStepTypeIds.Contains(step.ProcessStepTypeId) &&
+                            step.ProcessStepStatusId == ProcessStepStatusId.TODO))
+            ))
+            .SingleOrDefaultAsync();
 }
