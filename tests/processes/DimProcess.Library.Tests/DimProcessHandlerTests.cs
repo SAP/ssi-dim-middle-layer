@@ -105,7 +105,7 @@ public class DimProcessHandlerTests
     {
         // Arrange
         A.CallTo(() => _tenantRepositories.GetHostingUrlAndIsIssuer(_tenantId))
-            .Returns((true, (string?)null));
+            .Returns((true, null));
         Task Act() => _sut.CreateWallet(_tenantId, TenantName, CancellationToken.None);
 
         // Act
@@ -203,8 +203,9 @@ public class DimProcessHandlerTests
     {
         // Arrange
         var operationId = Guid.NewGuid();
+        var customerWalletId = Guid.NewGuid();
         var responseData = new OperationResponseData(
-            Guid.NewGuid(),
+            customerWalletId,
             Guid.NewGuid().ToString(),
             "test name",
             new ServiceKey(
@@ -231,6 +232,7 @@ public class DimProcessHandlerTests
         result.processMessage.Should().BeNull();
         result.stepStatusId.Should().Be(ProcessStepStatusId.DONE);
         result.nextStepTypeIds.Should().ContainSingle().And.Satisfy(x => x == ProcessStepTypeId.GET_COMPANY);
+        tenant.WalletId.Should().Be(customerWalletId);
         tenant.BaseUrl.Should().Be(responseData.ServiceKey.Url);
         tenant.TokenAddress.Should().Be(responseData.ServiceKey.Uaa.Url);
         tenant.ClientId.Should().Be(responseData.ServiceKey.Uaa.ClientId);
@@ -245,7 +247,7 @@ public class DimProcessHandlerTests
     {
         // Arrange
         A.CallTo(() => _tenantRepositories.GetCompanyRequestData(_tenantId))
-            .Returns(((string?)null, GetWalletData()));
+            .Returns((null, GetWalletData()));
         Task Act() => _sut.GetCompany(_tenantId, TenantName, CancellationToken.None);
 
         // Act
@@ -295,7 +297,7 @@ public class DimProcessHandlerTests
     {
         // Arrange
         A.CallTo(() => _tenantRepositories.GetDownloadUrlAndIsIssuer(_tenantId))
-            .Returns(((string?)null, false));
+            .Returns((null, false));
         Task Act() => _sut.GetDidDocument(_tenantId, CancellationToken.None);
 
         // Act
@@ -314,7 +316,7 @@ public class DimProcessHandlerTests
         var tenant = new Tenant(_tenantId, "test", "Corp", "https://example.org/did", false, _processId, _operatorId);
         const string DownloadUrl = "https://example.org/download";
         A.CallTo(() => _tenantRepositories.GetDownloadUrlAndIsIssuer(_tenantId))
-            .Returns((DownloadUrl, IsIssuer: isIssuer));
+            .Returns((DownloadUrl, isIssuer));
         A.CallTo(() => _tenantRepositories.AttachAndModifyTenant(_tenantId, A<Action<Tenant>>._, A<Action<Tenant>>._))
             .Invokes((Guid _, Action<Tenant>? initialize, Action<Tenant> modify) =>
             {
@@ -342,7 +344,7 @@ public class DimProcessHandlerTests
     {
         // Arrange
         A.CallTo(() => _tenantRepositories.GetStatusListCreationData(_tenantId))
-            .Returns(((Guid?)null, (string?)null, GetWalletData()));
+            .Returns((null, null, GetWalletData()));
         Task Act() => _sut.CreateStatusList(_tenantId, CancellationToken.None);
 
         // Act
@@ -400,7 +402,7 @@ public class DimProcessHandlerTests
         // Arrange
         A.CallTo(() => _tenantRepositories.GetCallbackData(_tenantId))
             .Returns(("bpn123", null, _fixture.Create<WalletData>(), null, null));
-        async Task Act() => await _sut.SendCallback(_tenantId, CancellationToken.None).ConfigureAwait(false);
+        async Task Act() => await _sut.SendCallback(_tenantId, CancellationToken.None);
 
         // Act
         var ex = await Assert.ThrowsAsync<UnexpectedConditionException>(Act);
@@ -415,7 +417,7 @@ public class DimProcessHandlerTests
         // Arrange
         A.CallTo(() => _tenantRepositories.GetCallbackData(_tenantId))
             .Returns(("bpn123", "https://example.org/base", _fixture.Create<WalletData>(), null, null));
-        async Task Act() => await _sut.SendCallback(_tenantId, CancellationToken.None).ConfigureAwait(false);
+        async Task Act() => await _sut.SendCallback(_tenantId, CancellationToken.None);
 
         // Act
         var ex = await Assert.ThrowsAsync<UnexpectedConditionException>(Act);
@@ -430,7 +432,7 @@ public class DimProcessHandlerTests
         // Arrange
         A.CallTo(() => _tenantRepositories.GetCallbackData(_tenantId))
             .Returns(("bpn123", "https://example.org/base", _fixture.Create<WalletData>(), "did:web:example:org:base", null));
-        async Task Act() => await _sut.SendCallback(_tenantId, CancellationToken.None).ConfigureAwait(false);
+        async Task Act() => await _sut.SendCallback(_tenantId, CancellationToken.None);
 
         // Act
         var ex = await Assert.ThrowsAsync<UnexpectedConditionException>(Act);

@@ -1,4 +1,4 @@
-/********************************************************************************
+﻿/********************************************************************************
  * Copyright (c) 2024 BMW Group AG
  * Copyright 2024 SAP SE or an SAP affiliate company and ssi-dim-middle-layer contributors.
  *
@@ -32,8 +32,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Dim.Migrations.Migrations
 {
     [DbContext(typeof(DimDbContext))]
-    [Migration("20240912045058_AddDivProvisioning")]
-    partial class AddDivProvisioning
+    [Migration("20240916091209_79-AdjustProvisioning")]
+    partial class _79AdjustProvisioning
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -217,6 +217,36 @@ namespace Dim.Migrations.Migrations
                         },
                         new
                         {
+                            Id = 7,
+                            Label = "RETRIGGER_CREATE_WALLET"
+                        },
+                        new
+                        {
+                            Id = 8,
+                            Label = "RETRIGGER_CHECK_OPERATION"
+                        },
+                        new
+                        {
+                            Id = 9,
+                            Label = "RETRIGGER_GET_COMPANY"
+                        },
+                        new
+                        {
+                            Id = 10,
+                            Label = "RETRIGGER_GET_DID_DOCUMENT"
+                        },
+                        new
+                        {
+                            Id = 11,
+                            Label = "RETRIGGER_CREATE_STATUS_LIST"
+                        },
+                        new
+                        {
+                            Id = 12,
+                            Label = "RETRIGGER_SEND_CALLBACK"
+                        },
+                        new
+                        {
                             Id = 100,
                             Label = "CREATE_TECHNICAL_USER"
                         },
@@ -232,6 +262,21 @@ namespace Dim.Migrations.Migrations
                         },
                         new
                         {
+                            Id = 103,
+                            Label = "RETRIGGER_CREATE_TECHNICAL_USER"
+                        },
+                        new
+                        {
+                            Id = 104,
+                            Label = "RETRIGGER_GET_TECHNICAL_USER_DATA"
+                        },
+                        new
+                        {
+                            Id = 105,
+                            Label = "RETRIGGER_SEND_TECHNICAL_USER_CREATION_CALLBACK"
+                        },
+                        new
+                        {
                             Id = 200,
                             Label = "DELETE_TECHNICAL_USER"
                         },
@@ -239,6 +284,16 @@ namespace Dim.Migrations.Migrations
                         {
                             Id = 201,
                             Label = "SEND_TECHNICAL_USER_DELETION_CALLBACK"
+                        },
+                        new
+                        {
+                            Id = 202,
+                            Label = "RETRIGGER_DELETE_TECHNICAL_USER"
+                        },
+                        new
+                        {
+                            Id = 203,
+                            Label = "RETRIGGER_SEND_TECHNICAL_USER_DELETION_CALLBACK"
                         });
                 });
 
@@ -298,6 +353,10 @@ namespace Dim.Migrations.Migrations
                     b.Property<byte[]>("InitializationVector")
                         .HasColumnType("bytea")
                         .HasColumnName("initialization_vector");
+
+                    b.Property<Guid?>("OperationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("operation_id");
 
                     b.Property<Guid>("ProcessId")
                         .HasColumnType("uuid")
@@ -401,6 +460,10 @@ namespace Dim.Migrations.Migrations
                     b.Property<string>("TokenAddress")
                         .HasColumnType("text")
                         .HasColumnName("token_address");
+
+                    b.Property<Guid?>("WalletId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("wallet_id");
 
                     b.HasKey("Id")
                         .HasName("pk_tenants");

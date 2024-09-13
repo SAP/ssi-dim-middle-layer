@@ -21,6 +21,7 @@
 using Dim.DbAccess;
 using Dim.DbAccess.Repositories;
 using Dim.Entities.Enums;
+using Dim.Entities.Extensions;
 using DimProcess.Library;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Processes.Worker.Library;
@@ -50,7 +51,7 @@ public class DimProcessTypeExecutor(
 
     public async ValueTask<IProcessTypeExecutor.InitializationResult> InitializeProcess(Guid processId, IEnumerable<ProcessStepTypeId> processStepTypeIds)
     {
-        var (exists, tenantId, companyName, bpn) = await dimRepositories.GetInstance<ITenantRepository>().GetTenantDataForProcessId(processId).ConfigureAwait(false);
+        var (exists, tenantId, companyName, bpn) = await dimRepositories.GetInstance<ITenantRepository>().GetTenantDataForProcessId(processId).ConfigureAwait(ConfigureAwaitOptions.None);
         if (!exists)
         {
             throw new NotFoundException($"process {processId} does not exist or is not associated with an tenant");
@@ -78,35 +79,35 @@ public class DimProcessTypeExecutor(
             (nextStepTypeIds, stepStatusId, modified, processMessage) = processStepTypeId switch
             {
                 ProcessStepTypeId.CREATE_WALLET => await dimProcessHandler.CreateWallet(_tenantId, _tenantName, cancellationToken)
-                    .ConfigureAwait(false),
+                    .ConfigureAwait(ConfigureAwaitOptions.None),
                 ProcessStepTypeId.CHECK_OPERATION => await dimProcessHandler.CheckOperation(_tenantId, cancellationToken)
-                    .ConfigureAwait(false),
+                    .ConfigureAwait(ConfigureAwaitOptions.None),
                 ProcessStepTypeId.GET_COMPANY => await dimProcessHandler.GetCompany(_tenantId, _tenantName, cancellationToken)
-                    .ConfigureAwait(false),
+                    .ConfigureAwait(ConfigureAwaitOptions.None),
                 ProcessStepTypeId.GET_DID_DOCUMENT => await dimProcessHandler.GetDidDocument(_tenantId, cancellationToken)
-                    .ConfigureAwait(false),
+                    .ConfigureAwait(ConfigureAwaitOptions.None),
                 ProcessStepTypeId.CREATE_STATUS_LIST => await dimProcessHandler.CreateStatusList(_tenantId, cancellationToken)
-                    .ConfigureAwait(false),
+                    .ConfigureAwait(ConfigureAwaitOptions.None),
                 ProcessStepTypeId.SEND_CALLBACK => await dimProcessHandler.SendCallback(_tenantId, cancellationToken)
-                    .ConfigureAwait(false),
+                    .ConfigureAwait(ConfigureAwaitOptions.None),
                 _ => (null, ProcessStepStatusId.TODO, false, null)
             };
         }
         catch (Exception ex) when (ex is not SystemException)
         {
-            (stepStatusId, processMessage, nextStepTypeIds) = ProcessError(ex);
+            (stepStatusId, processMessage, nextStepTypeIds) = ProcessError(ex, processStepTypeId);
             modified = true;
         }
 
         return new IProcessTypeExecutor.StepExecutionResult(modified, stepStatusId, nextStepTypeIds, null, processMessage);
     }
 
-    private static (ProcessStepStatusId StatusId, string? ProcessMessage, IEnumerable<ProcessStepTypeId>? nextSteps) ProcessError(Exception ex)
+    private static (ProcessStepStatusId StatusId, string? ProcessMessage, IEnumerable<ProcessStepTypeId>? nextSteps) ProcessError(Exception ex, ProcessStepTypeId processStepTypeId)
     {
         return ex switch
         {
             ServiceException { IsRecoverable: true } => (ProcessStepStatusId.TODO, ex.Message, null),
-            _ => (ProcessStepStatusId.FAILED, ex.Message, null)
+            _ => (ProcessStepStatusId.FAILED, ex.Message, Enumerable.Repeat(processStepTypeId.GetRetriggerStep(ProcessTypeId.SETUP_DIM), 1))
         };
     }
 }

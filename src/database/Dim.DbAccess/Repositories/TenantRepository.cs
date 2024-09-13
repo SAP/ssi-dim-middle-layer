@@ -106,12 +106,6 @@ public class TenantRepository(DimDbContext dbContext)
         dbContext.Tenants
             .AnyAsync(x => x.CompanyName == companyName && x.Bpn == bpn);
 
-    public Task<string> GetTenantBpn(Guid tenantId) =>
-        dbContext.Tenants
-            .Where(x => x.Id == tenantId)
-            .Select(x => x.Bpn)
-            .SingleAsync();
-
     public Task<Guid?> GetOperationId(Guid tenantId) =>
         dbContext.Tenants
             .Where(x => x.Id == tenantId)
@@ -184,5 +178,17 @@ public class TenantRepository(DimDbContext dbContext)
         dbContext.Tenants
             .Where(x => x.Id == tenantId)
             .Select(x => new ValueTuple<string?, bool>(x.DidDownloadUrl, x.IsIssuer))
+            .SingleOrDefaultAsync();
+
+    public Task<(Guid? WalletId, string TechnicalUserName)> GetTechnicalUserNameAndWalletId(Guid technicalUserId) =>
+        dbContext.TechnicalUsers
+            .Where(x => x.Id == technicalUserId)
+            .Select(x => new ValueTuple<Guid?, string>(x.Tenant!.WalletId, x.TechnicalUserName))
+            .SingleOrDefaultAsync();
+
+    public Task<Guid?> GetOperationIdForTechnicalUser(Guid technicalUserId) =>
+        dbContext.TechnicalUsers
+            .Where(x => x.Id == technicalUserId)
+            .Select(x => x.OperationId)
             .SingleOrDefaultAsync();
 }

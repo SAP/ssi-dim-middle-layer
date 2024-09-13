@@ -18,11 +18,16 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using Dim.Entities.Entities;
+using Dim.Entities.Enums;
 
-namespace Dim.Processes.Library;
+namespace Dim.DbAccess.Models;
 
-public record VerifyProcessData(
-    Process? Process,
-    IEnumerable<ProcessStep>? ProcessSteps
+public record ProcessData(
+    Guid ProcessId,
+    IEnumerable<ProcessStepData> ProcessStepData
+);
+
+public record ProcessStepData(
+    ProcessStepTypeId ProcessStepTypeId,
+    ProcessStepStatusId ProcessStepStatusId
 );

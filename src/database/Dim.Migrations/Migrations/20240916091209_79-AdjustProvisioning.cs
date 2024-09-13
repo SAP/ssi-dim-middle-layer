@@ -28,47 +28,11 @@ using System;
 namespace Dim.Migrations.Migrations
 {
     /// <inheritdoc />
-    public partial class AddDivProvisioning : Migration
+    public partial class _79AdjustProvisioning : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DeleteData(
-                schema: "dim",
-                table: "process_step_types",
-                keyColumn: "id",
-                keyValue: 7);
-
-            migrationBuilder.DeleteData(
-                schema: "dim",
-                table: "process_step_types",
-                keyColumn: "id",
-                keyValue: 8);
-
-            migrationBuilder.DeleteData(
-                schema: "dim",
-                table: "process_step_types",
-                keyColumn: "id",
-                keyValue: 9);
-
-            migrationBuilder.DeleteData(
-                schema: "dim",
-                table: "process_step_types",
-                keyColumn: "id",
-                keyValue: 10);
-
-            migrationBuilder.DeleteData(
-                schema: "dim",
-                table: "process_step_types",
-                keyColumn: "id",
-                keyValue: 11);
-
-            migrationBuilder.DeleteData(
-                schema: "dim",
-                table: "process_step_types",
-                keyColumn: "id",
-                keyValue: 12);
-
             migrationBuilder.DeleteData(
                 schema: "dim",
                 table: "process_step_types",
@@ -115,13 +79,14 @@ namespace Dim.Migrations.Migrations
                 schema: "dim",
                 table: "tenants");
 
-            migrationBuilder.DropColumn(
-                name: "space_id",
-                schema: "dim",
-                table: "tenants");
-
             migrationBuilder.RenameColumn(
                 name: "sub_account_id",
+                schema: "dim",
+                table: "tenants",
+                newName: "wallet_id");
+
+            migrationBuilder.RenameColumn(
+                name: "space_id",
                 schema: "dim",
                 table: "tenants",
                 newName: "operation_id");
@@ -163,6 +128,13 @@ namespace Dim.Migrations.Migrations
                 schema: "dim",
                 table: "tenants",
                 type: "bytea",
+                nullable: true);
+
+            migrationBuilder.AddColumn<Guid>(
+                name: "operation_id",
+                schema: "dim",
+                table: "technical_users",
+                type: "uuid",
                 nullable: true);
 
             migrationBuilder.UpdateData(
@@ -212,11 +184,102 @@ namespace Dim.Migrations.Migrations
                 keyValue: 6,
                 column: "label",
                 value: "SEND_CALLBACK");
+
+            migrationBuilder.UpdateData(
+                schema: "dim",
+                table: "process_step_types",
+                keyColumn: "id",
+                keyValue: 7,
+                column: "label",
+                value: "RETRIGGER_CREATE_WALLET");
+
+            migrationBuilder.UpdateData(
+                schema: "dim",
+                table: "process_step_types",
+                keyColumn: "id",
+                keyValue: 8,
+                column: "label",
+                value: "RETRIGGER_CHECK_OPERATION");
+
+            migrationBuilder.UpdateData(
+                schema: "dim",
+                table: "process_step_types",
+                keyColumn: "id",
+                keyValue: 9,
+                column: "label",
+                value: "RETRIGGER_GET_COMPANY");
+
+            migrationBuilder.UpdateData(
+                schema: "dim",
+                table: "process_step_types",
+                keyColumn: "id",
+                keyValue: 10,
+                column: "label",
+                value: "RETRIGGER_GET_DID_DOCUMENT");
+
+            migrationBuilder.UpdateData(
+                schema: "dim",
+                table: "process_step_types",
+                keyColumn: "id",
+                keyValue: 11,
+                column: "label",
+                value: "RETRIGGER_CREATE_STATUS_LIST");
+
+            migrationBuilder.UpdateData(
+                schema: "dim",
+                table: "process_step_types",
+                keyColumn: "id",
+                keyValue: 12,
+                column: "label",
+                value: "RETRIGGER_SEND_CALLBACK");
+
+            migrationBuilder.InsertData(
+                schema: "dim",
+                table: "process_step_types",
+                columns: new[] { "id", "label" },
+                values: new object[,]
+                {
+                    { 103, "RETRIGGER_CREATE_TECHNICAL_USER" },
+                    { 104, "RETRIGGER_GET_TECHNICAL_USER_DATA" },
+                    { 105, "RETRIGGER_SEND_TECHNICAL_USER_CREATION_CALLBACK" },
+                    { 202, "RETRIGGER_DELETE_TECHNICAL_USER" },
+                    { 203, "RETRIGGER_SEND_TECHNICAL_USER_DELETION_CALLBACK" }
+                });
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DeleteData(
+                schema: "dim",
+                table: "process_step_types",
+                keyColumn: "id",
+                keyValue: 103);
+
+            migrationBuilder.DeleteData(
+                schema: "dim",
+                table: "process_step_types",
+                keyColumn: "id",
+                keyValue: 104);
+
+            migrationBuilder.DeleteData(
+                schema: "dim",
+                table: "process_step_types",
+                keyColumn: "id",
+                keyValue: 105);
+
+            migrationBuilder.DeleteData(
+                schema: "dim",
+                table: "process_step_types",
+                keyColumn: "id",
+                keyValue: 202);
+
+            migrationBuilder.DeleteData(
+                schema: "dim",
+                table: "process_step_types",
+                keyColumn: "id",
+                keyValue: 203);
+
             migrationBuilder.DropColumn(
                 name: "client_secret",
                 schema: "dim",
@@ -232,6 +295,17 @@ namespace Dim.Migrations.Migrations
                 schema: "dim",
                 table: "tenants");
 
+            migrationBuilder.DropColumn(
+                name: "operation_id",
+                schema: "dim",
+                table: "technical_users");
+
+            migrationBuilder.RenameColumn(
+                name: "wallet_id",
+                schema: "dim",
+                table: "tenants",
+                newName: "sub_account_id");
+
             migrationBuilder.RenameColumn(
                 name: "token_address",
                 schema: "dim",
@@ -242,7 +316,7 @@ namespace Dim.Migrations.Migrations
                 name: "operation_id",
                 schema: "dim",
                 table: "tenants",
-                newName: "sub_account_id");
+                newName: "space_id");
 
             migrationBuilder.RenameColumn(
                 name: "client_id",
@@ -265,13 +339,6 @@ namespace Dim.Migrations.Migrations
 
             migrationBuilder.AddColumn<Guid>(
                 name: "dim_instance_id",
-                schema: "dim",
-                table: "tenants",
-                type: "uuid",
-                nullable: true);
-
-            migrationBuilder.AddColumn<Guid>(
-                name: "space_id",
                 schema: "dim",
                 table: "tenants",
                 type: "uuid",
@@ -325,18 +392,60 @@ namespace Dim.Migrations.Migrations
                 column: "label",
                 value: "SUBSCRIBE_APPLICATION");
 
+            migrationBuilder.UpdateData(
+                schema: "dim",
+                table: "process_step_types",
+                keyColumn: "id",
+                keyValue: 7,
+                column: "label",
+                value: "CREATE_CLOUD_FOUNDRY_ENVIRONMENT");
+
+            migrationBuilder.UpdateData(
+                schema: "dim",
+                table: "process_step_types",
+                keyColumn: "id",
+                keyValue: 8,
+                column: "label",
+                value: "CREATE_CLOUD_FOUNDRY_SPACE");
+
+            migrationBuilder.UpdateData(
+                schema: "dim",
+                table: "process_step_types",
+                keyColumn: "id",
+                keyValue: 9,
+                column: "label",
+                value: "ADD_SPACE_MANAGER_ROLE");
+
+            migrationBuilder.UpdateData(
+                schema: "dim",
+                table: "process_step_types",
+                keyColumn: "id",
+                keyValue: 10,
+                column: "label",
+                value: "ADD_SPACE_DEVELOPER_ROLE");
+
+            migrationBuilder.UpdateData(
+                schema: "dim",
+                table: "process_step_types",
+                keyColumn: "id",
+                keyValue: 11,
+                column: "label",
+                value: "CREATE_DIM_SERVICE_INSTANCE");
+
+            migrationBuilder.UpdateData(
+                schema: "dim",
+                table: "process_step_types",
+                keyColumn: "id",
+                keyValue: 12,
+                column: "label",
+                value: "CREATE_SERVICE_INSTANCE_BINDING");
+
             migrationBuilder.InsertData(
                 schema: "dim",
                 table: "process_step_types",
                 columns: new[] { "id", "label" },
                 values: new object[,]
                 {
-                    { 7, "CREATE_CLOUD_FOUNDRY_ENVIRONMENT" },
-                    { 8, "CREATE_CLOUD_FOUNDRY_SPACE" },
-                    { 9, "ADD_SPACE_MANAGER_ROLE" },
-                    { 10, "ADD_SPACE_DEVELOPER_ROLE" },
-                    { 11, "CREATE_DIM_SERVICE_INSTANCE" },
-                    { 12, "CREATE_SERVICE_INSTANCE_BINDING" },
                     { 13, "GET_DIM_DETAILS" },
                     { 14, "CREATE_APPLICATION" },
                     { 15, "CREATE_COMPANY_IDENTITY" },

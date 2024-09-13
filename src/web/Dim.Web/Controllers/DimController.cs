@@ -18,6 +18,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using Dim.Entities.Enums;
 using Dim.Web.BusinessLogic;
 using Dim.Web.Extensions;
 using Dim.Web.Models;
@@ -80,6 +81,59 @@ public static class DimController
             .RequireAuthorization(r => r.RequireRole("delete_technical_user"))
             .Produces(StatusCodes.Status200OK, contentType: Constants.JsonContentType);
 
+        dim.MapGet("process/setup", (
+                [FromQuery] string bpn,
+                [FromQuery] string companyName,
+                [FromServices] IDimBusinessLogic dimBusinessLogic)
+                => dimBusinessLogic.GetSetupProcess(bpn, companyName)
+            )
+            .WithSwaggerDescription("Gets the wallet creation process id for the given bpn and companyName",
+                "Example: Post: api/dim/process/setup?bpn={bpn}&companyName={companyName}",
+                "bpn of the company",
+                "name of the company")
+            .RequireAuthorization(r => r.RequireRole("get_process"))
+            .Produces(StatusCodes.Status200OK, contentType: Constants.JsonContentType);
+
+        dim.MapGet("process/technical-user", (
+                    [FromQuery] string bpn,
+                    [FromQuery] string companyName,
+                    [FromQuery] string technicalUserName,
+                    [FromServices] IDimBusinessLogic dimBusinessLogic)
+                => dimBusinessLogic.GetTechnicalUserProcess(bpn, companyName, technicalUserName)
+            )
+            .WithSwaggerDescription("Gets the technical user creation process id for the given technicalUserName",
+                "Example: Post: api/dim/process/technical-user?bpn={bpn}&companyName={companyName}&technicalUserName={technicalUserName}",
+                "bpn of the company",
+                "name of the company",
+                "name of the techincal user to get the process for")
+            .RequireAuthorization(r => r.RequireRole("get_process"))
+            .Produces(StatusCodes.Status200OK, contentType: Constants.JsonContentType);
+
+        dim.MapGet("process/wallet/{processId}/retrigger", (
+                    [FromRoute] Guid processId,
+                    [FromQuery] ProcessStepTypeId processStepTypeId,
+                    [FromServices] IDimBusinessLogic dimBusinessLogic)
+                => dimBusinessLogic.RetriggerProcess(ProcessTypeId.SETUP_DIM, processId, processStepTypeId)
+            )
+            .WithSwaggerDescription("Retriggers the given process step of the wallet creation process",
+                "Example: Post: api/dim/process/wallet/{processId}/retrigger?processStepTypeId={processStepTypeId}",
+                "Id of the process",
+                "The process step that should be retriggered")
+            .RequireAuthorization(r => r.RequireRole("retrigger_process"))
+            .Produces(StatusCodes.Status200OK, contentType: Constants.JsonContentType);
+
+        dim.MapGet("process/technicalUser/{processId}/retrigger", (
+                    [FromRoute] Guid processId,
+                    [FromQuery] ProcessStepTypeId processStepTypeId,
+                    [FromServices] IDimBusinessLogic dimBusinessLogic)
+                => dimBusinessLogic.RetriggerProcess(ProcessTypeId.TECHNICAL_USER, processId, processStepTypeId)
+            )
+            .WithSwaggerDescription("Retriggers the given process step of a technical user process",
+                "Example: Post: api/dim/process/technicalUser/{processId}/retrigger?processStepTypeId={processStepTypeId}",
+                "Id of the process",
+                "The process step that should be retriggered")
+            .RequireAuthorization(r => r.RequireRole("retrigger_process"))
+            .Produces(StatusCodes.Status200OK, contentType: Constants.JsonContentType);
         return group;
     }
 }

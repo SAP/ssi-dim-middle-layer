@@ -67,7 +67,7 @@ public class ProvisioningClient(IBasicAuthTokenService basicAuthTokenService, IO
         );
         var client = await basicAuthTokenService
             .GetBasicAuthorizedClient<ProvisioningClient>(_settings, cancellationToken)
-            .ConfigureAwait(false);
+            .ConfigureAwait(ConfigureAwaitOptions.None);
         var result = await client.PostAsJsonAsync("/api/v1.0.0/operations", data, JsonSerializerExtensions.Options, cancellationToken)
             .CatchingIntoServiceExceptionFor("create-operation", HttpAsyncResponseMessageExtension.RecoverOptions.INFRASTRUCTURE,
                 async response =>
@@ -99,7 +99,7 @@ public class ProvisioningClient(IBasicAuthTokenService basicAuthTokenService, IO
     {
         var client = await basicAuthTokenService
             .GetBasicAuthorizedClient<ProvisioningClient>(_settings, cancellationToken)
-            .ConfigureAwait(false);
+            .ConfigureAwait(ConfigureAwaitOptions.None);
         var result = await client.GetAsync($"/api/v1.0.0/operations/{operationId}", cancellationToken)
             .CatchingIntoServiceExceptionFor("get-operation", HttpAsyncResponseMessageExtension.RecoverOptions.INFRASTRUCTURE,
                 async response =>
@@ -123,6 +123,46 @@ public class ProvisioningClient(IBasicAuthTokenService basicAuthTokenService, IO
             }
 
             return response;
+        }
+        catch (JsonException je)
+        {
+            throw new ServiceException(je.Message);
+        }
+    }
+
+    public async Task<Guid> CreateServiceKey(string technicalUserName, Guid walletId, CancellationToken cancellationToken)
+    {
+        var data = new ServiceKeyOperationCreationRequest(
+            "customer-wallet-key",
+            "create",
+            new ServiceKeyPayloadData(
+                walletId,
+                technicalUserName
+            )
+        );
+        var client = await basicAuthTokenService
+            .GetBasicAuthorizedClient<ProvisioningClient>(_settings, cancellationToken)
+            .ConfigureAwait(ConfigureAwaitOptions.None);
+        var result = await client.PostAsJsonAsync("/api/v1.0.0/operations", data, JsonSerializerExtensions.Options, cancellationToken)
+            .CatchingIntoServiceExceptionFor("create-service-key", HttpAsyncResponseMessageExtension.RecoverOptions.INFRASTRUCTURE,
+                async response =>
+                {
+                    var content = await response.Content.ReadAsStringAsync().ConfigureAwait(ConfigureAwaitOptions.None);
+                    return (false, content);
+                })
+            .ConfigureAwait(false);
+        try
+        {
+            var response = await result.Content
+                .ReadFromJsonAsync<CreateOperationRequest>(JsonSerializerExtensions.Options, cancellationToken)
+                .ConfigureAwait(ConfigureAwaitOptions.None);
+
+            if (response == null)
+            {
+                throw new ServiceException("response should never be null here");
+            }
+
+            return response.OperationId;
         }
         catch (JsonException je)
         {

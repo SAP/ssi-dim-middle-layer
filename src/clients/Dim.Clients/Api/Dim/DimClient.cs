@@ -41,7 +41,7 @@ public class DimClient(IBasicAuthTokenService basicAuthTokenService)
         {
             var response = await result.Content
                 .ReadFromJsonAsync<CompanyIdentitiesResponse>(JsonSerializerExtensions.Options, cancellationToken)
-                .ConfigureAwait(false);
+                .ConfigureAwait(ConfigureAwaitOptions.None);
             if (response?.Data == null || response.Data.Count() != 1)
             {
                 throw new ConflictException("There is no matching company");
@@ -85,7 +85,7 @@ public class DimClient(IBasicAuthTokenService basicAuthTokenService)
             .CatchingIntoServiceExceptionFor("assign-application", HttpAsyncResponseMessageExtension.RecoverOptions.INFRASTRUCTURE,
                 async m =>
                 {
-                    var message = await m.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    var message = await m.Content.ReadAsStringAsync().ConfigureAwait(ConfigureAwaitOptions.None);
                     return (false, message);
                 }).ConfigureAwait(false);
         try

@@ -112,7 +112,7 @@ public class TechnicalUserProcessTypeExecutorTests
             .Returns(new ValueTuple<bool, Guid, string, string>(false, Guid.Empty, string.Empty, string.Empty));
 
         // Act
-        async Task Act() => await _sut.InitializeProcess(validProcessId, Enumerable.Empty<ProcessStepTypeId>()).ConfigureAwait(false);
+        async Task Act() => await _sut.InitializeProcess(validProcessId, Enumerable.Empty<ProcessStepTypeId>());
 
         // Assert
         var ex = await Assert.ThrowsAsync<NotFoundException>(Act);
@@ -127,7 +127,7 @@ public class TechnicalUserProcessTypeExecutorTests
     public async Task ExecuteProcessStep_WithoutInitialization_ThrowsUnexpectedConditionException()
     {
         // Act
-        async Task Act() => await _sut.ExecuteProcessStep(ProcessStepTypeId.CREATE_TECHNICAL_USER, Enumerable.Empty<ProcessStepTypeId>(), CancellationToken.None).ConfigureAwait(false);
+        async Task Act() => await _sut.ExecuteProcessStep(ProcessStepTypeId.CREATE_TECHNICAL_USER, Enumerable.Empty<ProcessStepTypeId>(), CancellationToken.None);
 
         // Assert
         var ex = await Assert.ThrowsAsync<UnexpectedConditionException>(Act);
@@ -225,7 +225,8 @@ public class TechnicalUserProcessTypeExecutorTests
 
         // Assert
         result.Modified.Should().BeTrue();
-        result.ScheduleStepTypeIds.Should().BeNull();
+        result.ScheduleStepTypeIds.Should().ContainSingle()
+            .And.Satisfy(x => x == ProcessStepTypeId.RETRIGGER_CREATE_TECHNICAL_USER);
         result.ProcessStepStatusId.Should().Be(ProcessStepStatusId.FAILED);
         result.ProcessMessage.Should().Be("this is a test");
         result.SkipStepTypeIds.Should().BeNull();
