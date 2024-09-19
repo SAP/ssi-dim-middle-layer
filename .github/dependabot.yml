@@ -24,7 +24,7 @@ updates:
   # NuGet
   -
     package-ecosystem: "nuget"
-    directory: /
+    directory: "/src/"
     labels:
       - "dependabot"
       - "dependencies"
@@ -34,10 +34,9 @@ updates:
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
     groups:
-      production-dependencies:
-        dependency-type: "production"
-      development-dependencies:
-        dependency-type: "development"
+      default:
+        patterns:
+          - "*"
 
   # Github Actions
   -
