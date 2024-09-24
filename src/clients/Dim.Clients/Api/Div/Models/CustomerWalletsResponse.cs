@@ -22,24 +22,21 @@ using System.Text.Json.Serialization;
 
 namespace Dim.Clients.Api.Div.Models;
 
-public record ServiceKeyOperationCreationRequest(
-    [property: JsonPropertyName("entity")] string Entity,
-    [property: JsonPropertyName("action")] string Action,
-    [property: JsonPropertyName("payload")] ServiceKeyCreationPayloadData CreationPayload
+public record CustomerWalletsResponse(
+    [property: JsonPropertyName("count")] int Count,
+    [property: JsonPropertyName("data")] IEnumerable<CustomerWallet> Data
 );
 
-public record ServiceKeyCreationPayloadData(
-    [property: JsonPropertyName("customerWalletId")] Guid CustomerWalletId,
-    [property: JsonPropertyName("divWalletServiceName")] string ServiceKeyName
+public record CustomerWallet(
+    [property: JsonPropertyName("id")] Guid Id,
+    [property: JsonPropertyName("meteringId")] Guid MeteringId,
+    [property: JsonPropertyName("customerName")] string CustomerName,
+    [property: JsonPropertyName("customerId")] string CustomerId,
+    [property: JsonPropertyName("subscriptionUrl")] string SubscriptionUrl,
+    [property: JsonPropertyName("serviceKeys")] IEnumerable<CustomerServiceKey> ServiceKeys
 );
 
-public record ServiceKeyOperationDeletionRequest(
-    [property: JsonPropertyName("entity")] string Entity,
-    [property: JsonPropertyName("action")] string Action,
-    [property: JsonPropertyName("payload")] ServiceKeyDeletionPayloadData DeletionPayload
-);
-
-public record ServiceKeyDeletionPayloadData(
-    [property: JsonPropertyName("customerWalletKeyId")] Guid ServiceKeyId,
-    [property: JsonPropertyName("customerWalletId")] Guid CustomerWalletId
+public record CustomerServiceKey(
+    [property: JsonPropertyName("id")] Guid Id,
+    [property: JsonPropertyName("name")] string Name
 );

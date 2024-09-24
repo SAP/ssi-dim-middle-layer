@@ -87,7 +87,7 @@ public class ProcessExecutorTests
         var result = await Assert.ThrowsAsync<UnexpectedConditionException>(Act);
 
         // Assert
-        result.Message.Should().Be($"processType {(ProcessTypeId)default} is not a registered executable processType.");
+        result.Message.Should().Be("processType 0 is not a registered executable processType.");
     }
 
     [Theory]

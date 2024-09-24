@@ -18,14 +18,19 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using Dim.Clients.Api.Dim.Models;
-using Dim.Clients.Token;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization.Policy;
+using Microsoft.AspNetCore.Http;
+using System.Security.Claims;
 
-namespace Dim.Clients.Api.Dim;
+namespace Dim.Web.Tests.Setup;
 
-public interface IDimClient
+public class FakePolicyEvaluator : IPolicyEvaluator
 {
-    Task<CompanyData> GetCompanyData(BasicAuthSettings dimAuth, string dimBaseUrl, string tenantName, string application, CancellationToken cancellationToken);
-    Task<string> GetStatusList(BasicAuthSettings dimAuth, string dimBaseUrl, Guid companyId, CancellationToken cancellationToken);
-    Task<string> CreateStatusList(BasicAuthSettings dimAuth, string dimBaseUrl, Guid companyId, CancellationToken cancellationToken);
+    public Task<AuthenticateResult> AuthenticateAsync(AuthorizationPolicy policy, HttpContext context) =>
+        Task.FromResult(AuthenticateResult.Success(new AuthenticationTicket(new ClaimsPrincipal(), new AuthenticationProperties(), "FakeScheme")));
+
+    public Task<PolicyAuthorizationResult> AuthorizeAsync(AuthorizationPolicy policy, AuthenticateResult authenticationResult, HttpContext context, object? resource) =>
+        Task.FromResult(PolicyAuthorizationResult.Success());
 }

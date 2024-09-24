@@ -31,7 +31,8 @@ public class DimRepositories(DimDbContext dbContext)
 {
     private static readonly IReadOnlyDictionary<Type, Func<DimDbContext, object>> Types = new Dictionary<Type, Func<DimDbContext, object>> {
         { typeof(IProcessStepRepository), context => new ProcessStepRepository(context) },
-        { typeof(ITenantRepository), context => new TenantRepository(context) }
+        { typeof(ITenantRepository), context => new TenantRepository(context) },
+        { typeof(ITechnicalUserRepository), context => new TechnicalUserRepository(context) }
     }.ToImmutableDictionary();
 
     public RepositoryType GetInstance<RepositoryType>()

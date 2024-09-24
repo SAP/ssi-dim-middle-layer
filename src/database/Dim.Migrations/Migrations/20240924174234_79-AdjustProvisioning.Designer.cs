@@ -1,4 +1,4 @@
-﻿/********************************************************************************
+/********************************************************************************
  * Copyright (c) 2024 BMW Group AG
  * Copyright 2024 SAP SE or an SAP affiliate company and ssi-dim-middle-layer contributors.
  *
@@ -32,7 +32,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Dim.Migrations.Migrations
 {
     [DbContext(typeof(DimDbContext))]
-    [Migration("20240916091209_79-AdjustProvisioning")]
+    [Migration("20240924174234_79-AdjustProvisioning")]
     partial class _79AdjustProvisioning
     {
         /// <inheritdoc />
@@ -258,21 +258,31 @@ namespace Dim.Migrations.Migrations
                         new
                         {
                             Id = 102,
-                            Label = "SEND_TECHNICAL_USER_CREATION_CALLBACK"
+                            Label = "GET_TECHNICAL_USER_SERVICE_KEY"
                         },
                         new
                         {
                             Id = 103,
-                            Label = "RETRIGGER_CREATE_TECHNICAL_USER"
+                            Label = "SEND_TECHNICAL_USER_CREATION_CALLBACK"
                         },
                         new
                         {
                             Id = 104,
-                            Label = "RETRIGGER_GET_TECHNICAL_USER_DATA"
+                            Label = "RETRIGGER_CREATE_TECHNICAL_USER"
                         },
                         new
                         {
                             Id = 105,
+                            Label = "RETRIGGER_GET_TECHNICAL_USER_DATA"
+                        },
+                        new
+                        {
+                            Id = 106,
+                            Label = "RETRIGGER_GET_TECHNICAL_USER_SERVICE_KEY"
+                        },
+                        new
+                        {
+                            Id = 107,
                             Label = "RETRIGGER_SEND_TECHNICAL_USER_CREATION_CALLBACK"
                         },
                         new
@@ -361,6 +371,10 @@ namespace Dim.Migrations.Migrations
                     b.Property<Guid>("ProcessId")
                         .HasColumnType("uuid")
                         .HasColumnName("process_id");
+
+                    b.Property<Guid?>("ServiceKeyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("service_key_id");
 
                     b.Property<string>("TechnicalUserName")
                         .IsRequired()

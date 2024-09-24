@@ -20,6 +20,7 @@
 
 using Dim.Clients.Api.Div;
 using Dim.Clients.Api.Div.Models;
+using Dim.Clients.Token;
 using Dim.DbAccess;
 using Dim.DbAccess.Models;
 using Dim.DbAccess.Repositories;
@@ -36,7 +37,7 @@ namespace DimProcess.Library.Tests;
 
 public class TechnicalUserProcessHandlerTests
 {
-    private readonly ITenantRepository _tenantRepositories;
+    private readonly ITechnicalUserRepository _technicalUserRepository;
     private readonly ICallbackService _callbackService;
     private readonly TechnicalUserProcessHandler _sut;
     private readonly TechnicalUserSettings _settings;
@@ -50,9 +51,9 @@ public class TechnicalUserProcessHandlerTests
         fixture.Behaviors.Add(new OmitOnRecursionBehavior());
 
         var repositories = A.Fake<IDimRepositories>();
-        _tenantRepositories = A.Fake<ITenantRepository>();
+        _technicalUserRepository = A.Fake<ITechnicalUserRepository>();
 
-        A.CallTo(() => repositories.GetInstance<ITenantRepository>()).Returns(_tenantRepositories);
+        A.CallTo(() => repositories.GetInstance<ITechnicalUserRepository>()).Returns(_technicalUserRepository);
 
         _provisioningClient = A.Fake<IProvisioningClient>();
         _callbackService = A.Fake<ICallbackService>();
@@ -83,9 +84,9 @@ public class TechnicalUserProcessHandlerTests
         // Arrange
         var operationId = Guid.NewGuid();
         var technicalUser = new TechnicalUser(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), "saTest", Guid.NewGuid());
-        A.CallTo(() => _tenantRepositories.GetTechnicalUserNameAndWalletId(technicalUser.Id))
+        A.CallTo(() => _technicalUserRepository.GetTechnicalUserNameAndWalletId(technicalUser.Id))
             .Returns((Guid.NewGuid(), technicalUser.TechnicalUserName));
-        A.CallTo(() => _tenantRepositories.AttachAndModifyTechnicalUser(technicalUser.Id, A<Action<TechnicalUser>>._, A<Action<TechnicalUser>>._))
+        A.CallTo(() => _technicalUserRepository.AttachAndModifyTechnicalUser(technicalUser.Id, A<Action<TechnicalUser>>._, A<Action<TechnicalUser>>._))
             .Invokes((Guid _, Action<TechnicalUser>? initialize, Action<TechnicalUser> modify) =>
             {
                 initialize!.Invoke(technicalUser);
@@ -95,7 +96,7 @@ public class TechnicalUserProcessHandlerTests
             .Returns(operationId);
 
         // Act
-        var result = await _sut.CreateServiceInstanceBindings("test", technicalUser.Id, CancellationToken.None);
+        var result = await _sut.CreateServiceInstanceBindings(technicalUser.Id, CancellationToken.None);
 
         // Assert
         result.stepStatusId.Should().Be(ProcessStepStatusId.DONE);
@@ -110,7 +111,7 @@ public class TechnicalUserProcessHandlerTests
     {
         // Arrange
         var technicalUserId = Guid.NewGuid();
-        Task Act() => _sut.CreateServiceInstanceBindings("test", technicalUserId, CancellationToken.None);
+        Task Act() => _sut.CreateServiceInstanceBindings(technicalUserId, CancellationToken.None);
 
         // Act
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
@@ -137,9 +138,9 @@ public class TechnicalUserProcessHandlerTests
                 "https://example.org/test",
                 "test"));
         var technicalUser = new TechnicalUser(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), "saTest", Guid.NewGuid());
-        A.CallTo(() => _tenantRepositories.GetOperationIdForTechnicalUser(technicalUser.Id))
+        A.CallTo(() => _technicalUserRepository.GetOperationIdForTechnicalUser(technicalUser.Id))
             .Returns(operationId);
-        A.CallTo(() => _tenantRepositories.AttachAndModifyTechnicalUser(technicalUser.Id, A<Action<TechnicalUser>>._, A<Action<TechnicalUser>>._))
+        A.CallTo(() => _technicalUserRepository.AttachAndModifyTechnicalUser(technicalUser.Id, A<Action<TechnicalUser>>._, A<Action<TechnicalUser>>._))
             .Invokes((Guid _, Action<TechnicalUser>? initialize, Action<TechnicalUser> modify) =>
             {
                 initialize!.Invoke(technicalUser);
@@ -149,13 +150,13 @@ public class TechnicalUserProcessHandlerTests
             .Returns(new OperationResponse(operationId, OperationResponseStatus.completed, null, null, responseData));
 
         // Act
-        var result = await _sut.GetTechnicalUserData("test", technicalUser.Id, CancellationToken.None);
+        var result = await _sut.GetTechnicalUserData(technicalUser.Id, CancellationToken.None);
 
         // Assert
         result.stepStatusId.Should().Be(ProcessStepStatusId.DONE);
         result.processMessage.Should().BeNull();
         result.modified.Should().BeFalse();
-        result.nextStepTypeIds.Should().ContainSingle().And.Satisfy(x => x == ProcessStepTypeId.SEND_TECHNICAL_USER_CREATION_CALLBACK);
+        result.nextStepTypeIds.Should().ContainSingle().And.Satisfy(x => x == ProcessStepTypeId.GET_TECHNICAL_USER_SERVICE_KEY);
 
         technicalUser.TokenAddress.Should().Be(responseData.ServiceKey.Uaa.Url);
         technicalUser.ClientId.Should().Be(responseData.ServiceKey.Uaa.ClientId);
@@ -167,13 +168,13 @@ public class TechnicalUserProcessHandlerTests
         // Arrange
         var operationId = Guid.NewGuid();
         var technicalUserId = Guid.NewGuid();
-        A.CallTo(() => _tenantRepositories.GetOperationIdForTechnicalUser(technicalUserId))
+        A.CallTo(() => _technicalUserRepository.GetOperationIdForTechnicalUser(technicalUserId))
             .Returns(operationId);
         A.CallTo(() => _provisioningClient.GetOperation(A<Guid>._, A<CancellationToken>._))
             .Returns(new OperationResponse(operationId, OperationResponseStatus.pending, null, null, null));
 
         // Act
-        var result = await _sut.GetTechnicalUserData("test", technicalUserId, CancellationToken.None);
+        var result = await _sut.GetTechnicalUserData(technicalUserId, CancellationToken.None);
 
         // Assert
         result.stepStatusId.Should().Be(ProcessStepStatusId.TODO);
@@ -188,11 +189,11 @@ public class TechnicalUserProcessHandlerTests
         // Arrange
         var operationId = Guid.NewGuid();
         var technicalUserId = Guid.NewGuid();
-        A.CallTo(() => _tenantRepositories.GetOperationIdForTechnicalUser(technicalUserId))
+        A.CallTo(() => _technicalUserRepository.GetOperationIdForTechnicalUser(technicalUserId))
             .Returns(operationId);
         A.CallTo(() => _provisioningClient.GetOperation(A<Guid>._, A<CancellationToken>._))
             .Returns(new OperationResponse(operationId, OperationResponseStatus.completed, null, null, null));
-        Task Act() => _sut.GetTechnicalUserData("test", technicalUserId, CancellationToken.None);
+        Task Act() => _sut.GetTechnicalUserData(technicalUserId, CancellationToken.None);
 
         // Act
         var ex = await Assert.ThrowsAsync<UnexpectedConditionException>(Act);
@@ -206,13 +207,61 @@ public class TechnicalUserProcessHandlerTests
     {
         // Arrange
         var technicalUserId = Guid.NewGuid();
-        Task Act() => _sut.GetTechnicalUserData("test", technicalUserId, CancellationToken.None);
+        Task Act() => _sut.GetTechnicalUserData(technicalUserId, CancellationToken.None);
 
         // Act
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
 
         // Assert
         ex.Message.Should().Be("OperationId must not be null");
+    }
+
+    #endregion
+
+    #region GetTechnicalUserData
+
+    [Fact]
+    public async Task GetTechnicalUserServiceKey_WithValid_SavesData()
+    {
+        // Arrange
+        var serviceKeyId = Guid.NewGuid();
+        var walletId = Guid.NewGuid();
+        var technicalUser = new TechnicalUser(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), "saTest", Guid.NewGuid());
+        A.CallTo(() => _technicalUserRepository.GetWalletIdAndNameForTechnicalUser(technicalUser.Id))
+            .Returns((walletId, "test"));
+        A.CallTo(() => _technicalUserRepository.AttachAndModifyTechnicalUser(technicalUser.Id, A<Action<TechnicalUser>>._, A<Action<TechnicalUser>>._))
+            .Invokes((Guid _, Action<TechnicalUser>? initialize, Action<TechnicalUser> modify) =>
+            {
+                initialize!.Invoke(technicalUser);
+                modify(technicalUser);
+            });
+        A.CallTo(() => _provisioningClient.GetServiceKey(A<string>._, A<Guid>._, A<CancellationToken>._))
+            .Returns(serviceKeyId);
+
+        // Act
+        var result = await _sut.GetTechnicalUserServiceKey(technicalUser.Id, CancellationToken.None);
+
+        // Assert
+        result.stepStatusId.Should().Be(ProcessStepStatusId.DONE);
+        result.processMessage.Should().BeNull();
+        result.modified.Should().BeFalse();
+        result.nextStepTypeIds.Should().ContainSingle().And.Satisfy(x => x == ProcessStepTypeId.SEND_TECHNICAL_USER_CREATION_CALLBACK);
+
+        technicalUser.ServiceKeyId.Should().Be(serviceKeyId);
+    }
+
+    [Fact]
+    public async Task GetTechnicalUserData_WithWalletIdNotSet_ThrowsConflictException()
+    {
+        // Arrange
+        var technicalUserId = Guid.NewGuid();
+        Task Act() => _sut.GetTechnicalUserServiceKey(technicalUserId, CancellationToken.None);
+
+        // Act
+        var ex = await Assert.ThrowsAsync<ConflictException>(Act);
+
+        // Assert
+        ex.Message.Should().Be("WalletId must be set");
     }
 
     #endregion
@@ -224,7 +273,7 @@ public class TechnicalUserProcessHandlerTests
     {
         // Arrange
         var technicalUserId = Guid.NewGuid();
-        A.CallTo(() => _tenantRepositories.GetTechnicalUserCallbackData(technicalUserId))
+        A.CallTo(() => _technicalUserRepository.GetTechnicalUserCallbackData(technicalUserId))
             .Returns((Guid.NewGuid(), GetWalletData()));
 
         // Act
@@ -245,19 +294,58 @@ public class TechnicalUserProcessHandlerTests
     #region DeleteServiceInstanceBindings
 
     [Fact]
+    public async Task DeleteServiceInstanceBindings_WithMissingServiceKeyId_ThrowsConflictException()
+    {
+        // Arrange
+        var technicalUserId = Guid.NewGuid();
+        A.CallTo(() => _technicalUserRepository.GetServiceKeyAndWalletId(technicalUserId))
+            .Returns(new ValueTuple<Guid?, Guid?>(null, Guid.NewGuid()));
+        Task Act() => _sut.DeleteServiceInstanceBindings(technicalUserId, CancellationToken.None);
+
+        // Act
+        var ex = await Assert.ThrowsAsync<ConflictException>(Act);
+
+        // Assert
+        ex.Message.Should().Be("ServiceKeyId must not be null");
+    }
+
+    [Fact]
+    public async Task DeleteServiceInstanceBindings_WithWalletIdNotSet_ThrowsConflictException()
+    {
+        // Arrange
+        var technicalUserId = Guid.NewGuid();
+        A.CallTo(() => _technicalUserRepository.GetServiceKeyAndWalletId(technicalUserId))
+            .Returns(new ValueTuple<Guid?, Guid?>(Guid.NewGuid(), null));
+        Task Act() => _sut.DeleteServiceInstanceBindings(technicalUserId, CancellationToken.None);
+
+        // Act
+        var ex = await Assert.ThrowsAsync<ConflictException>(Act);
+
+        // Assert
+        ex.Message.Should().Be("WalletId must not be null");
+    }
+
+    [Fact]
     public async Task DeleteServiceInstanceBindings_WithValidData_ReturnsExpected()
     {
         // Arrange
         var technicalUserId = Guid.NewGuid();
+        var walletId = Guid.NewGuid();
+        var serviceKeyId = Guid.NewGuid();
+        A.CallTo(() => _technicalUserRepository.GetServiceKeyAndWalletId(technicalUserId))
+            .Returns(new ValueTuple<Guid?, Guid?>(serviceKeyId, walletId));
 
         // Act
-        var result = await _sut.DeleteServiceInstanceBindings("test", technicalUserId, CancellationToken.None);
+        var result = await _sut.DeleteServiceInstanceBindings(technicalUserId, CancellationToken.None);
 
         // Assert
+        A.CallTo(() => _provisioningClient.DeleteServiceKey(walletId, serviceKeyId, A<CancellationToken>._))
+            .MustHaveHappenedOnceExactly();
         result.modified.Should().BeFalse();
-        result.processMessage.Should().Be("Technical User deletion is currently not supported");
-        result.stepStatusId.Should().Be(ProcessStepStatusId.FAILED);
-        result.nextStepTypeIds.Should().BeNull();
+        result.processMessage.Should().BeNull();
+        result.stepStatusId.Should().Be(ProcessStepStatusId.DONE);
+        result.nextStepTypeIds.Should().ContainSingle()
+            .And.Satisfy(x => x == ProcessStepTypeId.SEND_TECHNICAL_USER_DELETION_CALLBACK);
     }
 
     #endregion
@@ -265,23 +353,53 @@ public class TechnicalUserProcessHandlerTests
     #region SendCallback
 
     [Fact]
+    public async Task SendCallback_WithOperationInPending_StaysInTodo()
+    {
+        // Arrange
+        var technicalUserId = Guid.NewGuid();
+        var operationId = Guid.NewGuid();
+        var externalId = Guid.NewGuid();
+        A.CallTo(() => _technicalUserRepository.GetOperationAndExternalIdForTechnicalUser(technicalUserId))
+            .Returns((operationId, externalId));
+        A.CallTo(() => _provisioningClient.GetOperation(operationId, A<CancellationToken>._))
+            .Returns(new OperationResponse(operationId, OperationResponseStatus.pending, null, null, null));
+
+        // Act
+        var result = await _sut.SendDeleteCallback(technicalUserId, CancellationToken.None);
+
+        // Assert
+        result.modified.Should().BeTrue();
+        result.processMessage.Should().BeNull();
+        result.stepStatusId.Should().Be(ProcessStepStatusId.TODO);
+        result.nextStepTypeIds.Should().BeNull();
+
+        A.CallTo(() => _technicalUserRepository.RemoveTechnicalUser(A<Guid>._))
+            .MustNotHaveHappened();
+        A.CallTo(() => _callbackService.SendTechnicalUserDeletionCallback(A<Guid>._, A<CancellationToken>._))
+            .MustNotHaveHappened();
+    }
+
+    [Fact]
     public async Task SendCallback_WithValidData_ReturnsExpected()
     {
         // Arrange
         var technicalUserId = Guid.NewGuid();
+        var operationId = Guid.NewGuid();
         var externalId = Guid.NewGuid();
         var technicalUsers = new List<TechnicalUser>
         {
             new(technicalUserId, Guid.NewGuid(), Guid.NewGuid(), "sa-t", Guid.NewGuid())
         };
-        A.CallTo(() => _tenantRepositories.GetExternalIdForTechnicalUser(technicalUserId))
-            .Returns(externalId);
-        A.CallTo(() => _tenantRepositories.RemoveTechnicalUser(A<Guid>._))
+        A.CallTo(() => _technicalUserRepository.GetOperationAndExternalIdForTechnicalUser(technicalUserId))
+            .Returns((operationId, externalId));
+        A.CallTo(() => _technicalUserRepository.RemoveTechnicalUser(A<Guid>._))
             .Invokes((Guid tuId) =>
             {
                 var user = technicalUsers.Single(x => x.Id == tuId);
                 technicalUsers.Remove(user);
             });
+        A.CallTo(() => _provisioningClient.GetOperation(operationId, A<CancellationToken>._))
+            .Returns(new OperationResponse(operationId, OperationResponseStatus.completed, null, null, null));
 
         // Act
         var result = await _sut.SendDeleteCallback(technicalUserId, CancellationToken.None);

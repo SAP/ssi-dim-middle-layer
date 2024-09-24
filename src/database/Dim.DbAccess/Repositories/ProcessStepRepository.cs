@@ -90,33 +90,6 @@ public class ProcessStepRepository(DimDbContext dbContext)
                     step.ProcessStepTypeId))
             .AsAsyncEnumerable();
 
-    public Task<ProcessData?> GetWalletProcessForTenant(string bpn, string companyName) =>
-        dbContext.Tenants
-            .Where(x =>
-                x.Bpn == bpn &&
-                x.CompanyName == companyName &&
-                x.Process!.ProcessTypeId == ProcessTypeId.SETUP_DIM)
-            .Select(x => new ProcessData(
-                x.ProcessId,
-                x.Process!.ProcessSteps.Select(ps => new ProcessStepData(
-                    ps.ProcessStepTypeId,
-                    ps.ProcessStepStatusId))))
-            .SingleOrDefaultAsync();
-
-    public Task<ProcessData?> GetTechnicalUserProcess(string bpn, string companyName, string technicalUserName) =>
-        dbContext.TechnicalUsers
-            .Where(x =>
-                x.TechnicalUserName == technicalUserName &&
-                x.Tenant!.Bpn == bpn &&
-                x.Tenant!.CompanyName == companyName &&
-                x.Process!.ProcessTypeId == ProcessTypeId.TECHNICAL_USER)
-            .Select(x => new ProcessData(
-                x.ProcessId,
-                x.Process!.ProcessSteps.Select(ps => new ProcessStepData(
-                    ps.ProcessStepTypeId,
-                    ps.ProcessStepStatusId))))
-            .SingleOrDefaultAsync();
-
     public Task<(bool ProcessExists, VerifyProcessData ProcessData)> IsValidProcess(Guid processId, ProcessTypeId processTypeId, IEnumerable<ProcessStepTypeId> processStepTypeIds) =>
         dbContext.Processes
             .AsNoTracking()

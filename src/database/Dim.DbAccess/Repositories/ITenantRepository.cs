@@ -30,13 +30,6 @@ public interface ITenantRepository
     void AttachAndModifyTenant(Guid tenantId, Action<Tenant>? initialize, Action<Tenant> modify);
     Task<(bool IsIssuer, string? HostingUrl)> GetHostingUrlAndIsIssuer(Guid tenantId);
     Task<(bool Exists, Guid TenantId)> GetTenantForBpn(string bpn);
-    void CreateTenantTechnicalUser(Guid tenantId, string technicalUserName, Guid externalId, Guid processId);
-    void AttachAndModifyTechnicalUser(Guid technicalUserId, Action<TechnicalUser>? initialize, Action<TechnicalUser> modify);
-    Task<(bool Exists, Guid TechnicalUserId, string CompanyName, string Bpn)> GetTenantDataForTechnicalUserProcessId(Guid processId);
-    Task<(Guid ExternalId, WalletData WalletData)> GetTechnicalUserCallbackData(Guid technicalUserId);
-    Task<(bool Exists, Guid TechnicalUserId, Guid ProcessId)> GetTechnicalUserForBpn(string bpn, string technicalUserName);
-    Task<Guid> GetExternalIdForTechnicalUser(Guid technicalUserId);
-    void RemoveTechnicalUser(Guid technicalUserId);
     Task<bool> IsTenantExisting(string companyName, string bpn);
     Task<Guid?> GetOperationId(Guid tenantId);
     Task<(string? BaseUrl, WalletData WalletData)> GetCompanyRequestData(Guid tenantId);
@@ -44,6 +37,5 @@ public interface ITenantRepository
     Task<(Guid? CompanyId, string? BaseUrl, WalletData WalletData)> GetStatusListCreationData(Guid tenantId);
     Task<(string Bpn, string? BaseUrl, WalletData WalletData, string? Did, string? DownloadUrl)> GetCallbackData(Guid tenantId);
     Task<(string? DownloadUrl, bool IsIssuer)> GetDownloadUrlAndIsIssuer(Guid tenantId);
-    Task<(Guid? WalletId, string TechnicalUserName)> GetTechnicalUserNameAndWalletId(Guid technicalUserId);
-    Task<Guid?> GetOperationIdForTechnicalUser(Guid technicalUserId);
+    Task<ProcessData?> GetWalletProcessForTenant(string bpn, string companyName);
 }

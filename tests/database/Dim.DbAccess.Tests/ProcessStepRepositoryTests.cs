@@ -343,6 +343,23 @@ public class ProcessStepRepositoryTests : IAssemblyFixture<TestDbFixture>
 
     #endregion
 
+    #region GetActiveProcesses
+
+    [Fact]
+    public async Task IsValidProcess_WithValid_ReturnsExpected()
+    {
+        // Arrange
+        var sut = await CreateSut();
+
+        // Act
+        var result = await sut.IsValidProcess(new Guid("dd371565-9489-4907-a2e4-b8cbfe7a8cd1"), ProcessTypeId.SETUP_DIM, Enumerable.Repeat(ProcessStepTypeId.CREATE_WALLET, 1));
+
+        // Assert
+        result.ProcessExists.Should().BeTrue();
+    }
+
+    #endregion
+
     private async Task<(ProcessStepRepository sut, DimDbContext dbContext)> CreateSutWithContext()
     {
         var context = await _dbTestDbFixture.GetDbContext();

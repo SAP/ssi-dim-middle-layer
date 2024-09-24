@@ -137,6 +137,13 @@ namespace Dim.Migrations.Migrations
                 type: "uuid",
                 nullable: true);
 
+            migrationBuilder.AddColumn<Guid>(
+                name: "service_key_id",
+                schema: "dim",
+                table: "technical_users",
+                type: "uuid",
+                nullable: true);
+
             migrationBuilder.UpdateData(
                 schema: "dim",
                 table: "process_step_types",
@@ -233,15 +240,25 @@ namespace Dim.Migrations.Migrations
                 column: "label",
                 value: "RETRIGGER_SEND_CALLBACK");
 
+            migrationBuilder.UpdateData(
+                schema: "dim",
+                table: "process_step_types",
+                keyColumn: "id",
+                keyValue: 102,
+                column: "label",
+                value: "GET_TECHNICAL_USER_SERVICE_KEY");
+
             migrationBuilder.InsertData(
                 schema: "dim",
                 table: "process_step_types",
                 columns: new[] { "id", "label" },
                 values: new object[,]
                 {
-                    { 103, "RETRIGGER_CREATE_TECHNICAL_USER" },
-                    { 104, "RETRIGGER_GET_TECHNICAL_USER_DATA" },
-                    { 105, "RETRIGGER_SEND_TECHNICAL_USER_CREATION_CALLBACK" },
+                    { 103, "SEND_TECHNICAL_USER_CREATION_CALLBACK" },
+                    { 104, "RETRIGGER_CREATE_TECHNICAL_USER" },
+                    { 105, "RETRIGGER_GET_TECHNICAL_USER_DATA" },
+                    { 106, "RETRIGGER_GET_TECHNICAL_USER_SERVICE_KEY" },
+                    { 107, "RETRIGGER_SEND_TECHNICAL_USER_CREATION_CALLBACK" },
                     { 202, "RETRIGGER_DELETE_TECHNICAL_USER" },
                     { 203, "RETRIGGER_SEND_TECHNICAL_USER_DELETION_CALLBACK" }
                 });
@@ -272,6 +289,18 @@ namespace Dim.Migrations.Migrations
                 schema: "dim",
                 table: "process_step_types",
                 keyColumn: "id",
+                keyValue: 106);
+
+            migrationBuilder.DeleteData(
+                schema: "dim",
+                table: "process_step_types",
+                keyColumn: "id",
+                keyValue: 107);
+
+            migrationBuilder.DeleteData(
+                schema: "dim",
+                table: "process_step_types",
+                keyColumn: "id",
                 keyValue: 202);
 
             migrationBuilder.DeleteData(
@@ -297,6 +326,11 @@ namespace Dim.Migrations.Migrations
 
             migrationBuilder.DropColumn(
                 name: "operation_id",
+                schema: "dim",
+                table: "technical_users");
+
+            migrationBuilder.DropColumn(
+                name: "service_key_id",
                 schema: "dim",
                 table: "technical_users");
 
@@ -439,6 +473,14 @@ namespace Dim.Migrations.Migrations
                 keyValue: 12,
                 column: "label",
                 value: "CREATE_SERVICE_INSTANCE_BINDING");
+
+            migrationBuilder.UpdateData(
+                schema: "dim",
+                table: "process_step_types",
+                keyColumn: "id",
+                keyValue: 102,
+                column: "label",
+                value: "SEND_TECHNICAL_USER_CREATION_CALLBACK");
 
             migrationBuilder.InsertData(
                 schema: "dim",
