@@ -67,6 +67,6 @@ public record TrustedIssuer(
     [property: JsonPropertyName("ignoreMissingHashlist")] bool IgnoreMissingHashlist
 );
 
-public record CreateOperationRequest(
+public record OperationRequest(
     [property: JsonPropertyName("operationId")] Guid OperationId
 );

@@ -41,6 +41,7 @@ public class DimBusinessLogicTests
     private readonly IDimBusinessLogic _sut;
     private readonly IDimClient _dimClient;
     private readonly ITenantRepository _tenantRepository;
+    private readonly ITechnicalUserRepository _technicalUserRepository;
     private readonly IProcessStepRepository _processStepRepository;
     private readonly DimSettings _settings;
     private readonly IFixture _fixture;
@@ -56,9 +57,11 @@ public class DimBusinessLogicTests
         _dimClient = A.Fake<IDimClient>();
 
         _tenantRepository = A.Fake<ITenantRepository>();
+        _technicalUserRepository = A.Fake<ITechnicalUserRepository>();
         _processStepRepository = A.Fake<IProcessStepRepository>();
 
         A.CallTo(() => repositories.GetInstance<ITenantRepository>()).Returns(_tenantRepository);
+        A.CallTo(() => repositories.GetInstance<ITechnicalUserRepository>()).Returns(_technicalUserRepository);
         A.CallTo(() => repositories.GetInstance<IProcessStepRepository>()).Returns(_processStepRepository);
 
         _settings = new DimSettings
@@ -329,7 +332,7 @@ public class DimBusinessLogicTests
                 processSteps.Add(new ProcessStep(Guid.NewGuid(), processStepTypeId, processStepStatusId, pId, DateTimeOffset.UtcNow));
             });
         A.CallTo(() =>
-                _tenantRepository.CreateTenantTechnicalUser(A<Guid>._, A<string>._, A<Guid>._, A<Guid>._))
+                _technicalUserRepository.CreateTenantTechnicalUser(A<Guid>._, A<string>._, A<Guid>._, A<Guid>._))
             .Invokes((Guid tenantId, string name, Guid externalId, Guid pId) =>
             {
                 technicalUsers.Add(new TechnicalUser(Guid.NewGuid(), tenantId, externalId, name, pId));
@@ -356,7 +359,7 @@ public class DimBusinessLogicTests
         // Arrange
         const string Bpn = "BPNL00000001TEST";
         var technicalUserData = new TechnicalUserData(Guid.NewGuid(), "test");
-        A.CallTo(() => _tenantRepository.GetTechnicalUserForBpn(Bpn, technicalUserData.Name))
+        A.CallTo(() => _technicalUserRepository.GetTechnicalUserForBpn(Bpn, technicalUserData.Name))
             .Returns((false, Guid.NewGuid(), Guid.NewGuid()));
         async Task Act() => await _sut.DeleteTechnicalUser(Bpn, technicalUserData);
 
@@ -376,14 +379,14 @@ public class DimBusinessLogicTests
         var processSteps = new List<ProcessStep>();
         var technicalUserData = new TechnicalUserData(Guid.NewGuid(), "test");
         var technicalUser = new TechnicalUser(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), "test", processId);
-        A.CallTo(() => _tenantRepository.GetTechnicalUserForBpn(Bpn, technicalUserData.Name))
+        A.CallTo(() => _technicalUserRepository.GetTechnicalUserForBpn(Bpn, technicalUserData.Name))
             .Returns((true, technicalUser.Id, technicalUser.ProcessId));
         A.CallTo(() => _processStepRepository.CreateProcessStep(A<ProcessStepTypeId>._, A<ProcessStepStatusId>._, A<Guid>._))
             .Invokes((ProcessStepTypeId processStepTypeId, ProcessStepStatusId processStepStatusId, Guid pId) =>
             {
                 processSteps.Add(new ProcessStep(Guid.NewGuid(), processStepTypeId, processStepStatusId, pId, DateTimeOffset.UtcNow));
             });
-        A.CallTo(() => _tenantRepository.AttachAndModifyTechnicalUser(A<Guid>._, A<Action<TechnicalUser>>._, A<Action<TechnicalUser>>._))
+        A.CallTo(() => _technicalUserRepository.AttachAndModifyTechnicalUser(A<Guid>._, A<Action<TechnicalUser>>._, A<Action<TechnicalUser>>._))
             .Invokes((Guid _, Action<TechnicalUser>? initialize, Action<TechnicalUser> modify) =>
             {
                 initialize?.Invoke(technicalUser);

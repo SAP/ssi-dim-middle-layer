@@ -4,7 +4,6 @@ using Dim.DbAccess.Repositories;
 using Dim.DbAccess.Tests.Setup;
 using Dim.Entities;
 using Dim.Entities.Entities;
-using Dim.Entities.Enums;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
@@ -54,34 +53,6 @@ public class TenantRepositoryTests : IAssemblyFixture<TestDbFixture>
 
     #endregion
 
-    #region CreateTechnicalUser
-
-    [Fact]
-    public async Task CreateTechnicalUser_CreatesSuccessfully()
-    {
-        // Arrange
-        var (sut, dbContext) = await CreateSutWithContext();
-        var changeTracker = dbContext.ChangeTracker;
-
-        // Act
-        sut.CreateTenantTechnicalUser(Guid.NewGuid(), "testUser", Guid.NewGuid(), Guid.NewGuid());
-
-        // Assert
-        changeTracker.HasChanges().Should().BeTrue();
-        changeTracker.Entries().Should().HaveCount(1)
-            .And.AllSatisfy(x =>
-            {
-                x.State.Should().Be(EntityState.Added);
-                x.Entity.Should().BeOfType<TechnicalUser>();
-            });
-        changeTracker.Entries().Select(x => x.Entity).Cast<TechnicalUser>()
-            .Should().Satisfy(
-                x => x.TechnicalUserName == "testUser"
-            );
-    }
-
-    #endregion
-
     #region AttachAndModifyTenant
 
     [Fact]
@@ -111,39 +82,6 @@ public class TenantRepositoryTests : IAssemblyFixture<TestDbFixture>
         var changedEntity = changedEntries.Single();
         changedEntity.State.Should().Be(EntityState.Modified);
         changedEntity.Entity.Should().BeOfType<Tenant>().Which.Bpn.Should().Be("BPNL000001NEW");
-    }
-
-    #endregion
-
-    #region AttachAndModifyTechnicalUser
-
-    [Fact]
-    public async Task AttachAndModifyTechnicalUser_WithExistingTechnicalUser_UpdatesStatus()
-    {
-        // Arrange
-        var (sut, dbContext) = await CreateSutWithContext();
-
-        // Act
-        sut.AttachAndModifyTechnicalUser(new Guid("48f35f84-8d98-4fbd-ba80-8cbce5eeadb5"),
-            existing =>
-            {
-                existing.ClientId = "cl1";
-            },
-            modify =>
-            {
-                modify.ClientId = "clNew";
-            }
-        );
-
-        // Assert
-        var changeTracker = dbContext.ChangeTracker;
-        var changedEntries = changeTracker.Entries().ToList();
-        changeTracker.HasChanges().Should().BeTrue();
-        changedEntries.Should().NotBeEmpty();
-        changedEntries.Should().HaveCount(1);
-        var changedEntity = changedEntries.Single();
-        changedEntity.State.Should().Be(EntityState.Modified);
-        changedEntity.Entity.Should().BeOfType<TechnicalUser>().Which.ClientId.Should().Be("clNew");
     }
 
     #endregion
@@ -216,79 +154,6 @@ public class TenantRepositoryTests : IAssemblyFixture<TestDbFixture>
         // Assert
         result.Exists.Should().BeTrue();
         result.TenantId.Should().Be(new Guid("5c9a4f56-0609-49a5-ab86-dd8f93dfd3fa"));
-    }
-
-    #endregion
-
-    #region GetTenantDataForTechnicalUserProcessId
-
-    [Fact]
-    public async Task GetTenantDataForTechnicalUserProcessId_WithExistingTechnicalUser_ReturnsExpected()
-    {
-        // Arrange
-        var sut = await CreateSut();
-
-        // Act
-        var result = await sut.GetTenantDataForTechnicalUserProcessId(new Guid("e64393ad-a885-45ad-8e7b-265ef1b4c691"));
-
-        // Assert
-        result.Exists.Should().BeTrue();
-        result.Bpn.Should().Be("BPNL000001ISSUER");
-        result.CompanyName.Should().Be("issuer company");
-        result.TechnicalUserId.Should().Be(new Guid("abb769d6-337f-4d1f-9f42-5230541a2d51"));
-    }
-
-    #endregion
-
-    #region GetTechnicalUserCallbackData
-
-    [Fact]
-    public async Task GetTechnicalUserCallbackData_WithExistingTechnicalUser_ReturnsExpected()
-    {
-        // Arrange
-        var sut = await CreateSut();
-
-        // Act
-        var result = await sut.GetTechnicalUserCallbackData(new Guid("abb769d6-337f-4d1f-9f42-5230541a2d51"));
-
-        // Assert
-        result.ExternalId.Should().Be(new Guid("a140e80f-f9fb-4e68-bd34-52943622c63d"));
-    }
-
-    #endregion
-
-    #region GetTechnicalUserForBpn
-
-    [Fact]
-    public async Task GetTechnicalUserForBpn_WithExistingTechnicalUser_ReturnsExpected()
-    {
-        // Arrange
-        var sut = await CreateSut();
-
-        // Act
-        var result = await sut.GetTechnicalUserForBpn("BPNL000001ISSUER", "dim-sa-1");
-
-        // Assert
-        result.Exists.Should().BeTrue();
-        result.TechnicalUserId.Should().Be(new Guid("abb769d6-337f-4d1f-9f42-5230541a2d51"));
-        result.ProcessId.Should().Be(new Guid("e64393ad-a885-45ad-8e7b-265ef1b4c691"));
-    }
-
-    #endregion
-
-    #region GetExternalIdForTechnicalUser
-
-    [Fact]
-    public async Task GetExternalIdForTechnicalUser_WithExistingTechnicalUser_ReturnsExpected()
-    {
-        // Arrange
-        var sut = await CreateSut();
-
-        // Act
-        var result = await sut.GetExternalIdForTechnicalUser(new Guid("abb769d6-337f-4d1f-9f42-5230541a2d51"));
-
-        // Assert
-        result.Should().Be(new Guid("a140e80f-f9fb-4e68-bd34-52943622c63d"));
     }
 
     #endregion
@@ -428,31 +293,20 @@ public class TenantRepositoryTests : IAssemblyFixture<TestDbFixture>
 
     #endregion
 
-    #region CreateTechnicalUser
+    #region GetWalletProcessForTenant
 
     [Fact]
-    public async Task RemoveTechnicalUser_CreatesSuccessfully()
+    public async Task GetWalletProcessForTenant_WithExisting_ReturnsExpected()
     {
         // Arrange
-        var technicalUserId = Guid.NewGuid();
-        var (sut, dbContext) = await CreateSutWithContext();
-        var changeTracker = dbContext.ChangeTracker;
+        var sut = await CreateSut();
 
         // Act
-        sut.RemoveTechnicalUser(technicalUserId);
+        var result = await sut.GetWalletProcessForTenant("BPNL0000001CORP", "test corp");
 
         // Assert
-        changeTracker.HasChanges().Should().BeTrue();
-        changeTracker.Entries().Should().HaveCount(1)
-            .And.AllSatisfy(x =>
-            {
-                x.State.Should().Be(EntityState.Deleted);
-                x.Entity.Should().BeOfType<TechnicalUser>();
-            });
-        changeTracker.Entries().Select(x => x.Entity).Cast<TechnicalUser>()
-            .Should().Satisfy(
-                x => x.Id == technicalUserId
-            );
+        result.Should().NotBeNull();
+        result!.ProcessId.Should().Be(new Guid("dd371565-9489-4907-a2e4-b8cbfe7a8cd2"));
     }
 
     #endregion

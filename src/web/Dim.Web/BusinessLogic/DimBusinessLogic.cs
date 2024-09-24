@@ -139,7 +139,7 @@ public class DimBusinessLogic(
         processStepRepository.CreateProcessStep(ProcessStepTypeId.CREATE_TECHNICAL_USER, ProcessStepStatusId.TODO, processId);
 
         var technicalUserName = TechnicalUserName.Replace(technicalUserData.Name, string.Empty).ToLower();
-        dimRepositories.GetInstance<ITenantRepository>().CreateTenantTechnicalUser(tenantId, technicalUserName, technicalUserData.ExternalId, processId);
+        dimRepositories.GetInstance<ITechnicalUserRepository>().CreateTenantTechnicalUser(tenantId, technicalUserName, technicalUserData.ExternalId, processId);
 
         await dimRepositories.SaveAsync().ConfigureAwait(ConfigureAwaitOptions.None);
     }
@@ -147,7 +147,7 @@ public class DimBusinessLogic(
     public async Task DeleteTechnicalUser(string bpn, TechnicalUserData technicalUserData)
     {
         var technicalUserName = TechnicalUserName.Replace(technicalUserData.Name, string.Empty).ToLower();
-        var (exists, technicalUserId, processId) = await dimRepositories.GetInstance<ITenantRepository>().GetTechnicalUserForBpn(bpn, technicalUserName).ConfigureAwait(ConfigureAwaitOptions.None);
+        var (exists, technicalUserId, processId) = await dimRepositories.GetInstance<ITechnicalUserRepository>().GetTechnicalUserForBpn(bpn, technicalUserName).ConfigureAwait(ConfigureAwaitOptions.None);
         if (!exists)
         {
             throw NotFoundException.Create(DimErrors.NO_TECHNICAL_USER_FOUND, new ErrorParameter[] { new("bpn", bpn) });
@@ -156,7 +156,7 @@ public class DimBusinessLogic(
         var processStepRepository = dimRepositories.GetInstance<IProcessStepRepository>();
         processStepRepository.CreateProcessStep(ProcessStepTypeId.DELETE_TECHNICAL_USER, ProcessStepStatusId.TODO, processId);
 
-        dimRepositories.GetInstance<ITenantRepository>().AttachAndModifyTechnicalUser(technicalUserId,
+        dimRepositories.GetInstance<ITechnicalUserRepository>().AttachAndModifyTechnicalUser(technicalUserId,
             t =>
             {
                 t.ExternalId = Guid.Empty;
@@ -173,7 +173,7 @@ public class DimBusinessLogic(
 
     public async Task<ProcessData> GetSetupProcess(string bpn, string companyName)
     {
-        var processData = await dimRepositories.GetInstance<IProcessStepRepository>().GetWalletProcessForTenant(bpn, companyName)
+        var processData = await dimRepositories.GetInstance<ITenantRepository>().GetWalletProcessForTenant(bpn, companyName)
             .ConfigureAwait(ConfigureAwaitOptions.None);
         if (processData == null)
         {
@@ -185,7 +185,7 @@ public class DimBusinessLogic(
 
     public async Task<ProcessData> GetTechnicalUserProcess(string bpn, string companyName, string technicalUserName)
     {
-        var processData = await dimRepositories.GetInstance<IProcessStepRepository>().GetTechnicalUserProcess(bpn, companyName, technicalUserName)
+        var processData = await dimRepositories.GetInstance<ITechnicalUserRepository>().GetTechnicalUserProcess(bpn, companyName, technicalUserName)
             .ConfigureAwait(ConfigureAwaitOptions.None);
         if (processData == null)
         {

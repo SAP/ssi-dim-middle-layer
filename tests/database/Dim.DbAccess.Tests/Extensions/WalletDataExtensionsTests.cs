@@ -2,7 +2,6 @@ using Dim.DbAccess.Extensions;
 using Dim.DbAccess.Models;
 using FluentAssertions;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
-using System.Text;
 using Xunit;
 
 namespace Dim.DbAccess.Tests.Extensions;

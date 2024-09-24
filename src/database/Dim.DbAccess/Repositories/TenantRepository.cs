@@ -21,6 +21,7 @@
 using Dim.DbAccess.Models;
 using Dim.Entities;
 using Dim.Entities.Entities;
+using Dim.Entities.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace Dim.DbAccess.Repositories;
@@ -51,56 +52,10 @@ public class TenantRepository(DimDbContext dbContext)
             .Select(x => new ValueTuple<bool, string?>(x.IsIssuer, x.DidDocumentLocation))
             .SingleOrDefaultAsync();
 
-    public void CreateTenantTechnicalUser(Guid tenantId, string technicalUserName, Guid externalId, Guid processId) =>
-        dbContext.TechnicalUsers.Add(new TechnicalUser(Guid.NewGuid(), tenantId, externalId, technicalUserName, processId));
-
-    public void AttachAndModifyTechnicalUser(Guid technicalUserId, Action<TechnicalUser>? initialize, Action<TechnicalUser> modify)
-    {
-        var technicalUser = new TechnicalUser(technicalUserId, Guid.Empty, Guid.Empty, null!, Guid.Empty);
-        initialize?.Invoke(technicalUser);
-        dbContext.TechnicalUsers.Attach(technicalUser);
-        modify(technicalUser);
-    }
-
     public Task<(bool Exists, Guid TenantId)> GetTenantForBpn(string bpn) =>
         dbContext.Tenants.Where(x => x.Bpn == bpn)
             .Select(x => new ValueTuple<bool, Guid>(true, x.Id))
             .SingleOrDefaultAsync();
-
-    public Task<(bool Exists, Guid TechnicalUserId, string CompanyName, string Bpn)> GetTenantDataForTechnicalUserProcessId(Guid processId) =>
-        dbContext.TechnicalUsers
-            .Where(x => x.ProcessId == processId)
-            .Select(x => new ValueTuple<bool, Guid, string, string>(true, x.Id, x.Tenant!.CompanyName, x.Tenant.Bpn))
-            .SingleOrDefaultAsync();
-
-    public Task<(Guid ExternalId, WalletData WalletData)> GetTechnicalUserCallbackData(Guid technicalUserId) =>
-        dbContext.TechnicalUsers
-            .Where(x => x.Id == technicalUserId)
-            .Select(x => new ValueTuple<Guid, WalletData>(
-                x.ExternalId,
-                new WalletData(
-                    x.TokenAddress,
-                    x.ClientId,
-                    x.ClientSecret,
-                    x.InitializationVector,
-                    x.EncryptionMode)))
-            .SingleOrDefaultAsync();
-
-    public Task<(bool Exists, Guid TechnicalUserId, Guid ProcessId)> GetTechnicalUserForBpn(string bpn, string technicalUserName) =>
-        dbContext.TechnicalUsers
-            .Where(x => x.TechnicalUserName == technicalUserName && x.Tenant!.Bpn == bpn)
-            .Select(x => new ValueTuple<bool, Guid, Guid>(true, x.Id, x.ProcessId))
-            .SingleOrDefaultAsync();
-
-    public Task<Guid> GetExternalIdForTechnicalUser(Guid technicalUserId) =>
-        dbContext.TechnicalUsers
-            .Where(x => x.Id == technicalUserId)
-            .Select(x => x.ExternalId)
-            .SingleOrDefaultAsync();
-
-    public void RemoveTechnicalUser(Guid technicalUserId) =>
-        dbContext.TechnicalUsers
-            .Remove(new TechnicalUser(technicalUserId, Guid.Empty, Guid.Empty, null!, Guid.Empty));
 
     public Task<bool> IsTenantExisting(string companyName, string bpn) =>
         dbContext.Tenants
@@ -180,15 +135,16 @@ public class TenantRepository(DimDbContext dbContext)
             .Select(x => new ValueTuple<string?, bool>(x.DidDownloadUrl, x.IsIssuer))
             .SingleOrDefaultAsync();
 
-    public Task<(Guid? WalletId, string TechnicalUserName)> GetTechnicalUserNameAndWalletId(Guid technicalUserId) =>
-        dbContext.TechnicalUsers
-            .Where(x => x.Id == technicalUserId)
-            .Select(x => new ValueTuple<Guid?, string>(x.Tenant!.WalletId, x.TechnicalUserName))
-            .SingleOrDefaultAsync();
-
-    public Task<Guid?> GetOperationIdForTechnicalUser(Guid technicalUserId) =>
-        dbContext.TechnicalUsers
-            .Where(x => x.Id == technicalUserId)
-            .Select(x => x.OperationId)
+    public Task<ProcessData?> GetWalletProcessForTenant(string bpn, string companyName) =>
+        dbContext.Tenants
+            .Where(x =>
+                x.Bpn == bpn &&
+                x.CompanyName == companyName &&
+                x.Process!.ProcessTypeId == ProcessTypeId.SETUP_DIM)
+            .Select(x => new ProcessData(
+                x.ProcessId,
+                x.Process!.ProcessSteps.Select(ps => new ProcessStepData(
+                    ps.ProcessStepTypeId,
+                    ps.ProcessStepStatusId))))
             .SingleOrDefaultAsync();
 }

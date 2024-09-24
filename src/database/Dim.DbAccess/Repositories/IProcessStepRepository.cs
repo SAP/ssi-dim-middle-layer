@@ -36,7 +36,5 @@ public interface IProcessStepRepository
     void AttachAndModifyProcessSteps(IEnumerable<(Guid ProcessStepId, Action<ProcessStep>? Initialize, Action<ProcessStep> Modify)> processStepIdsInitializeModifyData);
     IAsyncEnumerable<Process> GetActiveProcesses(IEnumerable<ProcessTypeId> processTypeIds, IEnumerable<ProcessStepTypeId> processStepTypeIds, DateTimeOffset lockExpiryDate);
     IAsyncEnumerable<(Guid ProcessStepId, ProcessStepTypeId ProcessStepTypeId)> GetProcessStepData(Guid processId);
-    Task<ProcessData?> GetWalletProcessForTenant(string bpn, string companyName);
-    Task<ProcessData?> GetTechnicalUserProcess(string bpn, string companyName, string technicalUserName);
     Task<(bool ProcessExists, VerifyProcessData ProcessData)> IsValidProcess(Guid processId, ProcessTypeId processTypeId, IEnumerable<ProcessStepTypeId> processSetpTypeIds);
 }

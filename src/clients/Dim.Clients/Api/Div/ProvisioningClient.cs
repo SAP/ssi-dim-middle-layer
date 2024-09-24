@@ -30,9 +30,10 @@ using System.Text.Json;
 
 namespace Dim.Clients.Api.Div;
 
-public class ProvisioningClient(IBasicAuthTokenService basicAuthTokenService, IOptions<ProvisioningSettings> settings) : IProvisioningClient
+public class ProvisioningClient(IBasicAuthTokenService basicAuthTokenService, IOptions<ProvisioningSettings> options)
+    : IProvisioningClient
 {
-    private readonly ProvisioningSettings _settings = settings.Value;
+    private readonly ProvisioningSettings _settings = options.Value;
 
     public async Task<Guid> CreateOperation(Guid customerId, string customerName, string applicationName, string companyName, string didDocumentLocation, bool isIssuer, CancellationToken cancellationToken)
     {
@@ -79,7 +80,7 @@ public class ProvisioningClient(IBasicAuthTokenService basicAuthTokenService, IO
         try
         {
             var response = await result.Content
-                .ReadFromJsonAsync<CreateOperationRequest>(JsonSerializerExtensions.Options, cancellationToken)
+                .ReadFromJsonAsync<OperationRequest>(JsonSerializerExtensions.Options, cancellationToken)
                 .ConfigureAwait(ConfigureAwaitOptions.None);
 
             if (response == null)
@@ -135,7 +136,7 @@ public class ProvisioningClient(IBasicAuthTokenService basicAuthTokenService, IO
         var data = new ServiceKeyOperationCreationRequest(
             "customer-wallet-key",
             "create",
-            new ServiceKeyPayloadData(
+            new ServiceKeyCreationPayloadData(
                 walletId,
                 technicalUserName
             )
@@ -154,7 +155,89 @@ public class ProvisioningClient(IBasicAuthTokenService basicAuthTokenService, IO
         try
         {
             var response = await result.Content
-                .ReadFromJsonAsync<CreateOperationRequest>(JsonSerializerExtensions.Options, cancellationToken)
+                .ReadFromJsonAsync<OperationRequest>(JsonSerializerExtensions.Options, cancellationToken)
+                .ConfigureAwait(ConfigureAwaitOptions.None);
+
+            if (response == null)
+            {
+                throw new ServiceException("response should never be null here");
+            }
+
+            return response.OperationId;
+        }
+        catch (JsonException je)
+        {
+            throw new ServiceException(je.Message);
+        }
+    }
+
+    public async Task<Guid> GetServiceKey(string technicalUserName, Guid walletId, CancellationToken cancellationToken)
+    {
+        var client = await basicAuthTokenService
+            .GetBasicAuthorizedClient<ProvisioningClient>(_settings, cancellationToken)
+            .ConfigureAwait(ConfigureAwaitOptions.None);
+        var result = await client.GetAsync($"/api/v1.0.0/customerWallets?CustomerWalletId={walletId}", cancellationToken)
+            .CatchingIntoServiceExceptionFor("get-service-key", HttpAsyncResponseMessageExtension.RecoverOptions.INFRASTRUCTURE,
+                async response =>
+                {
+                    var content = await response.Content.ReadAsStringAsync().ConfigureAwait(ConfigureAwaitOptions.None);
+                    return (false, content);
+                }).ConfigureAwait(false);
+        try
+        {
+            var response = await result.Content
+                .ReadFromJsonAsync<CustomerWalletsResponse>(JsonSerializerExtensions.Options, cancellationToken)
+                .ConfigureAwait(ConfigureAwaitOptions.None);
+            if (response == null)
+            {
+                throw new ServiceException("Response must not be null");
+            }
+
+            var customers = response.Data.Where(x => x.Id == walletId);
+            if (customers.Count() != 1)
+            {
+                throw new ServiceException($"Must have exactly one customer for wallet id {walletId}");
+            }
+
+            var serviceKey = customers.Single().ServiceKeys.Where(sk => sk.Name.Equals(technicalUserName, StringComparison.OrdinalIgnoreCase));
+            if (serviceKey.Count() != 1)
+            {
+                throw new ServiceException($"Must have exactly one wallet and a service key with name {technicalUserName}");
+            }
+
+            return serviceKey.Single().Id;
+        }
+        catch (JsonException je)
+        {
+            throw new ServiceException(je.Message);
+        }
+    }
+
+    public async Task<Guid?> DeleteServiceKey(Guid walletId, Guid serviceKeyId, CancellationToken cancellationToken)
+    {
+        var data = new ServiceKeyOperationDeletionRequest(
+            "customer-wallet-key",
+            "delete",
+            new ServiceKeyDeletionPayloadData(
+                serviceKeyId,
+                walletId
+            )
+        );
+        var client = await basicAuthTokenService
+            .GetBasicAuthorizedClient<ProvisioningClient>(_settings, cancellationToken)
+            .ConfigureAwait(ConfigureAwaitOptions.None);
+        var result = await client.PostAsJsonAsync("/api/v1.0.0/operations", data, JsonSerializerExtensions.Options, cancellationToken)
+            .CatchingIntoServiceExceptionFor("delete-service-key", HttpAsyncResponseMessageExtension.RecoverOptions.INFRASTRUCTURE,
+                async response =>
+                {
+                    var content = await response.Content.ReadAsStringAsync().ConfigureAwait(ConfigureAwaitOptions.None);
+                    return (false, content);
+                })
+            .ConfigureAwait(false);
+        try
+        {
+            var response = await result.Content
+                .ReadFromJsonAsync<OperationRequest>(JsonSerializerExtensions.Options, cancellationToken)
                 .ConfigureAwait(ConfigureAwaitOptions.None);
 
             if (response == null)

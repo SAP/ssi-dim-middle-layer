@@ -30,7 +30,7 @@ public class TechnicalUserProcessTypeExecutorTests
 {
     private readonly TechnicalUserProcessTypeExecutor _sut;
     private readonly ITechnicalUserProcessHandler _technicalUserProcessHandler;
-    private readonly ITenantRepository _tenantRepository;
+    private readonly ITechnicalUserRepository _technicalUserRepository;
 
     public TechnicalUserProcessTypeExecutorTests()
     {
@@ -42,9 +42,9 @@ public class TechnicalUserProcessTypeExecutorTests
         var repositories = A.Fake<IDimRepositories>();
         _technicalUserProcessHandler = A.Fake<ITechnicalUserProcessHandler>();
 
-        _tenantRepository = A.Fake<ITenantRepository>();
+        _technicalUserRepository = A.Fake<ITechnicalUserRepository>();
 
-        A.CallTo(() => repositories.GetInstance<ITenantRepository>()).Returns(_tenantRepository);
+        A.CallTo(() => repositories.GetInstance<ITechnicalUserRepository>()).Returns(_technicalUserRepository);
 
         _sut = new TechnicalUserProcessTypeExecutor(repositories, _technicalUserProcessHandler);
     }
@@ -67,9 +67,10 @@ public class TechnicalUserProcessTypeExecutorTests
     public void GetExecutableStepTypeIds_ReturnsExpected()
     {
         // Assert
-        _sut.GetExecutableStepTypeIds().Should().HaveCount(5).And.Satisfy(
+        _sut.GetExecutableStepTypeIds().Should().HaveCount(6).And.Satisfy(
             x => x == ProcessStepTypeId.CREATE_TECHNICAL_USER,
             x => x == ProcessStepTypeId.GET_TECHNICAL_USER_DATA,
+            x => x == ProcessStepTypeId.GET_TECHNICAL_USER_SERVICE_KEY,
             x => x == ProcessStepTypeId.SEND_TECHNICAL_USER_CREATION_CALLBACK,
             x => x == ProcessStepTypeId.DELETE_TECHNICAL_USER,
             x => x == ProcessStepTypeId.SEND_TECHNICAL_USER_DELETION_CALLBACK);
@@ -92,8 +93,8 @@ public class TechnicalUserProcessTypeExecutorTests
     {
         // Arrange
         var validProcessId = Guid.NewGuid();
-        A.CallTo(() => _tenantRepository.GetTenantDataForTechnicalUserProcessId(validProcessId))
-            .Returns(new ValueTuple<bool, Guid, string, string>(true, Guid.NewGuid(), "test", "test1"));
+        A.CallTo(() => _technicalUserRepository.GetTenantDataForTechnicalUserProcessId(validProcessId))
+            .Returns(new ValueTuple<bool, Guid>(true, Guid.NewGuid()));
 
         // Act
         var result = await _sut.InitializeProcess(validProcessId, Enumerable.Empty<ProcessStepTypeId>());
@@ -108,8 +109,8 @@ public class TechnicalUserProcessTypeExecutorTests
     {
         // Arrange
         var validProcessId = Guid.NewGuid();
-        A.CallTo(() => _tenantRepository.GetTenantDataForTechnicalUserProcessId(validProcessId))
-            .Returns(new ValueTuple<bool, Guid, string, string>(false, Guid.Empty, string.Empty, string.Empty));
+        A.CallTo(() => _technicalUserRepository.GetTenantDataForTechnicalUserProcessId(validProcessId))
+            .Returns(new ValueTuple<bool, Guid>(false, Guid.Empty));
 
         // Act
         async Task Act() => await _sut.InitializeProcess(validProcessId, Enumerable.Empty<ProcessStepTypeId>());
@@ -131,7 +132,7 @@ public class TechnicalUserProcessTypeExecutorTests
 
         // Assert
         var ex = await Assert.ThrowsAsync<UnexpectedConditionException>(Act);
-        ex.Message.Should().Be("technicalUserId and tenantName should never be empty here");
+        ex.Message.Should().Be("technicalUserId should never be empty here");
     }
 
     [Theory]
@@ -145,8 +146,8 @@ public class TechnicalUserProcessTypeExecutorTests
         // Arrange InitializeProcess
         var validProcessId = Guid.NewGuid();
         var tenantId = Guid.NewGuid();
-        A.CallTo(() => _tenantRepository.GetTenantDataForTechnicalUserProcessId(validProcessId))
-            .Returns(new ValueTuple<bool, Guid, string, string>(true, tenantId, "test", "test1"));
+        A.CallTo(() => _technicalUserRepository.GetTenantDataForTechnicalUserProcessId(validProcessId))
+            .Returns(new ValueTuple<bool, Guid>(true, tenantId));
 
         // Act InitializeProcess
         var initializeResult = await _sut.InitializeProcess(validProcessId, Enumerable.Empty<ProcessStepTypeId>());
@@ -156,7 +157,7 @@ public class TechnicalUserProcessTypeExecutorTests
         initializeResult.ScheduleStepTypeIds.Should().BeNull();
 
         // Arrange
-        SetupMock(tenantId, "test1test");
+        SetupMock(tenantId);
 
         // Act
         var result = await _sut.ExecuteProcessStep(processStepTypeId, Enumerable.Empty<ProcessStepTypeId>(), CancellationToken.None);
@@ -175,8 +176,8 @@ public class TechnicalUserProcessTypeExecutorTests
         // Arrange InitializeProcess
         var validProcessId = Guid.NewGuid();
         var tenantId = Guid.NewGuid();
-        A.CallTo(() => _tenantRepository.GetTenantDataForTechnicalUserProcessId(validProcessId))
-            .Returns(new ValueTuple<bool, Guid, string, string>(true, tenantId, "test", "test1"));
+        A.CallTo(() => _technicalUserRepository.GetTenantDataForTechnicalUserProcessId(validProcessId))
+            .Returns(new ValueTuple<bool, Guid>(true, tenantId));
 
         // Act InitializeProcess
         var initializeResult = await _sut.InitializeProcess(validProcessId, Enumerable.Empty<ProcessStepTypeId>());
@@ -186,7 +187,7 @@ public class TechnicalUserProcessTypeExecutorTests
         initializeResult.ScheduleStepTypeIds.Should().BeNull();
 
         // Arrange
-        A.CallTo(() => _technicalUserProcessHandler.CreateServiceInstanceBindings("test1test", tenantId, A<CancellationToken>._))
+        A.CallTo(() => _technicalUserProcessHandler.CreateServiceInstanceBindings(tenantId, A<CancellationToken>._))
             .Throws(new ServiceException("this is a test", true));
 
         // Act
@@ -206,8 +207,8 @@ public class TechnicalUserProcessTypeExecutorTests
         // Arrange InitializeProcess
         var validProcessId = Guid.NewGuid();
         var tenantId = Guid.NewGuid();
-        A.CallTo(() => _tenantRepository.GetTenantDataForTechnicalUserProcessId(validProcessId))
-            .Returns(new ValueTuple<bool, Guid, string, string>(true, tenantId, "test", "test1"));
+        A.CallTo(() => _technicalUserRepository.GetTenantDataForTechnicalUserProcessId(validProcessId))
+            .Returns(new ValueTuple<bool, Guid>(true, tenantId));
 
         // Act InitializeProcess
         var initializeResult = await _sut.InitializeProcess(validProcessId, Enumerable.Empty<ProcessStepTypeId>());
@@ -217,7 +218,7 @@ public class TechnicalUserProcessTypeExecutorTests
         initializeResult.ScheduleStepTypeIds.Should().BeNull();
 
         // Arrange
-        A.CallTo(() => _technicalUserProcessHandler.CreateServiceInstanceBindings("test1test", tenantId, A<CancellationToken>._))
+        A.CallTo(() => _technicalUserProcessHandler.CreateServiceInstanceBindings(tenantId, A<CancellationToken>._))
             .Throws(new ServiceException("this is a test"));
 
         // Act
@@ -236,18 +237,18 @@ public class TechnicalUserProcessTypeExecutorTests
 
     #region Setup
 
-    private void SetupMock(Guid tenantId, string tenantName)
+    private void SetupMock(Guid tenantId)
     {
-        A.CallTo(() => _technicalUserProcessHandler.CreateServiceInstanceBindings(tenantName, tenantId, A<CancellationToken>._))
+        A.CallTo(() => _technicalUserProcessHandler.CreateServiceInstanceBindings(tenantId, A<CancellationToken>._))
             .Returns(new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(null, ProcessStepStatusId.DONE, false, null));
 
-        A.CallTo(() => _technicalUserProcessHandler.GetTechnicalUserData(tenantName, tenantId, A<CancellationToken>._))
+        A.CallTo(() => _technicalUserProcessHandler.GetTechnicalUserData(tenantId, A<CancellationToken>._))
             .Returns(new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(null, ProcessStepStatusId.DONE, false, null));
 
         A.CallTo(() => _technicalUserProcessHandler.SendCreateCallback(tenantId, A<CancellationToken>._))
             .Returns(new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(null, ProcessStepStatusId.DONE, false, null));
 
-        A.CallTo(() => _technicalUserProcessHandler.DeleteServiceInstanceBindings(tenantName, tenantId, A<CancellationToken>._))
+        A.CallTo(() => _technicalUserProcessHandler.DeleteServiceInstanceBindings(tenantId, A<CancellationToken>._))
             .Returns(new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(null, ProcessStepStatusId.DONE, false, null));
 
         A.CallTo(() => _technicalUserProcessHandler.SendDeleteCallback(tenantId, A<CancellationToken>._))

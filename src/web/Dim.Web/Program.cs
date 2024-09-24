@@ -19,7 +19,6 @@
  ********************************************************************************/
 
 using Dim.Clients.Api.Dim.DependencyInjection;
-using Dim.Clients.Api.Div.DependencyInjection;
 using Dim.Clients.Token;
 using Dim.DbAccess.DependencyInjection;
 using Dim.Web.Authentication;

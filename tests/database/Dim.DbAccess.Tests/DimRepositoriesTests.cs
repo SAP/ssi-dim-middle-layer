@@ -62,6 +62,19 @@ public class DimRepositoriesTests : IAssemblyFixture<TestDbFixture>
     }
 
     [Fact]
+    public async Task GetInstance_TechnicalUserRepository_CreatesSuccessfully()
+    {
+        // Arrange
+        var sut = await CreateSut();
+
+        // Act
+        var result = sut.GetInstance<ITechnicalUserRepository>();
+
+        // Assert
+        result.Should().BeOfType<TechnicalUserRepository>();
+    }
+
+    [Fact]
     public async Task GetInstance_ProcessStepRepository_CreatesSuccessfully()
     {
         // Arrange

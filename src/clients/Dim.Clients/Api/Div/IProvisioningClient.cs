@@ -19,6 +19,7 @@
  ********************************************************************************/
 
 using Dim.Clients.Api.Div.Models;
+using Dim.Clients.Token;
 
 namespace Dim.Clients.Api.Div;
 
@@ -27,4 +28,6 @@ public interface IProvisioningClient
     public Task<Guid> CreateOperation(Guid customerId, string customerName, string applicationName, string companyName, string didDocumentLocation, bool isIssuer, CancellationToken cancellationToken);
     public Task<OperationResponse> GetOperation(Guid operationId, CancellationToken cancellationToken);
     Task<Guid> CreateServiceKey(string technicalUserName, Guid walletId, CancellationToken cancellationToken);
+    Task<Guid?> DeleteServiceKey(Guid walletId, Guid serviceKeyId, CancellationToken cancellationToken);
+    Task<Guid> GetServiceKey(string technicalUserName, Guid walletId, CancellationToken cancellationToken);
 }

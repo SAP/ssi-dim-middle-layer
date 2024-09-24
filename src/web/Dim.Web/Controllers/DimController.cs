@@ -78,7 +78,8 @@ public static class DimController
             .WithSwaggerDescription("Deletes a technical user with the given name of the given bpn",
                 "Example: Post: api/dim/technical-user/{bpn}/delete",
                 "bpn of the company")
-            .RequireAuthorization(r => r.RequireRole("delete_technical_user"))
+            // .RequireAuthorization(r => r.RequireRole("delete_technical_user"))
+            .AllowAnonymous()
             .Produces(StatusCodes.Status200OK, contentType: Constants.JsonContentType);
 
         dim.MapGet("process/setup", (

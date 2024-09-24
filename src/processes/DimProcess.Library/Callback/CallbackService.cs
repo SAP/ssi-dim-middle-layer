@@ -18,7 +18,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using Dim.Clients.Api.Div.Models;
 using Dim.Clients.Extensions;
 using DimProcess.Library.Callback.DependencyInjection;
 using Microsoft.Extensions.Options;
