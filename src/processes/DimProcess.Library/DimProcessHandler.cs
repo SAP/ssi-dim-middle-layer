@@ -141,8 +141,9 @@ public class DimProcessHandler(
             ClientId = clientId,
             ClientSecret = secret
         };
-        var companyData = await dimClient.GetCompanyData(dimAuth, baseUrl, tenantName, _settings.ApplicationName, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
-
+        var companyData = await dimClient
+            .GetCompanyData(dimAuth, baseUrl, tenantName, _settings.ApplicationName, cancellationToken)
+            .ConfigureAwait(ConfigureAwaitOptions.None);
         tenantRepository.AttachAndModifyTenant(tenantId, t =>
         {
             t.DidDownloadUrl = null;

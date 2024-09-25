@@ -36,7 +36,13 @@ public class DimClient(IBasicAuthTokenService basicAuthTokenService)
     {
         var client = await basicAuthTokenService.GetBasicAuthorizedClient<DimClient>(dimAuth, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
         var filterString = $"name eq {tenantName} and application eq {application}";
-        var result = await client.GetAsync($"{dimBaseUrl}/api/v2.0.0/companyIdentities?$filter={HttpUtility.UrlEncode(filterString)}", cancellationToken);
+        var result = await client.GetAsync($"{dimBaseUrl}/api/v2.0.0/companyIdentities?$filter={HttpUtility.UrlEncode(filterString)}", cancellationToken)
+            .CatchingIntoServiceExceptionFor("get-company-data", HttpAsyncResponseMessageExtension.RecoverOptions.INFRASTRUCTURE,
+                async m =>
+                {
+                    var message = await m.Content.ReadAsStringAsync().ConfigureAwait(ConfigureAwaitOptions.None);
+                    return (false, message);
+                }).ConfigureAwait(false);
         try
         {
             var response = await result.Content
@@ -58,7 +64,13 @@ public class DimClient(IBasicAuthTokenService basicAuthTokenService)
     public async Task<string> GetStatusList(BasicAuthSettings dimAuth, string dimBaseUrl, Guid companyId, CancellationToken cancellationToken)
     {
         var client = await basicAuthTokenService.GetBasicAuthorizedClient<DimClient>(dimAuth, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
-        var result = await client.GetAsync($"{dimBaseUrl}/api/v2.0.0/companyIdentities/{companyId}/revocationLists", cancellationToken);
+        var result = await client.GetAsync($"{dimBaseUrl}/api/v2.0.0/companyIdentities/{companyId}/revocationLists", cancellationToken)
+            .CatchingIntoServiceExceptionFor("get-status-list", HttpAsyncResponseMessageExtension.RecoverOptions.INFRASTRUCTURE,
+                async m =>
+                {
+                    var message = await m.Content.ReadAsStringAsync().ConfigureAwait(ConfigureAwaitOptions.None);
+                    return (false, message);
+                }).ConfigureAwait(false);
         try
         {
             var response = await result.Content

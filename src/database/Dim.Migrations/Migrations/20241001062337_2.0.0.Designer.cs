@@ -32,8 +32,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Dim.Migrations.Migrations
 {
     [DbContext(typeof(DimDbContext))]
-    [Migration("20240924174234_79-AdjustProvisioning")]
-    partial class _79AdjustProvisioning
+    [Migration("20241001062337_2.0.0")]
+    partial class _200
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

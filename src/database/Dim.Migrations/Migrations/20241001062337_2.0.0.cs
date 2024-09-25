@@ -28,230 +28,260 @@ using System;
 namespace Dim.Migrations.Migrations
 {
     /// <inheritdoc />
-    public partial class _79AdjustProvisioning : Migration
+    public partial class _200 : Migration
     {
+        private const string technicalUsers = "technical_users";
+        private const string processStepTypes = "process_step_types";
+        private const string tenants = "tenants";
+        private const string operationId = "operation_id";
+        private const string label = "label";
+
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DeleteData(
                 schema: "dim",
-                table: "process_step_types",
+                table: processStepTypes,
                 keyColumn: "id",
                 keyValue: 13);
 
             migrationBuilder.DeleteData(
                 schema: "dim",
-                table: "process_step_types",
+                table: processStepTypes,
                 keyColumn: "id",
                 keyValue: 14);
 
             migrationBuilder.DeleteData(
                 schema: "dim",
-                table: "process_step_types",
+                table: processStepTypes,
                 keyColumn: "id",
                 keyValue: 15);
 
             migrationBuilder.DeleteData(
                 schema: "dim",
-                table: "process_step_types",
+                table: processStepTypes,
                 keyColumn: "id",
                 keyValue: 16);
 
             migrationBuilder.DeleteData(
                 schema: "dim",
-                table: "process_step_types",
+                table: processStepTypes,
                 keyColumn: "id",
                 keyValue: 17);
 
             migrationBuilder.DeleteData(
                 schema: "dim",
-                table: "process_step_types",
+                table: processStepTypes,
                 keyColumn: "id",
                 keyValue: 18);
 
             migrationBuilder.DropColumn(
                 name: "application_id",
                 schema: "dim",
-                table: "tenants");
+                table: tenants);
 
             migrationBuilder.DropColumn(
-                name: "dim_instance_id",
-                schema: "dim",
-                table: "tenants");
-
-            migrationBuilder.RenameColumn(
                 name: "sub_account_id",
                 schema: "dim",
-                table: "tenants",
+                table: tenants);
+
+            migrationBuilder.RenameColumn(
+                name: "dim_instance_id",
+                schema: "dim",
+                table: tenants,
                 newName: "wallet_id");
 
-            migrationBuilder.RenameColumn(
+            migrationBuilder.DropColumn(
                 name: "space_id",
                 schema: "dim",
-                table: "tenants",
-                newName: "operation_id");
+                table: tenants);
 
-            migrationBuilder.RenameColumn(
+            migrationBuilder.AddColumn<Guid>(
+                name: operationId,
+                schema: "dim",
+                table: tenants,
+                type: "uuid",
+                nullable: true);
+
+            migrationBuilder.DropColumn(
                 name: "service_instance_id",
                 schema: "dim",
-                table: "tenants",
-                newName: "token_address");
+                table: tenants);
 
-            migrationBuilder.RenameColumn(
+            migrationBuilder.AddColumn<string>(
+                name: "token_address",
+                schema: "dim",
+                table: tenants,
+                type: "text",
+                nullable: true);
+
+            migrationBuilder.DropColumn(
                 name: "service_binding_name",
                 schema: "dim",
-                table: "tenants",
-                newName: "client_id");
+                table: tenants);
 
-            migrationBuilder.RenameColumn(
+            migrationBuilder.AddColumn<string>(
+                name: "client_id",
+                schema: "dim",
+                table: tenants,
+                type: "text",
+                nullable: true);
+
+            migrationBuilder.DropColumn(
                 name: "application_key",
                 schema: "dim",
-                table: "tenants",
-                newName: "base_url");
+                table: tenants);
+
+            migrationBuilder.AddColumn<string>(
+                name: "base_url",
+                schema: "dim",
+                table: tenants,
+                type: "text",
+                nullable: true);
 
             migrationBuilder.AddColumn<byte[]>(
                 name: "client_secret",
                 schema: "dim",
-                table: "tenants",
+                table: tenants,
                 type: "bytea",
                 nullable: true);
 
             migrationBuilder.AddColumn<int>(
                 name: "encryption_mode",
                 schema: "dim",
-                table: "tenants",
+                table: tenants,
                 type: "integer",
                 nullable: true);
 
             migrationBuilder.AddColumn<byte[]>(
                 name: "initialization_vector",
                 schema: "dim",
-                table: "tenants",
+                table: tenants,
                 type: "bytea",
                 nullable: true);
 
             migrationBuilder.AddColumn<Guid>(
-                name: "operation_id",
+                name: operationId,
                 schema: "dim",
-                table: "technical_users",
+                table: technicalUsers,
                 type: "uuid",
                 nullable: true);
 
             migrationBuilder.AddColumn<Guid>(
                 name: "service_key_id",
                 schema: "dim",
-                table: "technical_users",
+                table: technicalUsers,
                 type: "uuid",
                 nullable: true);
 
             migrationBuilder.UpdateData(
                 schema: "dim",
-                table: "process_step_types",
+                table: processStepTypes,
                 keyColumn: "id",
                 keyValue: 1,
-                column: "label",
+                column: label,
                 value: "CREATE_WALLET");
 
             migrationBuilder.UpdateData(
                 schema: "dim",
-                table: "process_step_types",
+                table: processStepTypes,
                 keyColumn: "id",
                 keyValue: 2,
-                column: "label",
+                column: label,
                 value: "CHECK_OPERATION");
 
             migrationBuilder.UpdateData(
                 schema: "dim",
-                table: "process_step_types",
+                table: processStepTypes,
                 keyColumn: "id",
                 keyValue: 3,
-                column: "label",
+                column: label,
                 value: "GET_COMPANY");
 
             migrationBuilder.UpdateData(
                 schema: "dim",
-                table: "process_step_types",
+                table: processStepTypes,
                 keyColumn: "id",
                 keyValue: 4,
-                column: "label",
+                column: label,
                 value: "GET_DID_DOCUMENT");
 
             migrationBuilder.UpdateData(
                 schema: "dim",
-                table: "process_step_types",
+                table: processStepTypes,
                 keyColumn: "id",
                 keyValue: 5,
-                column: "label",
+                column: label,
                 value: "CREATE_STATUS_LIST");
 
             migrationBuilder.UpdateData(
                 schema: "dim",
-                table: "process_step_types",
+                table: processStepTypes,
                 keyColumn: "id",
                 keyValue: 6,
-                column: "label",
+                column: label,
                 value: "SEND_CALLBACK");
 
             migrationBuilder.UpdateData(
                 schema: "dim",
-                table: "process_step_types",
+                table: processStepTypes,
                 keyColumn: "id",
                 keyValue: 7,
-                column: "label",
+                column: label,
                 value: "RETRIGGER_CREATE_WALLET");
 
             migrationBuilder.UpdateData(
                 schema: "dim",
-                table: "process_step_types",
+                table: processStepTypes,
                 keyColumn: "id",
                 keyValue: 8,
-                column: "label",
+                column: label,
                 value: "RETRIGGER_CHECK_OPERATION");
 
             migrationBuilder.UpdateData(
                 schema: "dim",
-                table: "process_step_types",
+                table: processStepTypes,
                 keyColumn: "id",
                 keyValue: 9,
-                column: "label",
+                column: label,
                 value: "RETRIGGER_GET_COMPANY");
 
             migrationBuilder.UpdateData(
                 schema: "dim",
-                table: "process_step_types",
+                table: processStepTypes,
                 keyColumn: "id",
                 keyValue: 10,
-                column: "label",
+                column: label,
                 value: "RETRIGGER_GET_DID_DOCUMENT");
 
             migrationBuilder.UpdateData(
                 schema: "dim",
-                table: "process_step_types",
+                table: processStepTypes,
                 keyColumn: "id",
                 keyValue: 11,
-                column: "label",
+                column: label,
                 value: "RETRIGGER_CREATE_STATUS_LIST");
 
             migrationBuilder.UpdateData(
                 schema: "dim",
-                table: "process_step_types",
+                table: processStepTypes,
                 keyColumn: "id",
                 keyValue: 12,
-                column: "label",
+                column: label,
                 value: "RETRIGGER_SEND_CALLBACK");
 
             migrationBuilder.UpdateData(
                 schema: "dim",
-                table: "process_step_types",
+                table: processStepTypes,
                 keyColumn: "id",
                 keyValue: 102,
-                column: "label",
+                column: label,
                 value: "GET_TECHNICAL_USER_SERVICE_KEY");
 
             migrationBuilder.InsertData(
                 schema: "dim",
-                table: "process_step_types",
-                columns: new[] { "id", "label" },
+                table: processStepTypes,
+                columns: new[] { "id", label },
                 values: new object[,]
                 {
                     { 103, "SEND_TECHNICAL_USER_CREATION_CALLBACK" },
@@ -269,223 +299,223 @@ namespace Dim.Migrations.Migrations
         {
             migrationBuilder.DeleteData(
                 schema: "dim",
-                table: "process_step_types",
+                table: processStepTypes,
                 keyColumn: "id",
                 keyValue: 103);
 
             migrationBuilder.DeleteData(
                 schema: "dim",
-                table: "process_step_types",
+                table: processStepTypes,
                 keyColumn: "id",
                 keyValue: 104);
 
             migrationBuilder.DeleteData(
                 schema: "dim",
-                table: "process_step_types",
+                table: processStepTypes,
                 keyColumn: "id",
                 keyValue: 105);
 
             migrationBuilder.DeleteData(
                 schema: "dim",
-                table: "process_step_types",
+                table: processStepTypes,
                 keyColumn: "id",
                 keyValue: 106);
 
             migrationBuilder.DeleteData(
                 schema: "dim",
-                table: "process_step_types",
+                table: processStepTypes,
                 keyColumn: "id",
                 keyValue: 107);
 
             migrationBuilder.DeleteData(
                 schema: "dim",
-                table: "process_step_types",
+                table: processStepTypes,
                 keyColumn: "id",
                 keyValue: 202);
 
             migrationBuilder.DeleteData(
                 schema: "dim",
-                table: "process_step_types",
+                table: processStepTypes,
                 keyColumn: "id",
                 keyValue: 203);
 
             migrationBuilder.DropColumn(
                 name: "client_secret",
                 schema: "dim",
-                table: "tenants");
+                table: tenants);
 
             migrationBuilder.DropColumn(
                 name: "encryption_mode",
                 schema: "dim",
-                table: "tenants");
+                table: tenants);
 
             migrationBuilder.DropColumn(
                 name: "initialization_vector",
                 schema: "dim",
-                table: "tenants");
+                table: tenants);
 
             migrationBuilder.DropColumn(
-                name: "operation_id",
+                name: operationId,
                 schema: "dim",
-                table: "technical_users");
+                table: technicalUsers);
 
             migrationBuilder.DropColumn(
                 name: "service_key_id",
                 schema: "dim",
-                table: "technical_users");
+                table: technicalUsers);
 
             migrationBuilder.RenameColumn(
                 name: "wallet_id",
                 schema: "dim",
-                table: "tenants",
+                table: tenants,
                 newName: "sub_account_id");
 
             migrationBuilder.RenameColumn(
                 name: "token_address",
                 schema: "dim",
-                table: "tenants",
+                table: tenants,
                 newName: "service_instance_id");
 
             migrationBuilder.RenameColumn(
-                name: "operation_id",
+                name: operationId,
                 schema: "dim",
-                table: "tenants",
+                table: tenants,
                 newName: "space_id");
 
             migrationBuilder.RenameColumn(
                 name: "client_id",
                 schema: "dim",
-                table: "tenants",
+                table: tenants,
                 newName: "service_binding_name");
 
             migrationBuilder.RenameColumn(
                 name: "base_url",
                 schema: "dim",
-                table: "tenants",
+                table: tenants,
                 newName: "application_key");
 
             migrationBuilder.AddColumn<string>(
                 name: "application_id",
                 schema: "dim",
-                table: "tenants",
+                table: tenants,
                 type: "text",
                 nullable: true);
 
             migrationBuilder.AddColumn<Guid>(
                 name: "dim_instance_id",
                 schema: "dim",
-                table: "tenants",
+                table: tenants,
                 type: "uuid",
                 nullable: true);
 
             migrationBuilder.UpdateData(
                 schema: "dim",
-                table: "process_step_types",
+                table: processStepTypes,
                 keyColumn: "id",
                 keyValue: 1,
-                column: "label",
+                column: label,
                 value: "CREATE_SUBACCOUNT");
 
             migrationBuilder.UpdateData(
                 schema: "dim",
-                table: "process_step_types",
+                table: processStepTypes,
                 keyColumn: "id",
                 keyValue: 2,
-                column: "label",
+                column: label,
                 value: "CREATE_SERVICEMANAGER_BINDINGS");
 
             migrationBuilder.UpdateData(
                 schema: "dim",
-                table: "process_step_types",
+                table: processStepTypes,
                 keyColumn: "id",
                 keyValue: 3,
-                column: "label",
+                column: label,
                 value: "ASSIGN_ENTITLEMENTS");
 
             migrationBuilder.UpdateData(
                 schema: "dim",
-                table: "process_step_types",
+                table: processStepTypes,
                 keyColumn: "id",
                 keyValue: 4,
-                column: "label",
+                column: label,
                 value: "CREATE_SERVICE_INSTANCE");
 
             migrationBuilder.UpdateData(
                 schema: "dim",
-                table: "process_step_types",
+                table: processStepTypes,
                 keyColumn: "id",
                 keyValue: 5,
-                column: "label",
+                column: label,
                 value: "CREATE_SERVICE_BINDING");
 
             migrationBuilder.UpdateData(
                 schema: "dim",
-                table: "process_step_types",
+                table: processStepTypes,
                 keyColumn: "id",
                 keyValue: 6,
-                column: "label",
+                column: label,
                 value: "SUBSCRIBE_APPLICATION");
 
             migrationBuilder.UpdateData(
                 schema: "dim",
-                table: "process_step_types",
+                table: processStepTypes,
                 keyColumn: "id",
                 keyValue: 7,
-                column: "label",
+                column: label,
                 value: "CREATE_CLOUD_FOUNDRY_ENVIRONMENT");
 
             migrationBuilder.UpdateData(
                 schema: "dim",
-                table: "process_step_types",
+                table: processStepTypes,
                 keyColumn: "id",
                 keyValue: 8,
-                column: "label",
+                column: label,
                 value: "CREATE_CLOUD_FOUNDRY_SPACE");
 
             migrationBuilder.UpdateData(
                 schema: "dim",
-                table: "process_step_types",
+                table: processStepTypes,
                 keyColumn: "id",
                 keyValue: 9,
-                column: "label",
+                column: label,
                 value: "ADD_SPACE_MANAGER_ROLE");
 
             migrationBuilder.UpdateData(
                 schema: "dim",
-                table: "process_step_types",
+                table: processStepTypes,
                 keyColumn: "id",
                 keyValue: 10,
-                column: "label",
+                column: label,
                 value: "ADD_SPACE_DEVELOPER_ROLE");
 
             migrationBuilder.UpdateData(
                 schema: "dim",
-                table: "process_step_types",
+                table: processStepTypes,
                 keyColumn: "id",
                 keyValue: 11,
-                column: "label",
+                column: label,
                 value: "CREATE_DIM_SERVICE_INSTANCE");
 
             migrationBuilder.UpdateData(
                 schema: "dim",
-                table: "process_step_types",
+                table: processStepTypes,
                 keyColumn: "id",
                 keyValue: 12,
-                column: "label",
+                column: label,
                 value: "CREATE_SERVICE_INSTANCE_BINDING");
 
             migrationBuilder.UpdateData(
                 schema: "dim",
-                table: "process_step_types",
+                table: processStepTypes,
                 keyColumn: "id",
                 keyValue: 102,
-                column: "label",
+                column: label,
                 value: "SEND_TECHNICAL_USER_CREATION_CALLBACK");
 
             migrationBuilder.InsertData(
                 schema: "dim",
-                table: "process_step_types",
-                columns: new[] { "id", "label" },
+                table: processStepTypes,
+                columns: new[] { "id", label },
                 values: new object[,]
                 {
                     { 13, "GET_DIM_DETAILS" },
