@@ -67,11 +67,12 @@ public class DimProcessTypeExecutorTests
     public void GetExecutableStepTypeIds_ReturnsExpected()
     {
         // Assert
-        _sut.GetExecutableStepTypeIds().Should().HaveCount(5).And.Satisfy(
+        _sut.GetExecutableStepTypeIds().Should().HaveCount(6).And.Satisfy(
             x => x == ProcessStepTypeId.CHECK_OPERATION,
             x => x == ProcessStepTypeId.GET_COMPANY,
             x => x == ProcessStepTypeId.GET_DID_DOCUMENT,
             x => x == ProcessStepTypeId.CREATE_WALLET,
+            x => x == ProcessStepTypeId.CREATE_STATUS_LIST,
             x => x == ProcessStepTypeId.SEND_CALLBACK);
     }
 

@@ -39,6 +39,7 @@ public class DimProcessTypeExecutor(
         ProcessStepTypeId.CHECK_OPERATION,
         ProcessStepTypeId.GET_COMPANY,
         ProcessStepTypeId.GET_DID_DOCUMENT,
+        ProcessStepTypeId.CREATE_STATUS_LIST,
         ProcessStepTypeId.SEND_CALLBACK);
 
     private Guid _tenantId;
