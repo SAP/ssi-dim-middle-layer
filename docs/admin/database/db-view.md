@@ -59,6 +59,8 @@ erDiagram
         bytea initialization_vector
         integer encryption_mode
         uuid process_id FK
+        uuid operation_id
+        uuid service_key_id
     }
     TENANTS {
         uuid id PK
@@ -67,17 +69,18 @@ erDiagram
         text did_document_location
         bool is_issuer
         uuid process_id FK
-        uuid sub_account_id
-        text service_instance_id
-        text service_binding_name
-        uuid space_id
-        uuid dim_instance_id
+        uuid wallet_id
+        text token_address
+        text client_id
+        uuid operation_id
         text did_download_url
         text did
-        text application_id
         uuid company_id
-        text application_key
+        text base_url
         uuid operator_id
+        bytea client_secret
+        int encryption_mode
+        bytea initialization_vector
     }
 ```
 
@@ -105,29 +108,30 @@ label (TEXT): The label of the process step type.
 
 #### Possible Values
 
-- `CREATE_SUBACCOUNT`: Creates the sub account in sap
-- `CREATE_SERVICEMANAGER_BINDINGS`: Creates the service manager binding for the created subaccount
-- `ASSIGN_ENTITLEMENTS`: Assigns the entitlements
-- `CREATE_SERVICE_INSTANCE`: Creates the service instance
-- `CREATE_SERVICE_BINDING`: Creates the service binding for the created service instance
-- `SUBSCRIBE_APPLICATION`: Subscribes to the `decentralized-identity-management-app` application
-- `CREATE_CLOUD_FOUNDRY_ENVIRONMENT`: Creates the cloud foundry environment
-- `CREATE_CLOUD_FOUNDRY_SPACE`: Creates the cloud foundry space for the created environment
-- `ADD_SPACE_MANAGER_ROLE`: Adds the space manager role for the created subaccount
-- `ADD_SPACE_DEVELOPER_ROLE`: Adds the space developer role for the created subaccount
-- `CREATE_DIM_SERVICE_INSTANCE`: Creates the dim instance
-- `CREATE_SERVICE_INSTANCE_BINDING`: Creates the binding for to the created dim instance
-- `GET_DIM_DETAILS`: Retrieves the dim details from SAP Dim
-- `CREATE_APPLICATION`: Creates the application in the wallet
-- `CREATE_COMPANY_IDENTITY`: Creates a company identity for the wallet
-- `ASSIGN_COMPANY_APPLICATION`: Assigns the company identity to the application
-- `CREATE_STATUS_LIST`: Creates a statuslist for a company
-- `SEND_CALLBACK`: Sends the callback to the portal to transmit the data of the created wallet and did
-- `CREATE_TECHNICAL_USER`: Creates a new technical user for a wallet
-- `GET_TECHNICAL_USER_DATA`: Retrieves the technical user data from the SAP Dim
-- `SEND_TECHNICAL_USER_CREATION_CALLBACK`: Sends the technical user data back to the portal
-- `DELETE_TECHNICAL_USER`: Deletes the technical user from the database and from the SAP Dim
-- `SEND_TECHNICAL_USER_DELETION_CALLBACK`: Sends a status to the portal if the deletion was successful
+- `CREATE_WALLET`: Sends the wallet creation process to the SAP Dim
+- `CHECK_OPERATION`: Checks the wallet creation operation to be completed
+- `GET_COMPANY`: Gets the company and wallet information
+- `GET_DID_DOCUMENT`: Gets the did document and the did for the wallet
+- `CREATE_STATUS_LIST`: Only if the tenant is an issuer - Creates the status list
+- `SEND_CALLBACK`: Sends the wallet data back to the portal backend
+- `RETRIGGER_CREATE_WALLET`: Retriggers the `CREATE_WALLET` step
+- `RETRIGGER_CHECK_OPERATION`: Retriggers the `CHECK_OPERATION` step
+- `RETRIGGER_GET_COMPANY`: Retriggers the `GET_COMPANY` step
+- `RETRIGGER_GET_DID_DOCUMENT`: Retriggers the `GET_DID_DOCUMENT` step
+- `RETRIGGER_CREATE_STATUS_LIST`: Retriggers the `CREATE_STATUS_LIST` step
+- `RETRIGGER_SEND_CALLBACK`: Retriggers the `SEND_CALLBACK` step
+- `CREATE_TECHNICAL_USER`: Sends a technical user creation request to the SAP Dim
+- `GET_TECHNICAL_USER_DATA`: Gets the technical user data (clientId, clientSecret and tokenUrl)
+- `GET_TECHNICAL_USER_SERVICE_KEY`: Gets the service key id which is needed to delete the technical user later on
+- `SEND_TECHNICAL_USER_CREATION_CALLBACK`: Sends all information of the technical user to the portal backend
+- `RETRIGGER_CREATE_TECHNICAL_USER`: Retriggers the `CREATE_TECHNICAL_USER` step
+- `RETRIGGER_GET_TECHNICAL_USER_DATA`: Retriggers the `GET_TECHNICAL_USER_DATA` step
+- `RETRIGGER_GET_TECHNICAL_USER_SERVICE_KEY`: Retriggers the `GET_TECHNICAL_USER_SERVICE_KEY` step
+- `RETRIGGER_SEND_TECHNICAL_USER_CREATION_CALLBACK`: Retriggers the `SEND_TECHNICAL_USER_CREATION_CALLBACK` step
+- `DELETE_TECHNICAL_USER`: Deletes the technical user from the SAP Dim
+- `SEND_TECHNICAL_USER_DELETION_CALLBACK`: Sends a status of whether the deletion was successful to the portal and deletes the technical user from the database
+- `RETRIGGER_DELETE_TECHNICAL_USER`: Retriggers the `DELETE_TECHNICAL_USER` step
+- `RETRIGGER_SEND_TECHNICAL_USER_DELETION_CALLBACK`: Retriggers the `SEND_TECHNICAL_USER_DELETION_CALLBACK` step
 
 ### PROCESS_STEPS
 
@@ -168,6 +172,8 @@ client_secret (BYTEA): The encrypted client secret
 initialization_vector (BYTEA): The used initialization vector which is needed for decrypting the secret
 encryption_mode (INTEGER): The used encryption mode for the secret
 process_id (UUID): A unique identifier for the process. This is a foreign key referencing id in the PROCESS table
+operation_id (UUID): A unique identifier of the operation which is created on SAP Dim side
+service_key_id (UUID): A unique identifier of the technical user on SAP Dim side
 
 ### TENANTS
 
@@ -177,17 +183,18 @@ bpn (TEXT): Bpn of the company must be unique in combination with the name
 did_document_location (TEXT): The location of the did document (url)
 is_issuer (BOOL): Defines if the requesting tenant is an issuer
 process_id (UUID): A unique identifier for the process. This is a foreign key referencing id in the PROCESS table
-sub_account_id (UUID): A unique identifier of the sub account in the SAP DIM
-service_instance_id (TEXT): A unique identifier of the service instance id in the SAP DIM
-service_binding_name (TEXT): The service binding name in the SAP DIM
-space_id (UUID): A unique identifier of the space id in the SAP DIM
-dim_instance_id (UUID): A unique identifier of the dim instance in the SAP DIM
+operator_id (UUID): A unique identifier of the operator which is used for the wallet creation
 did_download_url (TEXT): The url of the did document.
 did (TEXT): The did of the wallet
-application_id (TEXT): A unique identifier of the application in the SAP DIM
+base_url (TEXT): The address of the wallet
+token_address (TEXT): The address for the authentication of the wallet
+client_id (TEXT): The client id which is needed for authentication
+client_secret (BYTEA): The encrypted client secret
+initialization_vector (BYTEA): The used initialization vector which is needed for decrypting the secret
+encryption_mode (INTEGER): The used encryption mode for the secret
 company_id (UUID): A unique identifier of the company in the SAP DIM
-application_key (TEXT): The key of the application in the SAP DIM
-operator_id (UUID): A unique identifier of the operator which is used for the wallet creation
+operation_id (UUID): A unique identifier of the operation which is created in the SAP DIM
+wallet_id (UUID): A unique identifier of the wallet in the SAP DIM
 
 ### Enum Value Tables
 
