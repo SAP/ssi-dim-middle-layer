@@ -44,8 +44,9 @@ dim:
   swaggerEnabled: false
   operatorId: "00000000-0000-0000-0000-000000000000"
   # -- bpn of the operating company
-  bpn: "BPNL00000003CRHK"
-  didDocumentLocationAddress: "https://portal-backend.int.catena-x.net/api/administration/staticdata/did/BPNL00000003CRHK/did.json"
+  bpn: ""
+  # -- address of the did for the operating company
+  didDocumentLocationAddress: ""
 
 migrations:
   name: "migrations"
@@ -65,7 +66,7 @@ migrations:
     testDataEnvironments: ""
     testData:
       # -- If set to true the data configured in the config map 'configmap-seeding-testdata.yaml' will be taken to insert the default test data
-      useDefault: true
+      useDefault: false
       useOwnConfigMap:
         # -- ConfigMap containing json files for the tables to seed, e.g. technical_users.test.json, tenants.test.json, etc.
         configMap: ""

@@ -42,10 +42,14 @@ ingress:
 dim:
   swaggerEnabled: true
   operatorId: "d6cd4e2e-1053-4ba6-888e-1cd56509958a"
+  bpn: "BPNL00000003CRHK"
+  didDocumentLocationAddress: "https://portal-backend.int.catena-x.net/api/administration/staticdata/did/BPNL00000003CRHK/did.json"
 
 migrations:
   logging:
     default: "Debug"
+    testData:
+      useDefault: false
 
 processesworker:
   logging:
