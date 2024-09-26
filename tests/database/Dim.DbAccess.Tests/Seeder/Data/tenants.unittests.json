@@ -8,7 +8,7 @@
     "is_issuer": true,
     "operator_id": "a7444c10-5b07-430d-a3c1-c52675c4fa5a",
     "operation_id": "6dcac248-57ab-4309-9477-ee21586b3738",
-    "company_id": null,
+    "company_id": "6dcac248-57ab-4309-9477-ee21586b3666",
     "base_url": "https://example.org/base"
   }
 ]

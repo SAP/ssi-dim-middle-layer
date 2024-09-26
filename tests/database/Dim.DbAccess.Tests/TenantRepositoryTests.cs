@@ -302,11 +302,11 @@ public class TenantRepositoryTests : IAssemblyFixture<TestDbFixture>
         var sut = await CreateSut();
 
         // Act
-        var result = await sut.GetWalletProcessForTenant("BPNL0000001CORP", "test corp");
+        var result = await sut.GetWalletProcessForTenant("BPNL000001ISSUER", "issuer company");
 
         // Assert
         result.Should().NotBeNull();
-        result!.ProcessId.Should().Be(new Guid("dd371565-9489-4907-a2e4-b8cbfe7a8cd2"));
+        result!.ProcessId.Should().Be(new Guid("dd371565-9489-4907-a2e4-b8cbfe7a8cd1"));
     }
 
     #endregion
