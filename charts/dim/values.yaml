@@ -43,6 +43,9 @@ dim:
       path: "/ready"
   swaggerEnabled: false
   operatorId: "00000000-0000-0000-0000-000000000000"
+  # -- bpn of the operating company
+  bpn: "BPNL00000003CRHK"
+  didDocumentLocationAddress: "https://portal-backend.int.catena-x.net/api/administration/staticdata/did/BPNL00000003CRHK/did.json"
 
 migrations:
   name: "migrations"
@@ -60,7 +63,14 @@ migrations:
       memory: 200M
   seeding:
     testDataEnvironments: ""
-    testDataPaths: "Seeder/Data"
+    testData:
+      # -- If set to true the data configured in the config map 'configmap-seeding-testdata.yaml' will be taken to insert the default test data
+      useDefault: true
+      useOwnConfigMap:
+        # -- ConfigMap containing json files for the tables to seed, e.g. technical_users.test.json, tenants.test.json, etc.
+        configMap: ""
+        # -- Filename identifying the test data files e.g. for tenants.test.json the value would be "test"
+        filename: ""
   logging:
     default: "Information"
 

@@ -54,6 +54,9 @@
     <Content Include="appsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+
+    <None Remove="Seeder\Data" />
+    <Content Include="Seeder\Data\**" LinkBase="Seeder\Data" CopyToOutputDirectory="Always" />
   </ItemGroup>
 
   <ItemGroup>
