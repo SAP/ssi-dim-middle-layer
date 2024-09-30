@@ -30,7 +30,12 @@ public record ServiceKeyOperationCreationRequest(
 
 public record ServiceKeyCreationPayloadData(
     [property: JsonPropertyName("customerWalletId")] Guid CustomerWalletId,
-    [property: JsonPropertyName("divWalletServiceName")] string ServiceKeyName
+    [property: JsonPropertyName("divWalletServiceName")] string ServiceKeyName,
+    [property: JsonPropertyName("divWalletServiceParameters")] ServiceKeyWalletServiceParameter Parameter
+);
+
+public record ServiceKeyWalletServiceParameter(
+    [property: JsonPropertyName("authorities")] IEnumerable<string> Authorities
 );
 
 public record ServiceKeyOperationDeletionRequest(

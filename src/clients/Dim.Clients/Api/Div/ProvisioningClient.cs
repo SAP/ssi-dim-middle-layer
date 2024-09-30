@@ -138,7 +138,8 @@ public class ProvisioningClient(IBasicAuthTokenService basicAuthTokenService, IO
             "create",
             new ServiceKeyCreationPayloadData(
                 walletId,
-                technicalUserName
+                technicalUserName,
+                new ServiceKeyWalletServiceParameter(["IatpOperations", "ReadCompanyIdentity", "ResolveDID"])
             )
         );
         var client = await basicAuthTokenService
