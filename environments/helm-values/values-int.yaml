@@ -28,11 +28,11 @@ ingress:
     nginx.ingress.kubernetes.io/proxy-body-size: "8m"
     nginx.ingress.kubernetes.io/cors-allow-origin: "https://*.int.catena-x.net"
   tls:
-    - secretName: "dim.int.catena-x.net-tls"
+    - secretName: "dim-v2.int.catena-x.net-tls"
       hosts:
-        - "dim.int.catena-x.net"
+        - "dim-v2.int.catena-x.net"
   hosts:
-    - host: "dim.int.catena-x.net"
+    - host: "dim-v2.int.catena-x.net"
       paths:
         - path: "/api/dim"
           pathType: "Prefix"
