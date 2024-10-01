@@ -53,11 +53,10 @@ processesworker:
   dim:
     applicationName: "catena-x-portal"
   provisioning:
-    clientId: "<path:portal/data/dim/int/cf#clientId>"
-    clientSecret: "<path:portal/data/dim/int/cf#clientSecret>"
-    tokenAddress: "https://login.cf.eu10.hana.ondemand.com/oauth/token"
-    # -- Url to the cf service api
-    baseUrl: "https://api.cf.eu10.hana.ondemand.com"
+    clientId: "<path:portal/data/dim/int/provisioning#clientId>"
+    clientSecret: "<path:portal/data/dim/int/provisioning#clientSecret>"
+    tokenAddress: "https://provisioning-prod-uvm2enuw.authentication.eu10.hana.ondemand.com/oauth/token"
+    baseUrl: "https://div-provisioning-prod.eu10.div.cloud.sap"
     grantType: "client_credentials"
     encryptionConfigs:
       index0:
