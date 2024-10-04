@@ -50,7 +50,6 @@ dependencies:
 | dim.healthChecks.liveness.path | string | `"/healthz"` |  |
 | dim.healthChecks.readyness.path | string | `"/ready"` |  |
 | dim.swaggerEnabled | bool | `false` |  |
-| dim.rootDirectoryId | string | `"00000000-0000-0000-0000-000000000000"` |  |
 | dim.operatorId | string | `"00000000-0000-0000-0000-000000000000"` |  |
 | migrations.name | string | `"migrations"` |  |
 | migrations.image.name | string | `"ghcr.io/sap/ssi-dim-middle-layer_dim-migrations"` |  |
@@ -65,17 +64,17 @@ dependencies:
 | processesworker.image.tag | string | `""` |  |
 | processesworker.imagePullPolicy | string | `"IfNotPresent"` |  |
 | processesworker.resources | object | `{"limits":{"cpu":"45m","memory":"300M"},"requests":{"cpu":"15m","memory":"300M"}}` | We recommend to review the default resource limits as this should a conscious choice. |
-| processesworker.dim.adminMail | string | `"mail@example.org"` |  |
-| processesworker.dim.clientIdCisCentral | string | `""` |  |
-| processesworker.dim.clientSecretCisCentral | string | `""` |  |
-| processesworker.dim.authUrl | string | `""` |  |
-| processesworker.subaccount.baseUrl | string | `""` | Url to the subaccount service api |
-| processesworker.entitlement.baseUrl | string | `""` | Url to the entitlement service api |
-| processesworker.cf.clientId | string | `""` |  |
-| processesworker.cf.clientSecret | string | `""` |  |
-| processesworker.cf.tokenAddress | string | `""` |  |
-| processesworker.cf.baseUrl | string | `""` | Url to the cf service api |
-| processesworker.cf.grantType | string | `"client_credentials"` |  |
+| processesworker.dim.applicationName | string | `""` |  |
+| processesworker.provisioning.clientId | string | `""` |  |
+| processesworker.provisioning.clientSecret | string | `""` |  |
+| processesworker.provisioning.tokenAddress | string | `""` |  |
+| processesworker.provisioning.baseUrl | string | `""` | Url to the cf service api |
+| processesworker.provisioning.grantType | string | `"client_credentials"` |  |
+| processesworker.provisioning.encryptionConfigIndex | int | `0` |  |
+| processesworker.provisioning.encryptionConfigs.index0.index | int | `0` |  |
+| processesworker.provisioning.encryptionConfigs.index0.cipherMode | string | `"CBC"` |  |
+| processesworker.provisioning.encryptionConfigs.index0.paddingMode | string | `"PKCS7"` |  |
+| processesworker.provisioning.encryptionConfigs.index0.encryptionKey | string | `""` | EncryptionKey to encrypt the provisioning client-secret. Secret-key 'provisioning-encryption-key0'. Expected format is 256 bit (64 digits) hex. |
 | processesworker.callback.scope | string | `"openid"` |  |
 | processesworker.callback.grantType | string | `"client_credentials"` |  |
 | processesworker.callback.clientId | string | `""` | Provide client-id for callback. |
