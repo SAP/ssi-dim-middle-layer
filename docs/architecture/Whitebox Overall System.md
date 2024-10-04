@@ -2,7 +2,7 @@
 
 ## Summary
 
-In the following image you see the overall system overview of the SSI Dim Middle Layer
+In the following image you see the overall system overview of the SSI DIM Middle Layer
 
 ```mermaid
 flowchart LR
@@ -15,7 +15,7 @@ flowchart LR
     SD(SAP DIM)
     PHD[("Postgres Database \n \n (Base data created with \n application seeding)")]
 
-    subgraph SSI Dim Middle Layer Product   
+    subgraph SSI DIM Middle Layer Product   
         ING
         PHD
         DS

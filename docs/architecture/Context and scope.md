@@ -6,9 +6,9 @@ The Self-Sovereign Identity (SSI) DIM Middle Layer purpose is to facilitate seam
 
 ## Technical Context
 
-From a technical standpoint, the SSI dim middle layer is built on a foundation that promotes interaction, monitoring and a host of other functionalities that are crucial for maintaining a secure and reliable identity management system.
+From a technical standpoint, the SSI DIM middle layer is built on a foundation that promotes interaction, monitoring and a host of other functionalities that are crucial for maintaining a secure and reliable identity management system.
 
-A key aspect of the technical context is the commitment to open-source principles. The SSI dim middle layer is constructed with open-source components to the greatest extent possible, fostering a collaborative and transparent development environment. Moreover, the entire codebase of the SSI dim middle layer is open-sourced, reflecting a 100% commitment to the open-source community.
+A key aspect of the technical context is the commitment to open-source principles. The SSI DIM middle layer is constructed with open-source components to the greatest extent possible, fostering a collaborative and transparent development environment. Moreover, the entire codebase of the SSI DIM middle layer is open-sourced, reflecting a 100% commitment to the open-source community.
 
 ## NOTICE
 

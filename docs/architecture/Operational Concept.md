@@ -1,18 +1,18 @@
 # Operational concepts
 
-## SSI Dim Middle Layer Services
+## SSI DIM Middle Layer Services
 
 ### Configuration
 
-The SSI Dim Middle Layer services can be configured using two methods:
+The SSI DIM Middle Layer services can be configured using two methods:
 
 ### appsettings.json
 
-If you build the SSI Dim Middle Layer, you can modify the appsettings.json for each backend service, to individually configure to a certain extend. This file contains all possible config entries for the application.
+If you build the SSI DIM Middle Layer, you can modify the appsettings.json for each backend service, to individually configure to a certain extend. This file contains all possible config entries for the application.
 
 ### Helm Chart
 
-The most relevant config properties are exposed as environment variables and must be set in the Helm chart so the application can run at all. Check the SSI Dim Middle Layer Helm chart in Git for all available variables.
+The most relevant config properties are exposed as environment variables and must be set in the Helm chart so the application can run at all. Check the SSI DIM Middle Layer Helm chart in Git for all available variables.
 
 ### DB Migration File
 

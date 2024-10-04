@@ -164,7 +164,7 @@ version (UUID): The version of the process.
 
 id (UUID): A unique identifier for the technical user. This is the primary key of the table
 tenant_id (UUID): A unique identifier for the tenant. This is a foreign key referencing id in the TENANT table
-external_id (UUID): the id of the technical user in the dim
+external_id (UUID): the id of the technical user in the DIM
 technical_user_name (TEXT): The name of the technical user
 token_address (TEXT): The address for the authentication of the technical user
 client_id (TEXT): The client id which is needed for authentication
@@ -172,8 +172,8 @@ client_secret (BYTEA): The encrypted client secret
 initialization_vector (BYTEA): The used initialization vector which is needed for decrypting the secret
 encryption_mode (INTEGER): The used encryption mode for the secret
 process_id (UUID): A unique identifier for the process. This is a foreign key referencing id in the PROCESS table
-operation_id (UUID): A unique identifier of the operation which is created on SAP Dim side
-service_key_id (UUID): A unique identifier of the technical user on SAP Dim side
+operation_id (UUID): A unique identifier of the operation which is created on SAP DIM side
+service_key_id (UUID): A unique identifier of the technical user on SAP DIM side
 
 ### TENANTS
 

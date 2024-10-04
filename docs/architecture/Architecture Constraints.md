@@ -2,7 +2,7 @@
 
 ## Overview
 
-The following document outlines the architecture constraints for the SSI Dim Middle Layer App. This App serves as a central point for wallet as well as technical user creation. The constraints outlined in this document are intended to guide the development and deployment of the system to ensure it meets the specified requirements and adheres to the defined standards.
+The following document outlines the architecture constraints for the SSI DIM Middle Layer App. This App serves as a central point for wallet as well as technical user creation. The constraints outlined in this document are intended to guide the development and deployment of the system to ensure it meets the specified requirements and adheres to the defined standards.
 
 ## General Constraints
 

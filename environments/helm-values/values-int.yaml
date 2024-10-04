@@ -40,20 +40,14 @@ ingress:
             port: 8080
 
 dim:
-  image:
-    tag: "fdb619d63e9fb44bbb3d46052fdb872d9ddf1910"
   swaggerEnabled: true
   operatorId: "d6cd4e2e-1053-4ba6-888e-1cd56509958a"
 
 migrations:
-  image:
-    tag: "fdb619d63e9fb44bbb3d46052fdb872d9ddf1910"
   logging:
     default: "Debug"
 
 processesworker:
-  image:
-    tag: "fdb619d63e9fb44bbb3d46052fdb872d9ddf1910"
   logging:
     default: "Debug"
   dim:

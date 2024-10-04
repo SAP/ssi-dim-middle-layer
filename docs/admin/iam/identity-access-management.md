@@ -2,7 +2,7 @@
 
 ## Role concept
 
-The endpoints of the SSI Dim Middle Layer can only be used with an authenticated and authorized user. To be able to authorize the (technical) user, he needs to have the configured audience which is set in the appsettings under `JWTBEAREROPTIONS__TOKENVALIDATIONPARAMETERS__VALIDAUDIENCE`. The configured audience **must** be added as a client in the IAM system.
+The endpoints of the SSI DIM Middle Layer can only be used with an authenticated and authorized user. To be able to authorize the (technical) user, he needs to have the configured audience which is set in the appsettings under `JWTBEAREROPTIONS__TOKENVALIDATIONPARAMETERS__VALIDAUDIENCE`. The configured audience **must** be added as a client in the IAM system.
 
 The following roles need to exist in the client that is configured as the valid audience and need to be assigned to the (technical) user:
 

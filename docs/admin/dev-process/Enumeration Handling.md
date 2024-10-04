@@ -2,7 +2,7 @@
 
 Enum or enumeration are used for data type consisting of named values like elements, status workflow, types, etc., that represent integral constants. Enums are non-transactional (so called static data) which can only get changed in a new application version. Changes in the operation mode of an application are not allowed since this will result into possible system breaks.
 
-List of used enums in the ssi dim middle layer application
+List of used enums in the SSI DIM Middle Layer application
 
 - process_step_statuses
 - process_step_types
