@@ -1,5 +1,24 @@
 # Changelog
 
+## [2.0.0](https://github.com/SAP/ssi-dim-middle-layer/compare/v1.2.1...v2.0.0) (2024-10-08)
+
+
+### ⚠ BREAKING CHANGES
+
+* **provisioning:** change to the new div provisioning api ([#93](https://github.com/SAP/ssi-dim-middle-layer/issues/93))
+
+### Features
+
+* **provisioning:** change to the new div provisioning api ([#93](https://github.com/SAP/ssi-dim-middle-layer/issues/93)) ([bf650d4](https://github.com/SAP/ssi-dim-middle-layer/commit/bf650d40a9e3b1696de54c56a900bbf1dc3a703a)), closes [#79](https://github.com/SAP/ssi-dim-middle-layer/issues/79)
+* **wallet:** add existence check for wallet creation ([#71](https://github.com/SAP/ssi-dim-middle-layer/issues/71)) ([c23dfe1](https://github.com/SAP/ssi-dim-middle-layer/commit/c23dfe1039e3b29cee19771be15ea2f3bc9cd7ac)), closes [#66](https://github.com/SAP/ssi-dim-middle-layer/issues/66)
+
+
+### Bug Fixes
+
+* **callback:** add error handling for callback service ([#73](https://github.com/SAP/ssi-dim-middle-layer/issues/73)) ([9db2959](https://github.com/SAP/ssi-dim-middle-layer/commit/9db295930374a296e2bcd0e1aa8ce9249ac3baf8)), closes [#67](https://github.com/SAP/ssi-dim-middle-layer/issues/67)
+* **environment:** adjust getEnvironment exception handling ([#89](https://github.com/SAP/ssi-dim-middle-layer/issues/89)) ([8b526a5](https://github.com/SAP/ssi-dim-middle-layer/commit/8b526a517404dad4b17bdefc05e904d6a526b228)), closes [#84](https://github.com/SAP/ssi-dim-middle-layer/issues/84)
+* **tenantName:** remove invalid characters from tenant name ([#88](https://github.com/SAP/ssi-dim-middle-layer/issues/88)) ([d44ef09](https://github.com/SAP/ssi-dim-middle-layer/commit/d44ef0909f5972fb12e99795ef2e0e49402b6cd0))
+
 ## [1.2.1](https://github.com/SAP/ssi-dim-middle-layer/compare/v1.2.0...v1.2.1) (2024-08-02)
 
 
