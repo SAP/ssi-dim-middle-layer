@@ -18,8 +18,11 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using Dim.Clients.Api.Cf;
+using Dim.Clients.Api.Div;
+using Dim.Clients.Api.Div.Models;
+using Dim.Clients.Token;
 using Dim.DbAccess;
+using Dim.DbAccess.Extensions;
 using Dim.DbAccess.Repositories;
 using Dim.Entities.Enums;
 using DimProcess.Library.Callback;
@@ -27,27 +30,29 @@ using DimProcess.Library.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Models.Configuration;
-using Org.Eclipse.TractusX.Portal.Backend.Framework.Models.Encryption;
 
 namespace DimProcess.Library;
 
 public class TechnicalUserProcessHandler(
     IDimRepositories dimRepositories,
-    ICfClient cfClient,
+    IProvisioningClient provisioningClient,
     ICallbackService callbackService,
     IOptions<TechnicalUserSettings> options) : ITechnicalUserProcessHandler
 {
     private readonly TechnicalUserSettings _settings = options.Value;
 
-    public async Task<(IEnumerable<ProcessStepTypeId>? nextStepTypeIds, ProcessStepStatusId stepStatusId, bool modified, string? processMessage)> CreateServiceInstanceBindings(string tenantName, Guid technicalUserId, CancellationToken cancellationToken)
+    public async Task<(IEnumerable<ProcessStepTypeId>? nextStepTypeIds, ProcessStepStatusId stepStatusId, bool modified, string? processMessage)> CreateServiceInstanceBindings(Guid technicalUserId, CancellationToken cancellationToken)
     {
-        var (spaceId, technicalUserName) = await dimRepositories.GetInstance<ITenantRepository>().GetSpaceIdAndTechnicalUserName(technicalUserId).ConfigureAwait(false);
-        if (spaceId == null)
+        var tenantRepository = dimRepositories.GetInstance<ITechnicalUserRepository>();
+        var (walletId, technicalUserName) = await tenantRepository.GetTechnicalUserNameAndWalletId(technicalUserId).ConfigureAwait(ConfigureAwaitOptions.None);
+        if (walletId == null)
         {
-            throw new ConflictException("SpaceId must not be null.");
+            throw new ConflictException("WalletId must not be null");
         }
 
-        await cfClient.CreateServiceInstanceBindings(tenantName, technicalUserName, spaceId.Value, cancellationToken).ConfigureAwait(false);
+        var operationId = await provisioningClient.CreateServiceKey(technicalUserName, walletId.Value, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
+
+        tenantRepository.AttachAndModifyTechnicalUser(technicalUserId, t => t.OperationId = null, t => t.OperationId = operationId);
 
         return new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(
             Enumerable.Repeat(ProcessStepTypeId.GET_TECHNICAL_USER_DATA, 1),
@@ -56,36 +61,78 @@ public class TechnicalUserProcessHandler(
             null);
     }
 
-    public async Task<(IEnumerable<ProcessStepTypeId>? nextStepTypeIds, ProcessStepStatusId stepStatusId, bool modified, string? processMessage)> GetTechnicalUserData(string tenantName, Guid technicalUserId, CancellationToken cancellationToken)
+    public async Task<(IEnumerable<ProcessStepTypeId>? nextStepTypeIds, ProcessStepStatusId stepStatusId, bool modified, string? processMessage)> GetTechnicalUserData(Guid technicalUserId, CancellationToken cancellationToken)
     {
-        var (spaceId, technicalUserName) = await dimRepositories.GetInstance<ITenantRepository>().GetSpaceIdAndTechnicalUserName(technicalUserId).ConfigureAwait(false);
-        if (spaceId == null)
+        var tenantRepository = dimRepositories.GetInstance<ITechnicalUserRepository>();
+        var operationId = await tenantRepository.GetOperationIdForTechnicalUser(technicalUserId)
+            .ConfigureAwait(ConfigureAwaitOptions.None);
+        if (operationId is null)
         {
-            throw new ConflictException("SpaceId must not be null.");
+            throw new ConflictException("OperationId must not be null");
         }
 
-        var dimInstanceId = await cfClient.GetServiceBinding(tenantName, spaceId.Value, $"{technicalUserName}-dim-key01", cancellationToken).ConfigureAwait(false);
-        var dimDetails = await cfClient.GetServiceBindingDetails(dimInstanceId, cancellationToken).ConfigureAwait(false);
+        var response = await provisioningClient.GetOperation(operationId.Value, cancellationToken)
+            .ConfigureAwait(ConfigureAwaitOptions.None);
+        if (response.Status == OperationResponseStatus.pending)
+        {
+            return new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(
+                null,
+                ProcessStepStatusId.TODO,
+                true,
+                null);
+        }
 
+        if (response is { Status: OperationResponseStatus.completed, Data: null })
+        {
+            throw new UnexpectedConditionException($"Data should never be null when in status {OperationResponseStatus.completed}");
+        }
+
+        var serviceKey = response.Data!.ServiceKey;
         var cryptoHelper = _settings.EncryptionConfigs.GetCryptoHelper(_settings.EncryptionConfigIndex);
-        var (secret, initializationVector) = cryptoHelper.Encrypt(dimDetails.Credentials.Uaa.ClientSecret);
+        var (secret, initializationVector) = cryptoHelper.Encrypt(serviceKey.Uaa.ClientSecret);
 
-        dimRepositories.GetInstance<ITenantRepository>().AttachAndModifyTechnicalUser(technicalUserId, technicalUser =>
+        tenantRepository.AttachAndModifyTechnicalUser(technicalUserId,
+            t =>
             {
-                technicalUser.TokenAddress = null;
-                technicalUser.ClientId = null;
-                technicalUser.ClientSecret = null;
-                technicalUser.InitializationVector = null;
-                technicalUser.EncryptionMode = null;
+                t.TokenAddress = null;
+                t.ClientId = null;
+                t.ClientSecret = null;
             },
-            technicalUser =>
+            t =>
             {
-                technicalUser.TokenAddress = $"{dimDetails.Credentials.Uaa.Url}/oauth/token";
-                technicalUser.ClientId = dimDetails.Credentials.Uaa.ClientId;
-                technicalUser.ClientSecret = secret;
-                technicalUser.InitializationVector = initializationVector;
-                technicalUser.EncryptionMode = _settings.EncryptionConfigIndex;
+                t.TokenAddress = serviceKey.Uaa.Url;
+                t.ClientId = serviceKey.Uaa.ClientId;
+                t.ClientSecret = secret;
+                t.InitializationVector = initializationVector;
+                t.EncryptionMode = _settings.EncryptionConfigIndex;
             });
+
+        return new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(
+            Enumerable.Repeat(ProcessStepTypeId.GET_TECHNICAL_USER_SERVICE_KEY, 1),
+            ProcessStepStatusId.DONE,
+            false,
+            null);
+    }
+
+    public async Task<(IEnumerable<ProcessStepTypeId>? nextStepTypeIds, ProcessStepStatusId stepStatusId, bool modified, string? processMessage)> GetTechnicalUserServiceKey(Guid technicalUserId, CancellationToken cancellationToken)
+    {
+        var (walletId, technicalUserName) = await dimRepositories.GetInstance<ITechnicalUserRepository>().GetWalletIdAndNameForTechnicalUser(technicalUserId).ConfigureAwait(ConfigureAwaitOptions.None);
+        if (walletId == null)
+        {
+            throw new ConflictException("WalletId must be set");
+        }
+
+        var serviceKeyId = await provisioningClient.GetServiceKey(technicalUserName, walletId.Value, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
+        dimRepositories.GetInstance<ITechnicalUserRepository>().AttachAndModifyTechnicalUser(technicalUserId,
+            t =>
+            {
+                t.ServiceKeyId = null;
+            },
+            t =>
+            {
+                t.ServiceKeyId = serviceKeyId;
+            });
+
         return new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(
             Enumerable.Repeat(ProcessStepTypeId.SEND_TECHNICAL_USER_CREATION_CALLBACK, 1),
             ProcessStepStatusId.DONE,
@@ -95,27 +142,13 @@ public class TechnicalUserProcessHandler(
 
     public async Task<(IEnumerable<ProcessStepTypeId>? nextStepTypeIds, ProcessStepStatusId stepStatusId, bool modified, string? processMessage)> SendCreateCallback(Guid technicalUserId, CancellationToken cancellationToken)
     {
-        var (externalId, tokenAddress, clientId, clientSecret, initializationVector, _) = await dimRepositories.GetInstance<ITenantRepository>().GetTechnicalUserCallbackData(technicalUserId).ConfigureAwait(false);
+        var (externalId, walletData) = await dimRepositories.GetInstance<ITechnicalUserRepository>().GetTechnicalUserCallbackData(technicalUserId).ConfigureAwait(ConfigureAwaitOptions.None);
+        var (tokenAddress, clientId, clientSecret, initializationVector, encryptionMode) = walletData.ValidateData();
 
-        if (string.IsNullOrWhiteSpace(clientId))
-        {
-            throw new ConflictException("ClientId must not be null");
-        }
-
-        if (string.IsNullOrWhiteSpace(tokenAddress))
-        {
-            throw new ConflictException("TokenAddress must not be null");
-        }
-
-        if (clientSecret == null)
-        {
-            throw new ConflictException("Secret must not be null");
-        }
-
-        var cryptoHelper = _settings.EncryptionConfigs.GetCryptoHelper(_settings.EncryptionConfigIndex);
+        var cryptoHelper = _settings.EncryptionConfigs.GetCryptoHelper(encryptionMode);
         var secret = cryptoHelper.Decrypt(clientSecret, initializationVector);
 
-        await callbackService.SendTechnicalUserCallback(externalId, tokenAddress, clientId, secret, cancellationToken).ConfigureAwait(false);
+        await callbackService.SendTechnicalUserCallback(externalId, tokenAddress, clientId, secret, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
 
         return new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(
             null,
@@ -124,16 +157,24 @@ public class TechnicalUserProcessHandler(
             null);
     }
 
-    public async Task<(IEnumerable<ProcessStepTypeId>? nextStepTypeIds, ProcessStepStatusId stepStatusId, bool modified, string? processMessage)> DeleteServiceInstanceBindings(string tenantName, Guid technicalUserId, CancellationToken cancellationToken)
+    public async Task<(IEnumerable<ProcessStepTypeId>? nextStepTypeIds, ProcessStepStatusId stepStatusId, bool modified, string? processMessage)> DeleteServiceInstanceBindings(Guid technicalUserId, CancellationToken cancellationToken)
     {
-        var (spaceId, technicalUserName) = await dimRepositories.GetInstance<ITenantRepository>().GetSpaceIdAndTechnicalUserName(technicalUserId).ConfigureAwait(false);
-        if (spaceId == null)
+        var technicalUserRepository = dimRepositories.GetInstance<ITechnicalUserRepository>();
+        var (serviceKeyId, walletId) = await technicalUserRepository.GetServiceKeyAndWalletId(technicalUserId).ConfigureAwait(ConfigureAwaitOptions.None);
+        if (walletId == null)
         {
-            throw new ConflictException("SpaceId must not be null.");
+            throw new ConflictException("WalletId must not be null");
         }
 
-        var serviceBindingId = await cfClient.GetServiceBinding(tenantName, spaceId.Value, $"{technicalUserName}-dim-key01", cancellationToken).ConfigureAwait(false);
-        await cfClient.DeleteServiceInstanceBindings(serviceBindingId, cancellationToken).ConfigureAwait(false);
+        if (serviceKeyId == null)
+        {
+            throw new ConflictException("ServiceKeyId must not be null");
+        }
+
+        var operationId = await provisioningClient.DeleteServiceKey(walletId.Value, serviceKeyId.Value, cancellationToken)
+            .ConfigureAwait(ConfigureAwaitOptions.None);
+
+        technicalUserRepository.AttachAndModifyTechnicalUser(technicalUserId, t => t.OperationId = null, t => t.OperationId = operationId);
 
         return new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(
             Enumerable.Repeat(ProcessStepTypeId.SEND_TECHNICAL_USER_DELETION_CALLBACK, 1),
@@ -144,11 +185,28 @@ public class TechnicalUserProcessHandler(
 
     public async Task<(IEnumerable<ProcessStepTypeId>? nextStepTypeIds, ProcessStepStatusId stepStatusId, bool modified, string? processMessage)> SendDeleteCallback(Guid technicalUserId, CancellationToken cancellationToken)
     {
-        var tenantRepository = dimRepositories.GetInstance<ITenantRepository>();
+        var tenantRepository = dimRepositories.GetInstance<ITechnicalUserRepository>();
 
-        var externalId = await tenantRepository.GetExternalIdForTechnicalUser(technicalUserId).ConfigureAwait(false);
+        var (operationId, externalId) = await tenantRepository.GetOperationAndExternalIdForTechnicalUser(technicalUserId)
+            .ConfigureAwait(ConfigureAwaitOptions.None);
+        if (operationId is null)
+        {
+            throw new ConflictException("OperationId must not be null");
+        }
+
+        var response = await provisioningClient.GetOperation(operationId.Value, cancellationToken)
+            .ConfigureAwait(ConfigureAwaitOptions.None);
+        if (response.Status == OperationResponseStatus.pending)
+        {
+            return new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(
+                null,
+                ProcessStepStatusId.TODO,
+                true,
+                null);
+        }
+
         tenantRepository.RemoveTechnicalUser(technicalUserId);
-        await callbackService.SendTechnicalUserDeletionCallback(externalId, cancellationToken).ConfigureAwait(false);
+        await callbackService.SendTechnicalUserDeletionCallback(externalId, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
 
         return new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(
             null,

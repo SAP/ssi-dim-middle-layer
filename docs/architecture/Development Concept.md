@@ -6,7 +6,7 @@ Details to the build, test and deploy process can get found under the following 
 
 ## Development Guidelines
 
-The SSI dim middle layer is using following key frameworks:
+The SSI DIM middle layer is using following key frameworks:
 
 - .Net
 - Entity Framework
@@ -127,12 +127,12 @@ An API manager or gateway tool will handle or help address the API security guid
 
 ## Migration
 
-To run the SSI dim middle layer, migrations are needed to load the initial data inside the SSI dim middle layer db to enable the SSI dim middle layer to work.
+To run the SSI DIM middle layer, migrations are needed to load the initial data inside the SSI DIM middle layer db to enable the SSI DIM middle layer to work.
 The migration will consist of an initial migration as well as delta migration files with future releases. As part of a new release, a migration file (if applicable) will get released and can get loaded via a delta load.
 
 ## Configurability
 
-SSI Dim Middle Layer configuration is mainly possible via the appsettings files as well as the static data migration files.
+SSI DIM Middle Layer configuration is mainly possible via the appsettings files as well as the static data migration files.
 
 ## NOTICE
 

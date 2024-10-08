@@ -28,7 +28,8 @@ public static class ServiceCollectionExtensions
     {
         services.AddOptions<DimSettings>()
             .Bind(section)
-            .ValidateOnStart();
+            .ValidateOnStart()
+            .ValidateDataAnnotations();
         return services;
     }
 }

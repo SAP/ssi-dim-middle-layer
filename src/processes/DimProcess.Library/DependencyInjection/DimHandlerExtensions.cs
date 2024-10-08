@@ -18,13 +18,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using Dim.Clients.Api.Cf.DependencyInjection;
 using Dim.Clients.Api.Dim.DependencyInjection;
-using Dim.Clients.Api.Entitlements.DependencyInjection;
-using Dim.Clients.Api.Provisioning.DependencyInjection;
-using Dim.Clients.Api.Services.DependencyInjection;
-using Dim.Clients.Api.SubAccounts.DependencyInjection;
-using Dim.Clients.Api.Subscriptions.DependencyInjection;
+using Dim.Clients.Api.Div.DependencyInjection;
 using Dim.Clients.Token;
 using DimProcess.Library.Callback.DependencyInjection;
 using Microsoft.Extensions.Configuration;
@@ -43,12 +38,7 @@ public static class DimHandlerExtensions
         services
             .AddTransient<IBasicAuthTokenService, BasicAuthTokenService>()
             .AddTransient<IDimProcessHandler, DimProcessHandler>()
-            .AddSubAccountClient(config.GetSection("SubAccount"))
-            .AddEntitlementClient(config.GetSection("Entitlement"))
-            .AddServiceClient()
-            .AddSubscriptionClient()
-            .AddProvisioningClient()
-            .AddCfClient(config.GetSection("Cf"))
+            .AddProvisioningClient(config.GetSection("Provisioning"))
             .AddDimClient()
             .AddCallbackClient(config.GetSection("Callback"));
 
@@ -64,7 +54,7 @@ public static class DimHandlerExtensions
         services
             .AddTransient<IBasicAuthTokenService, BasicAuthTokenService>()
             .AddTransient<ITechnicalUserProcessHandler, TechnicalUserProcessHandler>()
-            .AddCfClient(config.GetSection("Cf"))
+            .AddProvisioningClient(config.GetSection("Provisioning"))
             .AddCallbackClient(config.GetSection("Callback"));
 
         return services;

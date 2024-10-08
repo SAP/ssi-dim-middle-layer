@@ -31,7 +31,9 @@
     <PackageReference Include="AutoFixture.AutoFakeItEasy" Version="4.18.1" />
     <PackageReference Include="FakeItEasy" Version="8.1.0" />
     <PackageReference Include="FluentAssertions" Version="6.12.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.6" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
+    <PackageReference Include="Testcontainers.PostgreSql" Version="3.8.0" />
     <PackageReference Include="xunit" Version="2.7.0" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.5.7">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -45,7 +47,30 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\clients\Dim.Clients\Dim.Clients.csproj" />
     <ProjectReference Include="..\..\..\src\database\Dim.DbAccess\Dim.DbAccess.csproj" />
+    <ProjectReference Include="..\..\..\src\database\Dim.Migrations\Dim.Migrations.csproj" />
     <ProjectReference Include="..\..\..\src\web\Dim.Web\Dim.Web.csproj" />
     <ProjectReference Include="..\..\shared\Tests.Shared\Tests.Shared.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Update="Seeder\Data\processes.json">
+      <LinkBase>Seeder/Data/</LinkBase>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Update="Seeder\Data\process_steps.json">
+      <LinkBase>Seeder/Data/</LinkBase>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Update="Seeder\Data\technical_users.json">
+      <LinkBase>Seeder/Data/</LinkBase>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Update="Seeder\Data\tenants.json">
+      <LinkBase>Seeder/Data/</LinkBase>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <None Remove="appsettings.IntegrationTests.json" />
+    <Content Include="appsettings.IntegrationTests.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 </Project>

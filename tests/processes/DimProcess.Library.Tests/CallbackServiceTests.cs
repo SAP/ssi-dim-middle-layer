@@ -18,7 +18,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using Dim.Clients.Api.Cf;
 using Dim.Tests.Shared;
 using DimProcess.Library.Callback;
 using DimProcess.Library.Callback.DependencyInjection;
@@ -76,7 +75,7 @@ public class CallbackServiceTests
         var sut = new CallbackService(_tokenService, _options);
 
         // Act
-        await sut.SendCallback("BPNL00001TEST", _fixture.Create<ServiceCredentialBindingDetailResponse>(), _fixture.Create<JsonDocument>(), "did:web:test123", CancellationToken.None);
+        await sut.SendCallback("BPNL00001TEST", _fixture.Create<AuthenticationDetail>(), _fixture.Create<JsonDocument>(), "did:web:test123", CancellationToken.None);
 
         // Assert
         httpMessageHandlerMock.RequestMessage.Should().Match<HttpRequestMessage>(x =>
@@ -97,7 +96,7 @@ public class CallbackServiceTests
         var sut = new CallbackService(_tokenService, _options);
 
         // Act
-        async Task Act() => await sut.SendCallback("BPNL00001TEST", _fixture.Create<ServiceCredentialBindingDetailResponse>(), _fixture.Create<JsonDocument>(), "did:web:test123", CancellationToken.None);
+        async Task Act() => await sut.SendCallback("BPNL00001TEST", _fixture.Create<AuthenticationDetail>(), _fixture.Create<JsonDocument>(), "did:web:test123", CancellationToken.None);
 
         // Assert
         var ex = await Assert.ThrowsAsync<ServiceException>(Act);

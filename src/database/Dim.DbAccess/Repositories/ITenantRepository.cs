@@ -18,9 +18,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using Dim.DbAccess.Models;
 using Dim.Entities.Entities;
-using System;
-using System.Threading.Tasks;
 
 namespace Dim.DbAccess.Repositories;
 
@@ -29,25 +28,14 @@ public interface ITenantRepository
     Tenant CreateTenant(string companyName, string bpn, string didDocumentLocation, bool isIssuer, Guid processId, Guid operatorId);
     Task<(bool Exists, Guid TenantId, string CompanyName, string Bpn)> GetTenantDataForProcessId(Guid processId);
     void AttachAndModifyTenant(Guid tenantId, Action<Tenant>? initialize, Action<Tenant> modify);
-    Task<Guid?> GetSubAccountIdByTenantId(Guid tenantId);
-    Task<(Guid? SubAccountId, string? ServiceInstanceId)> GetSubAccountAndServiceInstanceIdsByTenantId(Guid tenantId);
-    Task<(Guid? SubAccountId, string? ServiceBindingName)> GetSubAccountIdAndServiceBindingNameByTenantId(Guid tenantId);
-    Task<Guid?> GetSpaceId(Guid tenantId);
-    Task<Guid?> GetDimInstanceId(Guid tenantId);
-    Task<(string bpn, string? DownloadUrl, string? Did, Guid? DimInstanceId)> GetCallbackData(Guid tenantId);
-    Task<(Guid? DimInstanceId, string HostingUrl, bool IsIssuer)> GetDimInstanceIdAndHostingUrl(Guid tenantId);
-    Task<(string? ApplicationId, Guid? CompanyId, Guid? DimInstanceId, bool IsIssuer)> GetApplicationAndCompanyId(Guid tenantId);
-    Task<(bool Exists, Guid? CompanyId, Guid? InstanceId)> GetCompanyAndInstanceIdForBpn(string bpn);
+    Task<(bool IsIssuer, string? HostingUrl)> GetHostingUrlAndIsIssuer(Guid tenantId);
     Task<(bool Exists, Guid TenantId)> GetTenantForBpn(string bpn);
-    void CreateTenantTechnicalUser(Guid tenantId, string technicalUserName, Guid externalId, Guid processId);
-    void AttachAndModifyTechnicalUser(Guid technicalUserId, Action<TechnicalUser>? initialize, Action<TechnicalUser> modify);
-    Task<(bool Exists, Guid TechnicalUserId, string CompanyName, string Bpn)> GetTenantDataForTechnicalUserProcessId(Guid processId);
-    Task<(Guid? spaceId, string technicalUserName)> GetSpaceIdAndTechnicalUserName(Guid technicalUserId);
-    Task<(Guid ExternalId, string? TokenAddress, string? ClientId, byte[]? ClientSecret, byte[]? InitializationVector, int? EncryptionMode)> GetTechnicalUserCallbackData(Guid technicalUserId);
-    Task<(Guid? DimInstanceId, Guid? CompanyId)> GetDimInstanceIdAndDid(Guid tenantId);
-    Task<(bool Exists, Guid TechnicalUserId, Guid ProcessId)> GetTechnicalUserForBpn(string bpn, string technicalUserName);
-    Task<Guid> GetExternalIdForTechnicalUser(Guid technicalUserId);
-    void RemoveTechnicalUser(Guid technicalUserId);
     Task<bool> IsTenantExisting(string companyName, string bpn);
-    Task<string> GetTenantBpn(Guid tenantId);
+    Task<Guid?> GetOperationId(Guid tenantId);
+    Task<(string? BaseUrl, WalletData WalletData)> GetCompanyRequestData(Guid tenantId);
+    Task<(bool Exists, Guid? CompanyId, string? BaseUrl, WalletData WalletData)> GetCompanyAndWalletDataForBpn(string bpn);
+    Task<(Guid? CompanyId, string? BaseUrl, WalletData WalletData)> GetStatusListCreationData(Guid tenantId);
+    Task<(string Bpn, string? BaseUrl, WalletData WalletData, string? Did, string? DownloadUrl)> GetCallbackData(Guid tenantId);
+    Task<(string? DownloadUrl, bool IsIssuer)> GetDownloadUrlAndIsIssuer(Guid tenantId);
+    Task<ProcessData?> GetWalletProcessForTenant(string bpn, string companyName);
 }

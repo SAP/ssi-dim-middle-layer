@@ -23,5 +23,4 @@ namespace Dim.Clients.Token;
 public interface IBasicAuthTokenService
 {
     Task<HttpClient> GetBasicAuthorizedClient<T>(BasicAuthSettings settings, CancellationToken cancellationToken);
-    Task<HttpClient> GetBasicAuthorizedLegacyClient<T>(BasicAuthSettings settings, CancellationToken cancellationToken);
 }

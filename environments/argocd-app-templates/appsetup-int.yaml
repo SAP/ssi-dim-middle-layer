@@ -21,7 +21,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: dim-middle-layer
+  name: dim-middle-layer-v2
 spec:
   destination:
     namespace: product-portal
@@ -29,7 +29,7 @@ spec:
   source:
     path: charts/dim
     repoURL: 'https://github.com/SAP/ssi-dim-middle-layer.git'
-    targetRevision: dim-1.2.1
+    targetRevision: feature/79-div-provisioning
     plugin:
       env:
         - name: AVP_SECRET

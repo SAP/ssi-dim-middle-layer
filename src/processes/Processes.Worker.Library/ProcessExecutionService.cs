@@ -27,7 +27,7 @@ using Org.Eclipse.TractusX.Portal.Backend.Framework.DateTimeProvider;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 
-namespace Org.Eclipse.TractusX.Portal.Backend.Processes.Worker.Library;
+namespace Processes.Worker.Library;
 
 /// <summary>
 /// Service that reads all open/pending processSteps of a checklist and triggers their execution.
@@ -109,7 +109,7 @@ public class ProcessExecutionService
                         return true;
                     }
 
-                    await foreach (var executionResult in processExecutor.ExecuteProcess(process.Id, process.ProcessTypeId, stoppingToken).WithCancellation(stoppingToken).ConfigureAwait(false))
+                    await foreach (var executionResult in processExecutor.ExecuteProcess(process.Id, process.ProcessTypeId, stoppingToken).ConfigureAwait(false))
                     {
                         if (executionResult switch
                         {
@@ -118,14 +118,14 @@ public class ProcessExecutionService
                             _ => false
                         })
                         {
-                            await executorRepositories.SaveAsync().ConfigureAwait(false);
+                            await executorRepositories.SaveAsync().ConfigureAwait(ConfigureAwaitOptions.None);
                         }
                         executorRepositories.Clear();
                     }
 
                     if (process.ReleaseLock())
                     {
-                        await executorRepositories.SaveAsync().ConfigureAwait(false);
+                        await executorRepositories.SaveAsync().ConfigureAwait(ConfigureAwaitOptions.None);
                         executorRepositories.Clear();
                     }
                     _logger.LogInformation("finished processing process {processId}", process.Id);

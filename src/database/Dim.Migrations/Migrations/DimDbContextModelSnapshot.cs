@@ -35,7 +35,7 @@ namespace Dim.Migrations.Migrations
             modelBuilder
                 .HasDefaultSchema("dim")
                 .UseCollation("en_US.utf8")
-                .HasAnnotation("ProductVersion", "8.0.5")
+                .HasAnnotation("ProductVersion", "8.0.7")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -181,92 +181,62 @@ namespace Dim.Migrations.Migrations
                         new
                         {
                             Id = 1,
-                            Label = "CREATE_SUBACCOUNT"
+                            Label = "CREATE_WALLET"
                         },
                         new
                         {
                             Id = 2,
-                            Label = "CREATE_SERVICEMANAGER_BINDINGS"
+                            Label = "CHECK_OPERATION"
                         },
                         new
                         {
                             Id = 3,
-                            Label = "ASSIGN_ENTITLEMENTS"
+                            Label = "GET_COMPANY"
                         },
                         new
                         {
                             Id = 4,
-                            Label = "CREATE_SERVICE_INSTANCE"
+                            Label = "GET_DID_DOCUMENT"
                         },
                         new
                         {
                             Id = 5,
-                            Label = "CREATE_SERVICE_BINDING"
-                        },
-                        new
-                        {
-                            Id = 6,
-                            Label = "SUBSCRIBE_APPLICATION"
-                        },
-                        new
-                        {
-                            Id = 7,
-                            Label = "CREATE_CLOUD_FOUNDRY_ENVIRONMENT"
-                        },
-                        new
-                        {
-                            Id = 8,
-                            Label = "CREATE_CLOUD_FOUNDRY_SPACE"
-                        },
-                        new
-                        {
-                            Id = 9,
-                            Label = "ADD_SPACE_MANAGER_ROLE"
-                        },
-                        new
-                        {
-                            Id = 10,
-                            Label = "ADD_SPACE_DEVELOPER_ROLE"
-                        },
-                        new
-                        {
-                            Id = 11,
-                            Label = "CREATE_DIM_SERVICE_INSTANCE"
-                        },
-                        new
-                        {
-                            Id = 12,
-                            Label = "CREATE_SERVICE_INSTANCE_BINDING"
-                        },
-                        new
-                        {
-                            Id = 13,
-                            Label = "GET_DIM_DETAILS"
-                        },
-                        new
-                        {
-                            Id = 14,
-                            Label = "CREATE_APPLICATION"
-                        },
-                        new
-                        {
-                            Id = 15,
-                            Label = "CREATE_COMPANY_IDENTITY"
-                        },
-                        new
-                        {
-                            Id = 16,
-                            Label = "ASSIGN_COMPANY_APPLICATION"
-                        },
-                        new
-                        {
-                            Id = 17,
                             Label = "CREATE_STATUS_LIST"
                         },
                         new
                         {
-                            Id = 18,
+                            Id = 6,
                             Label = "SEND_CALLBACK"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            Label = "RETRIGGER_CREATE_WALLET"
+                        },
+                        new
+                        {
+                            Id = 8,
+                            Label = "RETRIGGER_CHECK_OPERATION"
+                        },
+                        new
+                        {
+                            Id = 9,
+                            Label = "RETRIGGER_GET_COMPANY"
+                        },
+                        new
+                        {
+                            Id = 10,
+                            Label = "RETRIGGER_GET_DID_DOCUMENT"
+                        },
+                        new
+                        {
+                            Id = 11,
+                            Label = "RETRIGGER_CREATE_STATUS_LIST"
+                        },
+                        new
+                        {
+                            Id = 12,
+                            Label = "RETRIGGER_SEND_CALLBACK"
                         },
                         new
                         {
@@ -281,7 +251,32 @@ namespace Dim.Migrations.Migrations
                         new
                         {
                             Id = 102,
+                            Label = "GET_TECHNICAL_USER_SERVICE_KEY"
+                        },
+                        new
+                        {
+                            Id = 103,
                             Label = "SEND_TECHNICAL_USER_CREATION_CALLBACK"
+                        },
+                        new
+                        {
+                            Id = 104,
+                            Label = "RETRIGGER_CREATE_TECHNICAL_USER"
+                        },
+                        new
+                        {
+                            Id = 105,
+                            Label = "RETRIGGER_GET_TECHNICAL_USER_DATA"
+                        },
+                        new
+                        {
+                            Id = 106,
+                            Label = "RETRIGGER_GET_TECHNICAL_USER_SERVICE_KEY"
+                        },
+                        new
+                        {
+                            Id = 107,
+                            Label = "RETRIGGER_SEND_TECHNICAL_USER_CREATION_CALLBACK"
                         },
                         new
                         {
@@ -292,6 +287,16 @@ namespace Dim.Migrations.Migrations
                         {
                             Id = 201,
                             Label = "SEND_TECHNICAL_USER_DELETION_CALLBACK"
+                        },
+                        new
+                        {
+                            Id = 202,
+                            Label = "RETRIGGER_DELETE_TECHNICAL_USER"
+                        },
+                        new
+                        {
+                            Id = 203,
+                            Label = "RETRIGGER_SEND_TECHNICAL_USER_DELETION_CALLBACK"
                         });
                 });
 
@@ -352,9 +357,17 @@ namespace Dim.Migrations.Migrations
                         .HasColumnType("bytea")
                         .HasColumnName("initialization_vector");
 
+                    b.Property<Guid?>("OperationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("operation_id");
+
                     b.Property<Guid>("ProcessId")
                         .HasColumnType("uuid")
                         .HasColumnName("process_id");
+
+                    b.Property<Guid?>("ServiceKeyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("service_key_id");
 
                     b.Property<string>("TechnicalUserName")
                         .IsRequired()
@@ -388,18 +401,22 @@ namespace Dim.Migrations.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<string>("ApplicationId")
+                    b.Property<string>("BaseUrl")
                         .HasColumnType("text")
-                        .HasColumnName("application_id");
-
-                    b.Property<string>("ApplicationKey")
-                        .HasColumnType("text")
-                        .HasColumnName("application_key");
+                        .HasColumnName("base_url");
 
                     b.Property<string>("Bpn")
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("bpn");
+
+                    b.Property<string>("ClientId")
+                        .HasColumnType("text")
+                        .HasColumnName("client_id");
+
+                    b.Property<byte[]>("ClientSecret")
+                        .HasColumnType("bytea")
+                        .HasColumnName("client_secret");
 
                     b.Property<Guid?>("CompanyId")
                         .HasColumnType("uuid")
@@ -423,13 +440,21 @@ namespace Dim.Migrations.Migrations
                         .HasColumnType("text")
                         .HasColumnName("did_download_url");
 
-                    b.Property<Guid?>("DimInstanceId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("dim_instance_id");
+                    b.Property<int?>("EncryptionMode")
+                        .HasColumnType("integer")
+                        .HasColumnName("encryption_mode");
+
+                    b.Property<byte[]>("InitializationVector")
+                        .HasColumnType("bytea")
+                        .HasColumnName("initialization_vector");
 
                     b.Property<bool>("IsIssuer")
                         .HasColumnType("boolean")
                         .HasColumnName("is_issuer");
+
+                    b.Property<Guid?>("OperationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("operation_id");
 
                     b.Property<Guid>("OperatorId")
                         .HasColumnType("uuid")
@@ -439,21 +464,13 @@ namespace Dim.Migrations.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("process_id");
 
-                    b.Property<string>("ServiceBindingName")
+                    b.Property<string>("TokenAddress")
                         .HasColumnType("text")
-                        .HasColumnName("service_binding_name");
+                        .HasColumnName("token_address");
 
-                    b.Property<string>("ServiceInstanceId")
-                        .HasColumnType("text")
-                        .HasColumnName("service_instance_id");
-
-                    b.Property<Guid?>("SpaceId")
+                    b.Property<Guid?>("WalletId")
                         .HasColumnType("uuid")
-                        .HasColumnName("space_id");
-
-                    b.Property<Guid?>("SubAccountId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("sub_account_id");
+                        .HasColumnName("wallet_id");
 
                     b.HasKey("Id")
                         .HasName("pk_tenants");

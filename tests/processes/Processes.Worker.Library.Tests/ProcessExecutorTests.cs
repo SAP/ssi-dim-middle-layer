@@ -24,7 +24,6 @@ using Dim.Entities.Entities;
 using Dim.Entities.Enums;
 using Microsoft.Extensions.Logging;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
-using Org.Eclipse.TractusX.Portal.Backend.Processes.Worker.Library;
 using System.Collections.Immutable;
 using ProcessTypeId = Dim.Entities.Enums.ProcessTypeId;
 
@@ -82,13 +81,13 @@ public class ProcessExecutorTests
     public async Task ExecuteProcess_WithInvalidProcessTypeId_Throws()
     {
         // Arrange
-        var Act = async () => await _sut.ExecuteProcess(Guid.NewGuid(), (ProcessTypeId)default, CancellationToken.None).ToListAsync().ConfigureAwait(false);
+        var Act = async () => await _sut.ExecuteProcess(Guid.NewGuid(), default, CancellationToken.None).ToListAsync();
 
         // Act
         var result = await Assert.ThrowsAsync<UnexpectedConditionException>(Act);
 
         // Assert
-        result.Message.Should().Be($"processType {(ProcessTypeId)default} is not a registered executable processType.");
+        result.Message.Should().Be("processType 0 is not a registered executable processType.");
     }
 
     [Theory]
@@ -842,7 +841,7 @@ public class ProcessExecutorTests
 
         var Act = async () =>
         {
-            await foreach (var stepResult in _sut.ExecuteProcess(processId, ProcessTypeId.SETUP_DIM, CancellationToken.None).ConfigureAwait(false))
+            await foreach (var stepResult in _sut.ExecuteProcess(processId, ProcessTypeId.SETUP_DIM, CancellationToken.None))
             {
                 stepResults.Add(stepResult);
             }

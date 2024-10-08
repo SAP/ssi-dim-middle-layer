@@ -26,13 +26,13 @@ using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 
 namespace DimProcess.Executor.Tests;
 
-public class CredentialProcessTypeExecutorTests
+public class DimProcessTypeExecutorTests
 {
     private readonly DimProcessTypeExecutor _sut;
     private readonly IDimProcessHandler _dimProcessHandler;
     private readonly ITenantRepository _tenantRepository;
 
-    public CredentialProcessTypeExecutorTests()
+    public DimProcessTypeExecutorTests()
     {
         var fixture = new Fixture().Customize(new AutoFakeItEasyCustomization { ConfigureMembers = true });
         fixture.Behaviors.OfType<ThrowingRecursionBehavior>().ToList()
@@ -67,24 +67,12 @@ public class CredentialProcessTypeExecutorTests
     public void GetExecutableStepTypeIds_ReturnsExpected()
     {
         // Assert
-        _sut.GetExecutableStepTypeIds().Should().HaveCount(18).And.Satisfy(
-            x => x == ProcessStepTypeId.CREATE_SUBACCOUNT,
-            x => x == ProcessStepTypeId.CREATE_SERVICEMANAGER_BINDINGS,
-            x => x == ProcessStepTypeId.ASSIGN_ENTITLEMENTS,
-            x => x == ProcessStepTypeId.CREATE_SERVICE_INSTANCE,
-            x => x == ProcessStepTypeId.CREATE_SERVICE_BINDING,
-            x => x == ProcessStepTypeId.SUBSCRIBE_APPLICATION,
-            x => x == ProcessStepTypeId.CREATE_CLOUD_FOUNDRY_ENVIRONMENT,
-            x => x == ProcessStepTypeId.CREATE_CLOUD_FOUNDRY_SPACE,
-            x => x == ProcessStepTypeId.ADD_SPACE_MANAGER_ROLE,
-            x => x == ProcessStepTypeId.ADD_SPACE_DEVELOPER_ROLE,
-            x => x == ProcessStepTypeId.CREATE_DIM_SERVICE_INSTANCE,
-            x => x == ProcessStepTypeId.CREATE_SERVICE_INSTANCE_BINDING,
-            x => x == ProcessStepTypeId.GET_DIM_DETAILS,
-            x => x == ProcessStepTypeId.CREATE_APPLICATION,
-            x => x == ProcessStepTypeId.CREATE_COMPANY_IDENTITY,
+        _sut.GetExecutableStepTypeIds().Should().HaveCount(6).And.Satisfy(
+            x => x == ProcessStepTypeId.CHECK_OPERATION,
+            x => x == ProcessStepTypeId.GET_COMPANY,
+            x => x == ProcessStepTypeId.GET_DID_DOCUMENT,
+            x => x == ProcessStepTypeId.CREATE_WALLET,
             x => x == ProcessStepTypeId.CREATE_STATUS_LIST,
-            x => x == ProcessStepTypeId.ASSIGN_COMPANY_APPLICATION,
             x => x == ProcessStepTypeId.SEND_CALLBACK);
     }
 
@@ -125,7 +113,7 @@ public class CredentialProcessTypeExecutorTests
             .Returns(new ValueTuple<bool, Guid, string, string>(false, Guid.Empty, string.Empty, string.Empty));
 
         // Act
-        async Task Act() => await _sut.InitializeProcess(validProcessId, Enumerable.Empty<ProcessStepTypeId>()).ConfigureAwait(false);
+        async Task Act() => await _sut.InitializeProcess(validProcessId, Enumerable.Empty<ProcessStepTypeId>());
 
         // Assert
         var ex = await Assert.ThrowsAsync<NotFoundException>(Act);
@@ -140,7 +128,7 @@ public class CredentialProcessTypeExecutorTests
     public async Task ExecuteProcessStep_WithoutRegistrationId_ThrowsUnexpectedConditionException()
     {
         // Act
-        async Task Act() => await _sut.ExecuteProcessStep(ProcessStepTypeId.SEND_CALLBACK, Enumerable.Empty<ProcessStepTypeId>(), CancellationToken.None).ConfigureAwait(false);
+        async Task Act() => await _sut.ExecuteProcessStep(ProcessStepTypeId.SEND_CALLBACK, Enumerable.Empty<ProcessStepTypeId>(), CancellationToken.None);
 
         // Assert
         var ex = await Assert.ThrowsAsync<UnexpectedConditionException>(Act);
@@ -148,23 +136,10 @@ public class CredentialProcessTypeExecutorTests
     }
 
     [Theory]
-    [InlineData(ProcessStepTypeId.CREATE_SUBACCOUNT)]
-    [InlineData(ProcessStepTypeId.CREATE_SERVICEMANAGER_BINDINGS)]
-    [InlineData(ProcessStepTypeId.ASSIGN_ENTITLEMENTS)]
-    [InlineData(ProcessStepTypeId.CREATE_SERVICE_INSTANCE)]
-    [InlineData(ProcessStepTypeId.CREATE_SERVICE_BINDING)]
-    [InlineData(ProcessStepTypeId.SUBSCRIBE_APPLICATION)]
-    [InlineData(ProcessStepTypeId.CREATE_CLOUD_FOUNDRY_ENVIRONMENT)]
-    [InlineData(ProcessStepTypeId.CREATE_CLOUD_FOUNDRY_SPACE)]
-    [InlineData(ProcessStepTypeId.ADD_SPACE_MANAGER_ROLE)]
-    [InlineData(ProcessStepTypeId.ADD_SPACE_DEVELOPER_ROLE)]
-    [InlineData(ProcessStepTypeId.CREATE_DIM_SERVICE_INSTANCE)]
-    [InlineData(ProcessStepTypeId.CREATE_SERVICE_INSTANCE_BINDING)]
-    [InlineData(ProcessStepTypeId.GET_DIM_DETAILS)]
-    [InlineData(ProcessStepTypeId.CREATE_APPLICATION)]
-    [InlineData(ProcessStepTypeId.CREATE_COMPANY_IDENTITY)]
-    [InlineData(ProcessStepTypeId.CREATE_STATUS_LIST)]
-    [InlineData(ProcessStepTypeId.ASSIGN_COMPANY_APPLICATION)]
+    [InlineData(ProcessStepTypeId.CREATE_WALLET)]
+    [InlineData(ProcessStepTypeId.CHECK_OPERATION)]
+    [InlineData(ProcessStepTypeId.GET_COMPANY)]
+    [InlineData(ProcessStepTypeId.GET_DID_DOCUMENT)]
     [InlineData(ProcessStepTypeId.SEND_CALLBACK)]
     public async Task ExecuteProcessStep_WithValidData_CallsExpected(ProcessStepTypeId processStepTypeId)
     {
@@ -182,7 +157,7 @@ public class CredentialProcessTypeExecutorTests
         initializeResult.ScheduleStepTypeIds.Should().BeNull();
 
         // Arrange
-        SetupMock(tenantId, "test1_test");
+        SetupMock(tenantId, "test1test");
 
         // Act
         var result = await _sut.ExecuteProcessStep(processStepTypeId, Enumerable.Empty<ProcessStepTypeId>(), CancellationToken.None);
@@ -212,11 +187,11 @@ public class CredentialProcessTypeExecutorTests
         initializeResult.ScheduleStepTypeIds.Should().BeNull();
 
         // Arrange
-        A.CallTo(() => _dimProcessHandler.CreateSubaccount(tenantId, "test1_test", A<CancellationToken>._))
+        A.CallTo(() => _dimProcessHandler.CreateWallet(tenantId, "test1test", A<CancellationToken>._))
             .Throws(new ServiceException("this is a test", true));
 
         // Act
-        var result = await _sut.ExecuteProcessStep(ProcessStepTypeId.CREATE_SUBACCOUNT, Enumerable.Empty<ProcessStepTypeId>(), CancellationToken.None);
+        var result = await _sut.ExecuteProcessStep(ProcessStepTypeId.CREATE_WALLET, Enumerable.Empty<ProcessStepTypeId>(), CancellationToken.None);
 
         // Assert
         result.Modified.Should().BeTrue();
@@ -243,15 +218,16 @@ public class CredentialProcessTypeExecutorTests
         initializeResult.ScheduleStepTypeIds.Should().BeNull();
 
         // Arrange
-        A.CallTo(() => _dimProcessHandler.CreateSubaccount(tenantId, "test1_test", A<CancellationToken>._))
+        A.CallTo(() => _dimProcessHandler.CreateWallet(tenantId, "test1test", A<CancellationToken>._))
             .Throws(new ServiceException("this is a test"));
 
         // Act
-        var result = await _sut.ExecuteProcessStep(ProcessStepTypeId.CREATE_SUBACCOUNT, Enumerable.Empty<ProcessStepTypeId>(), CancellationToken.None);
+        var result = await _sut.ExecuteProcessStep(ProcessStepTypeId.CREATE_WALLET, Enumerable.Empty<ProcessStepTypeId>(), CancellationToken.None);
 
         // Assert
         result.Modified.Should().BeTrue();
-        result.ScheduleStepTypeIds.Should().BeNull();
+        result.ScheduleStepTypeIds.Should().ContainSingle()
+            .And.Satisfy(x => x == ProcessStepTypeId.RETRIGGER_CREATE_WALLET);
         result.ProcessStepStatusId.Should().Be(ProcessStepStatusId.FAILED);
         result.ProcessMessage.Should().Be("this is a test");
         result.SkipStepTypeIds.Should().BeNull();
@@ -263,61 +239,19 @@ public class CredentialProcessTypeExecutorTests
 
     private void SetupMock(Guid tenantId, string tenantName)
     {
-        A.CallTo(() => _dimProcessHandler.CreateSubaccount(tenantId, tenantName, A<CancellationToken>._))
+        A.CallTo(() => _dimProcessHandler.CreateWallet(tenantId, tenantName, A<CancellationToken>._))
             .Returns(new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(null, ProcessStepStatusId.DONE, false, null));
 
-        A.CallTo(() => _dimProcessHandler.CreateServiceManagerBindings(tenantId, A<CancellationToken>._))
+        A.CallTo(() => _dimProcessHandler.CheckOperation(tenantId, A<CancellationToken>._))
             .Returns(new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(null, ProcessStepStatusId.DONE, false, null));
 
-        A.CallTo(() => _dimProcessHandler.AssignEntitlements(tenantId, A<CancellationToken>._))
+        A.CallTo(() => _dimProcessHandler.GetCompany(tenantId, tenantName, A<CancellationToken>._))
             .Returns(new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(null, ProcessStepStatusId.DONE, false, null));
 
-        A.CallTo(() => _dimProcessHandler.CreateServiceInstance(tenantId, A<CancellationToken>._))
-            .Returns(new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(null, ProcessStepStatusId.DONE, false, null));
-
-        A.CallTo(() => _dimProcessHandler.CreateServiceBindings(tenantId, A<CancellationToken>._))
-            .Returns(new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(null, ProcessStepStatusId.DONE, false, null));
-
-        A.CallTo(() => _dimProcessHandler.SubscribeApplication(tenantId, A<CancellationToken>._))
-            .Returns(new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(null, ProcessStepStatusId.DONE, false, null));
-
-        A.CallTo(() => _dimProcessHandler.CreateCloudFoundryEnvironment(tenantId, tenantName, A<CancellationToken>._))
-            .Returns(new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(null, ProcessStepStatusId.DONE, false, null));
-
-        A.CallTo(() => _dimProcessHandler.CreateCloudFoundrySpace(tenantId, tenantName, A<CancellationToken>._))
-            .Returns(new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(null, ProcessStepStatusId.DONE, false, null));
-
-        A.CallTo(() => _dimProcessHandler.AddSpaceManagerRole(tenantId, A<CancellationToken>._))
-            .Returns(new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(null, ProcessStepStatusId.DONE, false, null));
-
-        A.CallTo(() => _dimProcessHandler.AddSpaceDeveloperRole(tenantId, A<CancellationToken>._))
-            .Returns(new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(null, ProcessStepStatusId.DONE, false, null));
-
-        A.CallTo(() => _dimProcessHandler.CreateSubaccount(tenantId, tenantName, A<CancellationToken>._))
-            .Returns(new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(null, ProcessStepStatusId.DONE, false, null));
-
-        A.CallTo(() => _dimProcessHandler.CreateDimServiceInstance(tenantName, tenantId, A<CancellationToken>._))
-            .Returns(new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(null, ProcessStepStatusId.DONE, false, null));
-
-        A.CallTo(() => _dimProcessHandler.CreateServiceInstanceBindings(tenantName, tenantId, A<CancellationToken>._))
-            .Returns(new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(null, ProcessStepStatusId.DONE, false, null));
-
-        A.CallTo(() => _dimProcessHandler.GetDimDetails(tenantName, tenantId, A<CancellationToken>._))
-            .Returns(new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(null, ProcessStepStatusId.DONE, false, null));
-
-        A.CallTo(() => _dimProcessHandler.CreateApplication(tenantName, tenantId, A<CancellationToken>._))
-            .Returns(new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(null, ProcessStepStatusId.DONE, false, null));
-
-        A.CallTo(() => _dimProcessHandler.GetDimDetails(tenantName, tenantId, A<CancellationToken>._))
-            .Returns(new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(null, ProcessStepStatusId.DONE, false, null));
-
-        A.CallTo(() => _dimProcessHandler.CreateCompanyIdentity(tenantId, A<CancellationToken>._))
+        A.CallTo(() => _dimProcessHandler.GetDidDocument(tenantId, A<CancellationToken>._))
             .Returns(new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(null, ProcessStepStatusId.DONE, false, null));
 
         A.CallTo(() => _dimProcessHandler.CreateStatusList(tenantId, A<CancellationToken>._))
-            .Returns(new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(null, ProcessStepStatusId.DONE, false, null));
-
-        A.CallTo(() => _dimProcessHandler.AssignCompanyApplication(tenantId, A<CancellationToken>._))
             .Returns(new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(null, ProcessStepStatusId.DONE, false, null));
 
         A.CallTo(() => _dimProcessHandler.SendCallback(tenantId, A<CancellationToken>._))

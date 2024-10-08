@@ -21,9 +21,10 @@
 using Dim.DbAccess;
 using Dim.DbAccess.Repositories;
 using Dim.Entities.Enums;
+using Dim.Entities.Extensions;
 using DimProcess.Library;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
-using Org.Eclipse.TractusX.Portal.Backend.Processes.Worker.Library;
+using Processes.Worker.Library;
 using System.Collections.Immutable;
 
 namespace DimProcess.Executor;
@@ -36,12 +37,12 @@ public class TechnicalUserProcessTypeExecutor(
     private readonly IEnumerable<ProcessStepTypeId> _executableProcessSteps = ImmutableArray.Create(
         ProcessStepTypeId.CREATE_TECHNICAL_USER,
         ProcessStepTypeId.GET_TECHNICAL_USER_DATA,
+        ProcessStepTypeId.GET_TECHNICAL_USER_SERVICE_KEY,
         ProcessStepTypeId.SEND_TECHNICAL_USER_CREATION_CALLBACK,
         ProcessStepTypeId.DELETE_TECHNICAL_USER,
         ProcessStepTypeId.SEND_TECHNICAL_USER_DELETION_CALLBACK);
 
     private Guid _technicalUserId;
-    private string? _tenantName;
 
     public ProcessTypeId GetProcessTypeId() => ProcessTypeId.TECHNICAL_USER;
     public bool IsExecutableStepTypeId(ProcessStepTypeId processStepTypeId) => _executableProcessSteps.Contains(processStepTypeId);
@@ -50,22 +51,21 @@ public class TechnicalUserProcessTypeExecutor(
 
     public async ValueTask<IProcessTypeExecutor.InitializationResult> InitializeProcess(Guid processId, IEnumerable<ProcessStepTypeId> processStepTypeIds)
     {
-        var (exists, technicalUserId, companyName, bpn) = await dimRepositories.GetInstance<ITenantRepository>().GetTenantDataForTechnicalUserProcessId(processId).ConfigureAwait(false);
+        var (exists, technicalUserId) = await dimRepositories.GetInstance<ITechnicalUserRepository>().GetTenantDataForTechnicalUserProcessId(processId).ConfigureAwait(ConfigureAwaitOptions.None);
         if (!exists)
         {
             throw new NotFoundException($"process {processId} does not exist or is not associated with an technical user");
         }
 
         _technicalUserId = technicalUserId;
-        _tenantName = $"{bpn}_{companyName}";
         return new IProcessTypeExecutor.InitializationResult(false, null);
     }
 
     public async ValueTask<IProcessTypeExecutor.StepExecutionResult> ExecuteProcessStep(ProcessStepTypeId processStepTypeId, IEnumerable<ProcessStepTypeId> processStepTypeIds, CancellationToken cancellationToken)
     {
-        if (_technicalUserId == Guid.Empty || _tenantName is null)
+        if (_technicalUserId == Guid.Empty)
         {
-            throw new UnexpectedConditionException("technicalUserId and tenantName should never be empty here");
+            throw new UnexpectedConditionException("technicalUserId should never be empty here");
         }
 
         IEnumerable<ProcessStepTypeId>? nextStepTypeIds;
@@ -77,34 +77,36 @@ public class TechnicalUserProcessTypeExecutor(
         {
             (nextStepTypeIds, stepStatusId, modified, processMessage) = processStepTypeId switch
             {
-                ProcessStepTypeId.CREATE_TECHNICAL_USER => await technicalUserProcessHandler.CreateServiceInstanceBindings(_tenantName, _technicalUserId, cancellationToken)
-                    .ConfigureAwait(false),
-                ProcessStepTypeId.GET_TECHNICAL_USER_DATA => await technicalUserProcessHandler.GetTechnicalUserData(_tenantName, _technicalUserId, cancellationToken)
-                    .ConfigureAwait(false),
+                ProcessStepTypeId.CREATE_TECHNICAL_USER => await technicalUserProcessHandler.CreateServiceInstanceBindings(_technicalUserId, cancellationToken)
+                    .ConfigureAwait(ConfigureAwaitOptions.None),
+                ProcessStepTypeId.GET_TECHNICAL_USER_DATA => await technicalUserProcessHandler.GetTechnicalUserData(_technicalUserId, cancellationToken)
+                    .ConfigureAwait(ConfigureAwaitOptions.None),
+                ProcessStepTypeId.GET_TECHNICAL_USER_SERVICE_KEY => await technicalUserProcessHandler.GetTechnicalUserServiceKey(_technicalUserId, cancellationToken)
+                    .ConfigureAwait(ConfigureAwaitOptions.None),
                 ProcessStepTypeId.SEND_TECHNICAL_USER_CREATION_CALLBACK => await technicalUserProcessHandler.SendCreateCallback(_technicalUserId, cancellationToken)
-                    .ConfigureAwait(false),
-                ProcessStepTypeId.DELETE_TECHNICAL_USER => await technicalUserProcessHandler.DeleteServiceInstanceBindings(_tenantName, _technicalUserId, cancellationToken)
-                    .ConfigureAwait(false),
+                    .ConfigureAwait(ConfigureAwaitOptions.None),
+                ProcessStepTypeId.DELETE_TECHNICAL_USER => await technicalUserProcessHandler.DeleteServiceInstanceBindings(_technicalUserId, cancellationToken)
+                    .ConfigureAwait(ConfigureAwaitOptions.None),
                 ProcessStepTypeId.SEND_TECHNICAL_USER_DELETION_CALLBACK => await technicalUserProcessHandler.SendDeleteCallback(_technicalUserId, cancellationToken)
-                    .ConfigureAwait(false),
+                    .ConfigureAwait(ConfigureAwaitOptions.None),
                 _ => (null, ProcessStepStatusId.TODO, false, null)
             };
         }
         catch (Exception ex) when (ex is not SystemException)
         {
-            (stepStatusId, processMessage, nextStepTypeIds) = ProcessError(ex);
+            (stepStatusId, processMessage, nextStepTypeIds) = ProcessError(ex, processStepTypeId);
             modified = true;
         }
 
         return new IProcessTypeExecutor.StepExecutionResult(modified, stepStatusId, nextStepTypeIds, null, processMessage);
     }
 
-    private static (ProcessStepStatusId StatusId, string? ProcessMessage, IEnumerable<ProcessStepTypeId>? nextSteps) ProcessError(Exception ex)
+    private static (ProcessStepStatusId StatusId, string? ProcessMessage, IEnumerable<ProcessStepTypeId>? nextSteps) ProcessError(Exception ex, ProcessStepTypeId processStepTypeId)
     {
         return ex switch
         {
             ServiceException { IsRecoverable: true } => (ProcessStepStatusId.TODO, ex.Message, null),
-            _ => (ProcessStepStatusId.FAILED, ex.Message, null)
+            _ => (ProcessStepStatusId.FAILED, ex.Message, Enumerable.Repeat(processStepTypeId.GetRetriggerStep(ProcessTypeId.TECHNICAL_USER), 1))
         };
     }
 }

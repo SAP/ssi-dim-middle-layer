@@ -27,7 +27,7 @@ using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using System.Collections.Immutable;
 using System.Runtime.CompilerServices;
 
-namespace Org.Eclipse.TractusX.Portal.Backend.Processes.Worker.Library;
+namespace Processes.Worker.Library;
 
 public class ProcessExecutor : IProcessExecutor
 {
@@ -78,6 +78,7 @@ public class ProcessExecutor : IProcessExecutor
             {
                 yield return IProcessExecutor.ProcessExecutionResult.LockRequested;
             }
+
             ProcessStepStatusId resultStepStatusId;
             IEnumerable<ProcessStepTypeId>? scheduleStepTypeIds;
             IEnumerable<ProcessStepTypeId>? skipStepTypeIds;

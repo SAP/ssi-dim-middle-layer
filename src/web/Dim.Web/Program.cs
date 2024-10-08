@@ -18,7 +18,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using Dim.Clients.Api.Cf.DependencyInjection;
 using Dim.Clients.Api.Dim.DependencyInjection;
 using Dim.Clients.Token;
 using Dim.DbAccess.DependencyInjection;
@@ -39,7 +38,6 @@ await WebApplicationBuildRunner
                 .AddTransient<IBasicAuthTokenService, BasicAuthTokenService>()
                 .AddTransient<IClaimsTransformation, KeycloakClaimsTransformation>()
                 .AddDimClient()
-                .AddCfClient(builder.Configuration.GetSection("Cf"))
                 .AddDim(builder.Configuration.GetSection("Dim"))
                 .AddEndpointsApiExplorer()
                 .AddDatabase(builder.Configuration)

@@ -1,6 +1,6 @@
 # Known Issues and Limitations
 
-- The creation of the CF Space currently is only possible by using a personal SAP account. This will likely be adjusted to a technical user in the future. For now, the configuration needs to be made with an personal user.
+There are currently no known issues or limitations.
 
 ## NOTICE
 

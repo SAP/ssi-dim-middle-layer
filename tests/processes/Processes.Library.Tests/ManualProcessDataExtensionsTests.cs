@@ -19,6 +19,7 @@
  ********************************************************************************/
 
 using Dim.DbAccess;
+using Dim.DbAccess.Models;
 using Dim.DbAccess.Repositories;
 using Dim.Entities.Entities;
 using Dim.Entities.Enums;

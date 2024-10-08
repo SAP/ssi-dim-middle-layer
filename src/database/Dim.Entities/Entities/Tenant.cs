@@ -32,28 +32,21 @@ public class Tenant(
     public Guid Id { get; set; } = id;
     public string CompanyName { get; set; } = companyName;
     public string Bpn { get; set; } = bpn;
-
     public string DidDocumentLocation { get; set; } = didDocumentLocation;
-
     public bool IsIssuer { get; set; } = isIssuer;
-
+    public Guid OperatorId { get; set; } = operatorId;
     public Guid ProcessId { get; set; } = processId;
-
-    public Guid? SubAccountId { get; set; }
-
-    public string? ServiceInstanceId { get; set; }
-
-    public string? ServiceBindingName { get; set; }
-
-    public Guid? SpaceId { get; set; }
-
-    public Guid? DimInstanceId { get; set; }
+    public Guid? OperationId { get; set; }
+    public Guid? WalletId { get; set; }
+    public string? TokenAddress { get; set; }
+    public string? BaseUrl { get; set; }
+    public string? ClientId { get; set; }
+    public byte[]? ClientSecret { get; set; }
+    public byte[]? InitializationVector { get; set; }
+    public int? EncryptionMode { get; set; }
+    public Guid? CompanyId { get; set; }
     public string? DidDownloadUrl { get; set; }
     public string? Did { get; set; }
-    public string? ApplicationId { get; set; }
-    public Guid? CompanyId { get; set; }
-    public string? ApplicationKey { get; set; }
-    public Guid OperatorId { get; set; } = operatorId;
     public virtual Process? Process { get; set; }
     public virtual ICollection<TechnicalUser> TechnicalUsers { get; private set; } = new HashSet<TechnicalUser>();
 }

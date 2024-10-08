@@ -28,10 +28,12 @@ namespace Dim.Web.ErrorHandling;
 public class DimErrorMessageContainer : IErrorMessageContainer
 {
     private static readonly IReadOnlyDictionary<int, string> _messageContainer = new Dictionary<DimErrors, string> {
+        { DimErrors.TENANT_ALREADY_EXISTS, "Tenant {companyName} with Bpn {bpn} already exists" },
         { DimErrors.NO_COMPANY_FOR_BPN, "No Tenant found for Bpn {bpn}" },
         { DimErrors.NO_COMPANY_ID_SET, "No Company Id set" },
         { DimErrors.NO_INSTANCE_ID_SET, "No Instnace Id set" },
         { DimErrors.NO_TECHNICAL_USER_FOUND, "No Technical User found" },
+        { DimErrors.NO_BASE_URL_SET, "No BaseUrl for the wallet set" },
     }.ToImmutableDictionary(x => (int)x.Key, x => x.Value);
 
     public Type Type { get => typeof(DimErrors); }
@@ -40,8 +42,10 @@ public class DimErrorMessageContainer : IErrorMessageContainer
 
 public enum DimErrors
 {
+    TENANT_ALREADY_EXISTS,
     NO_COMPANY_FOR_BPN,
     NO_COMPANY_ID_SET,
     NO_INSTANCE_ID_SET,
-    NO_TECHNICAL_USER_FOUND
+    NO_TECHNICAL_USER_FOUND,
+    NO_BASE_URL_SET,
 }
