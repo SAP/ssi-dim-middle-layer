@@ -24,29 +24,15 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Seeding;
 
-namespace Dim.DbAccess.Tests.Seeder;
+namespace Dim.Migrations.Seeder;
 
 /// <summary>
 /// Seeder to seed the base entities (those with an id as primary key)
 /// </summary>
-public class BatchInsertSeeder : ICustomSeeder
+public class BatchInsertSeeder(DimDbContext context, ILogger<BatchInsertSeeder> logger, IOptions<SeederSettings> options)
+    : ICustomSeeder
 {
-    private readonly DimDbContext _context;
-    private readonly ILogger<BatchInsertSeeder> _logger;
-    private readonly SeederSettings _settings;
-
-    /// <summary>
-    /// Constructor
-    /// </summary>
-    /// <param name="context">The database context</param>
-    /// <param name="logger">The logger</param>
-    /// <param name="options">The options</param>
-    public BatchInsertSeeder(DimDbContext context, ILogger<BatchInsertSeeder> logger, IOptions<SeederSettings> options)
-    {
-        _context = context;
-        _logger = logger;
-        _settings = options.Value;
-    }
+    private readonly SeederSettings _settings = options.Value;
 
     /// <inheritdoc />
     public int Order => 1;
@@ -56,37 +42,36 @@ public class BatchInsertSeeder : ICustomSeeder
     {
         if (!_settings.DataPaths.Any())
         {
-            _logger.LogInformation("There a no data paths configured, therefore the {SeederName} will be skipped", nameof(BatchInsertSeeder));
+            logger.LogInformation("There a no data paths configured, therefore the {SeederName} will be skipped", nameof(BatchInsertSeeder));
             return;
         }
 
-        _logger.LogInformation("Start BaseEntityBatch Seeder");
+        logger.LogInformation("Start BaseEntityBatch Seeder");
         await SeedTable<Tenant>("tenants", x => x.Id, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
         await SeedTable<ProcessStep>("process_steps", x => x.Id, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
         await SeedTable<Process>("processes", x => x.Id, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
         await SeedTable<TechnicalUser>("technical_users", x => x.Id, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
 
-        await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
-        _logger.LogInformation("Finished BaseEntityBatch Seeder");
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
+        logger.LogInformation("Finished BaseEntityBatch Seeder");
     }
 
     private async Task SeedTable<T>(string fileName, Func<T, object> keySelector, CancellationToken cancellationToken) where T : class
     {
-        _logger.LogInformation("Start seeding {Filename}", fileName);
+        logger.LogInformation("Start seeding {Filename}", fileName);
         var additionalEnvironments = _settings.TestDataEnvironments ?? Enumerable.Empty<string>();
-        var data = await SeederHelper.GetSeedData<T>(_logger, fileName, _settings.DataPaths, cancellationToken, additionalEnvironments.ToArray()).ConfigureAwait(ConfigureAwaitOptions.None);
-        _logger.LogInformation("Found {ElementCount} data", data.Count);
+        var data = await SeederHelper.GetSeedData<T>(logger, fileName, _settings.DataPaths, cancellationToken, additionalEnvironments.ToArray()).ConfigureAwait(ConfigureAwaitOptions.None);
+        logger.LogInformation("Found {ElementCount} data", data.Count);
         if (data.Any())
         {
             var typeName = typeof(T).Name;
-            _logger.LogInformation("Started to Seed {TableName}", typeName);
-            data = data.GroupJoin(_context.Set<T>(), keySelector, keySelector, (d, dbEntry) => new { d, dbEntry })
+            logger.LogInformation("Started to Seed {TableName}", typeName);
+            data = data.GroupJoin(context.Set<T>(), keySelector, keySelector, (d, dbEntry) => new { d, dbEntry })
                 .SelectMany(t => t.dbEntry.DefaultIfEmpty(), (t, x) => new { t, x })
                 .Where(t => t.x == null)
                 .Select(t => t.t.d).ToList();
-            _logger.LogInformation("Seeding {DataCount} {TableName}", data.Count, typeName);
-            await _context.Set<T>().AddRangeAsync(data, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
-            _logger.LogInformation("Seeded {TableName}", typeName);
+            await context.Set<T>().AddRangeAsync(data, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
+            logger.LogInformation("Seeded {TableName}", typeName);
         }
     }
 }

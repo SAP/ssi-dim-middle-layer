@@ -54,6 +54,22 @@
     <Content Include="appsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Update="Seeder\Data\processes.json">
+      <LinkBase>Seeder/Data/</LinkBase>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Update="Seeder\Data\process_steps.json">
+      <LinkBase>Seeder/Data/</LinkBase>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Update="Seeder\Data\technical_users.json">
+      <LinkBase>Seeder/Data/</LinkBase>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Update="Seeder\Data\tenants.json">
+      <LinkBase>Seeder/Data/</LinkBase>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>

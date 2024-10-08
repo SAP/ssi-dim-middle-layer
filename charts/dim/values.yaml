@@ -59,8 +59,13 @@ migrations:
       cpu: 45m
       memory: 200M
   seeding:
-    testDataEnvironments: ""
-    testDataPaths: "Seeder/Data"
+    # -- If set to true the data configured in the config map 'configmap-seeding-initialdata.yaml' will be taken to insert the initial data
+    useInitial: true
+    useOwnConfigMap:
+      # -- ConfigMap containing json files for the tables to seed, e.g. processes.initial.json, process_steps.initial.json, etc.
+      configMap: ""
+      # -- Filename identifying the test data files e.g. for processes.initial.json the value would be "initial"
+      filename: ""
   logging:
     default: "Information"
 
