@@ -37,6 +37,7 @@ public class ProcessStepRepositoryTests : IAssemblyFixture<TestDbFixture>
     private readonly IFixture _fixture;
     private readonly TestDbFixture _dbTestDbFixture;
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "xUnit1041:Fixture arguments to test classes must have fixture sources", Justification = "<Pending>")]
     public ProcessStepRepositoryTests(TestDbFixture testDbFixture)
     {
         _fixture = new Fixture().Customize(new AutoFakeItEasyCustomization { ConfigureMembers = true });
