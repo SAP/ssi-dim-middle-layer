@@ -102,18 +102,18 @@ spec:
             mountPath: /migrations/Seeder/Data/import/custom-data
         {{- end }}
         {{- end }}
-    {{- if or (.Values.migrations.seeding.useInitial) (and (.Values.migrations.seeding.useOwnConfigMap.configMap) (.Values.migrations.seeding.useOwnConfigMap.filename)) }}
-    volumes:
-    {{- if (.Values.migrations.seeding.useInitial) }}
-      - name: data-initial
-        configMap:
-          name: "{{ include "dim.fullname" . }}-seeding-initialdata"
-          optional: true
-    {{- end }}
-    {{- if and (.Values.migrations.seeding.useOwnConfigMap.configMap) (.Values.migrations.seeding.useOwnConfigMap.filename) }}
-      - name: data-custom
-        configMap:
-          name: "{{ .Values.migrations.seeding.useOwnConfigMap.configMap }}"
-          optional: true
+      {{- if or (.Values.migrations.seeding.useInitial) (and (.Values.migrations.seeding.useOwnConfigMap.configMap) (.Values.migrations.seeding.useOwnConfigMap.filename)) }}
+      volumes:
+        {{- if (.Values.migrations.seeding.useInitial) }}
+        - name: data-initial
+          configMap:
+            name: "{{ include "dim.fullname" . }}-seeding-initialdata"
+            optional: true
+      {{- end }}
+      {{- if and (.Values.migrations.seeding.useOwnConfigMap.configMap) (.Values.migrations.seeding.useOwnConfigMap.filename) }}
+        - name: data-custom
+          configMap:
+            name: "{{ .Values.migrations.seeding.useOwnConfigMap.configMap }}"
+            optional: true
     {{- end }}
     {{- end }}
