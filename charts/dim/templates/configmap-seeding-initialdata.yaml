@@ -18,13 +18,14 @@
 * SPDX-License-Identifier: Apache-2.0
 */}}
 
+{{- if (.Values.migrations.seeding.useInitial) }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name:  {{ include "dim.fullname" . }}-seeding-initialdata
   namespace: {{ .Release.Namespace }}
 data:
-  tenants.initial.json: |-
+  tenants.json: |-
     [
       {
         "id": "5c9a4f56-0609-49a5-ab86-dd8f93dfd3fa",
@@ -36,23 +37,4 @@ data:
         "operator_id": "{{ .Values.dim.operatorId }}"
       }
     ]
-  processes.initial.json: |-
-    [
-      {
-        "id": "dd371565-9489-4907-a2e4-b8cbfe7a8cd1",
-        "process_type_id" : 1,
-        "lock_expiry_date" : "2023-03-01 00:00:00.000000 +00:00",
-        "version" : "deadbeef-dead-beef-dead-beefdeadbeef"
-      }
-    ]
-  process_steps.initial.json: |-
-    [
-      {
-        "id": "5c9a4f56-0609-49a5-ab86-dd8f93dfd3fa",
-        "process_step_type_id": 1,
-        "process_step_status_id": 1,
-        "process_id": "dd371565-9489-4907-a2e4-b8cbfe7a8cd1",
-        "date_created": "2023-02-21 08:15:20.479000 +00:00",
-        "date_last_changed": null
-      }
-    ]
+{{- end }}

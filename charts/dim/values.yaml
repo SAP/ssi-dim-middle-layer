@@ -43,6 +43,10 @@ dim:
       path: "/ready"
   swaggerEnabled: false
   operatorId: "00000000-0000-0000-0000-000000000000"
+  # -- The bpn of the operator
+  bpn: "empty"
+  # -- The did document location address for the operator wallet
+  didDocumentLocationAddress: "https://example.org"
 
 migrations:
   name: "migrations"
@@ -61,11 +65,6 @@ migrations:
   seeding:
     # -- If set to true the data configured in the config map 'configmap-seeding-initialdata.yaml' will be taken to insert the initial data
     useInitial: true
-    useOwnConfigMap:
-      # -- ConfigMap containing json files for the tables to seed, e.g. processes.initial.json, process_steps.initial.json, etc.
-      configMap: ""
-      # -- Filename identifying the test data files e.g. for processes.initial.json the value would be "initial"
-      filename: ""
   logging:
     default: "Information"
 

@@ -54,30 +54,16 @@
     <Content Include="appsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Update="Seeder\Data\processes.json">
+
+    <None Remove="Seeder\Data" />
+    <Content Include="Seeder\Data\**" LinkBase="Seeder\Data" CopyToOutputDirectory="Always" />
+    <Content Update="Seeder\Data\overwriteable\tenants.json">
       <LinkBase>Seeder/Data/</LinkBase>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Update="Seeder\Data\process_steps.json">
-      <LinkBase>Seeder/Data/</LinkBase>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Update="Seeder\Data\technical_users.json">
-      <LinkBase>Seeder/Data/</LinkBase>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Update="Seeder\Data\tenants.json">
-      <LinkBase>Seeder/Data/</LinkBase>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Dim.Entities\Dim.Entities.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Migrations\" />
   </ItemGroup>
 
 </Project>

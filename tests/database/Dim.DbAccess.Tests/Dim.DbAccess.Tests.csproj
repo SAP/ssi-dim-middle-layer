@@ -56,8 +56,4 @@
     <Content Include="Seeder\Data\**" LinkBase="Seeder\Data" CopyToOutputDirectory="Always" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Seeder\" />
-  </ItemGroup>
-
 </Project>

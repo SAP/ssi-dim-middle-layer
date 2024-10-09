@@ -56,7 +56,7 @@ public class TestDbFixture : IAsyncLifetime
 
         optionsBuilder.UseNpgsql(
             _container.GetConnectionString(),
-            x => x.MigrationsAssembly(typeof(_120).Assembly.GetName().Name)
+            x => x.MigrationsAssembly(typeof(BatchInsertSeeder).Assembly.GetName().Name)
                 .MigrationsHistoryTable("__efmigrations_history_dim")
         );
         var context = new DimDbContext(optionsBuilder.Options);
@@ -82,7 +82,7 @@ public class TestDbFixture : IAsyncLifetime
 
         optionsBuilder.UseNpgsql(
             _container.GetConnectionString(),
-            x => x.MigrationsAssembly(typeof(_120).Assembly.GetName().Name)
+            x => x.MigrationsAssembly(typeof(BatchInsertSeeder).Assembly.GetName().Name)
                 .MigrationsHistoryTable("__efmigrations_history_dim")
         );
         var context = new DimDbContext(optionsBuilder.Options);
@@ -90,8 +90,8 @@ public class TestDbFixture : IAsyncLifetime
 
         var seederOptions = Options.Create(new SeederSettings
         {
-            TestDataEnvironments = Enumerable.Empty<string>(),
-            DataPaths = new[] { "Seeder/Data" }
+            TestDataEnvironments = new[] { "test" },
+            DataPaths = new[] { "Seeder/Data", "Seeder/Data/overwrite" }
         });
         var insertSeeder = new BatchInsertSeeder(context,
             LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger<BatchInsertSeeder>(),

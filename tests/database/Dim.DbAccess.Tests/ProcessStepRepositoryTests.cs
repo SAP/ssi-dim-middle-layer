@@ -296,9 +296,10 @@ public class ProcessStepRepositoryTests : IAssemblyFixture<TestDbFixture>
 
         // Act
         var result = await sut.GetActiveProcesses(processTypeIds, processStepTypeIds, DateTimeOffset.UtcNow).ToListAsync();
-        result.Should().HaveCount(1)
+        result.Should().HaveCount(2)
             .And.Satisfy(
-                x => x.Id == new Guid("dd371565-9489-4907-a2e4-b8cbfe7a8cd2") && x.ProcessTypeId == ProcessTypeId.SETUP_DIM && x.LockExpiryDate == null
+                x => x.Id == new Guid("dd371565-9489-4907-a2e4-b8cbfe7a8cd1") && x.ProcessTypeId == ProcessTypeId.SETUP_DIM,
+                x => x.Id == new Guid("dd371565-9489-4907-a2e4-b8cbfe7a8cd2") && x.ProcessTypeId == ProcessTypeId.SETUP_DIM
             );
     }
 
@@ -318,7 +319,7 @@ public class ProcessStepRepositoryTests : IAssemblyFixture<TestDbFixture>
 
         // Act
         var result = await sut.GetActiveProcesses(processTypeIds, processStepTypeIds, DateTimeOffset.UtcNow).ToListAsync();
-        result.Should().HaveCount(1);
+        result.Should().HaveCount(2);
     }
 
     #endregion
