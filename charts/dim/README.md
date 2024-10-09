@@ -51,13 +51,14 @@ dependencies:
 | dim.healthChecks.readyness.path | string | `"/ready"` |  |
 | dim.swaggerEnabled | bool | `false` |  |
 | dim.operatorId | string | `"00000000-0000-0000-0000-000000000000"` |  |
+| dim.bpn | string | `"empty"` | The bpn of the operator |
+| dim.didDocumentLocationAddress | string | `"https://example.org"` | The did document location address for the operator wallet |
 | migrations.name | string | `"migrations"` |  |
 | migrations.image.name | string | `"ghcr.io/sap/ssi-dim-middle-layer_dim-migrations"` |  |
 | migrations.image.tag | string | `""` |  |
 | migrations.imagePullPolicy | string | `"IfNotPresent"` |  |
 | migrations.resources | object | `{"limits":{"cpu":"45m","memory":"200M"},"requests":{"cpu":"15m","memory":"200M"}}` | We recommend to review the default resource limits as this should a conscious choice. |
-| migrations.seeding.testDataEnvironments | string | `""` |  |
-| migrations.seeding.testDataPaths | string | `"Seeder/Data"` |  |
+| migrations.seeding.useInitial | bool | `true` | Enables dynamic seeding of bpn (dim.bpn) and did document location address (dim.didDocumentLocationAddress) of the operator; If set to `true` the data configured in the config map 'configmap-seeding-initialdata.yaml' will be taken to insert the initial data; |
 | migrations.logging.default | string | `"Information"` |  |
 | processesworker.name | string | `"processesworker"` |  |
 | processesworker.image.name | string | `"ghcr.io/sap/ssi-dim-middle-layer_dim-processes-worker"` |  |

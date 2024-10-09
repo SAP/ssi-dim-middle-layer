@@ -1,13 +1,5 @@
 [
   {
-    "id": "5c9a4f56-0609-49a5-ab86-dd8f93dfd3fa",
-    "process_step_type_id": 1,
-    "process_step_status_id": 2,
-    "process_id": "dd371565-9489-4907-a2e4-b8cbfe7a8cd1",
-    "date_created": "2023-02-21 08:15:20.479000 +00:00",
-    "date_last_changed": null
-  },
-  {
     "id": "80771e4a-0d69-43b8-b278-25884da7f97d",
     "process_step_type_id": 1,
     "process_step_status_id": 1,
