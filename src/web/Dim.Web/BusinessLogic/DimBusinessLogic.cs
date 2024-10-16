@@ -42,13 +42,12 @@ public class DimBusinessLogic(
     IOptions<DimSettings> options)
     : IDimBusinessLogic
 {
-    private static readonly Regex TenantName = new(@"(?<=[^\w-])|(?<=[^-])[\W_]+|(?<=[^-])$", RegexOptions.Compiled, new TimeSpan(0, 0, 0, 1));
-    private static readonly Regex TechnicalUserName = new("[^a-zA-Z0-9]+", RegexOptions.Compiled, new TimeSpan(0, 0, 0, 1));
+    private static readonly Regex NameRegex = new("[^a-zA-Z0-9]+", RegexOptions.Compiled, new TimeSpan(0, 0, 0, 1));
     private readonly DimSettings _settings = options.Value;
 
     public async Task StartSetupDim(string companyName, string bpn, string didDocumentLocation, bool isIssuer)
     {
-        var tenant = TenantName.Replace(companyName, string.Empty).TrimStart('-').TrimEnd('-').ToLower();
+        var tenant = GetName(companyName, bpn);
         if (await dimRepositories.GetInstance<ITenantRepository>().IsTenantExisting(companyName, bpn).ConfigureAwait(ConfigureAwaitOptions.None))
         {
             throw ConflictException.Create(DimErrors.TENANT_ALREADY_EXISTS, new ErrorParameter[] { new("companyName", companyName), new("bpn", bpn) });
@@ -138,7 +137,7 @@ public class DimBusinessLogic(
         var processId = processStepRepository.CreateProcess(ProcessTypeId.TECHNICAL_USER).Id;
         processStepRepository.CreateProcessStep(ProcessStepTypeId.CREATE_TECHNICAL_USER, ProcessStepStatusId.TODO, processId);
 
-        var technicalUserName = TechnicalUserName.Replace(technicalUserData.Name, string.Empty).ToLower();
+        var technicalUserName = GetName(technicalUserData.Name);
         dimRepositories.GetInstance<ITechnicalUserRepository>().CreateTenantTechnicalUser(tenantId, technicalUserName, technicalUserData.ExternalId, processId);
 
         await dimRepositories.SaveAsync().ConfigureAwait(ConfigureAwaitOptions.None);
@@ -146,7 +145,7 @@ public class DimBusinessLogic(
 
     public async Task DeleteTechnicalUser(string bpn, TechnicalUserData technicalUserData)
     {
-        var technicalUserName = TechnicalUserName.Replace(technicalUserData.Name, string.Empty).ToLower();
+        var technicalUserName = GetName(technicalUserData.Name);
         var (exists, technicalUserId, processId) = await dimRepositories.GetInstance<ITechnicalUserRepository>().GetTechnicalUserForBpn(bpn, technicalUserName).ConfigureAwait(ConfigureAwaitOptions.None);
         if (!exists)
         {
@@ -169,6 +168,18 @@ public class DimBusinessLogic(
             });
 
         await dimRepositories.SaveAsync().ConfigureAwait(ConfigureAwaitOptions.None);
+    }
+
+    private static string GetName(string name, string? additionalName = null)
+    {
+        name = NameRegex.Replace(name, string.Empty).TrimStart('-').TrimEnd('-').ToLower();
+        if (additionalName is null)
+        {
+            return name[..(name.Length <= 32 ? name.Length : 32)];
+        }
+
+        var maxLength = name.Length + additionalName.Length <= 32 ? name.Length : 32 - additionalName.Length;
+        return name[..maxLength];
     }
 
     public async Task<ProcessData> GetSetupProcess(string bpn, string companyName)

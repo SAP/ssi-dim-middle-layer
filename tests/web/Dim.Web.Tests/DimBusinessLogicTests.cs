@@ -104,7 +104,9 @@ public class DimBusinessLogicTests
     [InlineData("abc-123", "abc123")]
     [InlineData("abc#123", "abc123")]
     [InlineData("abc'123", "abc123")]
-    [InlineData("abc\"123", "abc123")]
+    [InlineData("ä+slidfböü123üü", "slidfb123")]
+    [InlineData("averylongnamethatexeedsthemaxlengthbysomecharacters", "averylongnametha")]
+    [InlineData("a test company", "atestcompany")]
     public async Task StartSetupDim_WithNewData_CreatesExpected(string companyName, string expectedCompanyName)
     {
         // Arrange
@@ -309,8 +311,16 @@ public class DimBusinessLogicTests
         result.Message.Should().Be(DimErrors.NO_COMPANY_FOR_BPN.ToString());
     }
 
-    [Fact]
-    public async Task CreateTechnicalUser_WithNewData_CreatesExpected()
+    [Theory]
+    [InlineData("testCompany", "testcompany")]
+    [InlineData("-abc123", "abc123")]
+    [InlineData("abc-123", "abc123")]
+    [InlineData("abc#123", "abc123")]
+    [InlineData("abc'123", "abc123")]
+    [InlineData("ä+slidfböü123üü", "slidfb123")]
+    [InlineData("averylongnamethatexeedsthemaxlengthbysomecharacters", "averylongnamethatexeedsthemaxlen")]
+    [InlineData("a test company", "atestcompany")]
+    public async Task CreateTechnicalUser_WithNewData_CreatesExpected(string name, string expectedName)
     {
         // Arrange
         const string Bpn = "BPNL00001Test";
@@ -333,20 +343,20 @@ public class DimBusinessLogicTests
             });
         A.CallTo(() =>
                 _technicalUserRepository.CreateTenantTechnicalUser(A<Guid>._, A<string>._, A<Guid>._, A<Guid>._))
-            .Invokes((Guid tenantId, string name, Guid externalId, Guid pId) =>
+            .Invokes((Guid tenantId, string technicalUserName, Guid externalId, Guid pId) =>
             {
-                technicalUsers.Add(new TechnicalUser(Guid.NewGuid(), tenantId, externalId, name, pId));
+                technicalUsers.Add(new TechnicalUser(Guid.NewGuid(), tenantId, externalId, technicalUserName, pId));
             });
 
         // Act
-        await _sut.CreateTechnicalUser(Bpn, _fixture.Create<TechnicalUserData>());
+        await _sut.CreateTechnicalUser(Bpn, _fixture.Build<TechnicalUserData>().With(x => x.Name, name).Create());
 
         // Assert
         processes.Should().ContainSingle()
             .Which.ProcessTypeId.Should().Be(ProcessTypeId.TECHNICAL_USER);
         processSteps.Should().ContainSingle()
             .And.Satisfy(x => x.ProcessId == processId && x.ProcessStepTypeId == ProcessStepTypeId.CREATE_TECHNICAL_USER);
-        technicalUsers.Should().ContainSingle();
+        technicalUsers.Should().ContainSingle().And.Satisfy(x => x.TechnicalUserName == expectedName);
     }
 
     #endregion

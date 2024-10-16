@@ -18,6 +18,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using System;
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 namespace Dim.Clients.Api.Div.Models;
@@ -30,7 +32,12 @@ public record ServiceKeyOperationCreationRequest(
 
 public record ServiceKeyCreationPayloadData(
     [property: JsonPropertyName("customerWalletId")] Guid CustomerWalletId,
-    [property: JsonPropertyName("divWalletServiceName")] string ServiceKeyName
+    [property: JsonPropertyName("divWalletServiceName")] string ServiceKeyName,
+    [property: JsonPropertyName("divWalletServiceParameters")] ServiceKeyParameter Parameter
+);
+
+public record ServiceKeyParameter(
+    [property: JsonPropertyName("authorities")] IEnumerable<string> Authorities
 );
 
 public record ServiceKeyOperationDeletionRequest(
