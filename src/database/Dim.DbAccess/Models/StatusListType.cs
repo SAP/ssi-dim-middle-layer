@@ -18,15 +18,10 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using Dim.Clients.Api.Div.Models;
+namespace Dim.DbAccess.Models;
 
-namespace Dim.Clients.Api.Div;
-
-public interface IProvisioningClient
+public enum StatusListType
 {
-    public Task<Guid> CreateOperation(Guid customerId, string customerName, string applicationName, string companyName, string didDocumentLocation, bool isIssuer, CancellationToken cancellationToken);
-    public Task<OperationResponse> GetOperation(Guid operationId, CancellationToken cancellationToken);
-    Task<Guid> CreateServiceKey(string technicalUserName, Guid walletId, CancellationToken cancellationToken);
-    Task<Guid?> DeleteServiceKey(Guid walletId, Guid serviceKeyId, CancellationToken cancellationToken);
-    Task<Guid> GetServiceKey(string technicalUserName, Guid walletId, CancellationToken cancellationToken);
+    StatusList2021 = 1,
+    BitstringStatusList = 2,
 }

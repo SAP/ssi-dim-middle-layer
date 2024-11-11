@@ -161,7 +161,7 @@ public class DimBusinessLogicTests
         var bpn = "BPNL00000001TEST";
         A.CallTo(() => _tenantRepository.GetCompanyAndWalletDataForBpn(bpn))
             .Returns((false, null, null, GetWalletData()));
-        Task Act() => _sut.GetStatusList(bpn, CancellationToken.None);
+        Task Act() => _sut.GetStatusList(bpn, StatusListType.BitstringStatusList, CancellationToken.None);
 
         // Act
         var result = await Assert.ThrowsAsync<NotFoundException>(Act);
@@ -177,7 +177,7 @@ public class DimBusinessLogicTests
         const string Bpn = "BPNL00000001TEST";
         A.CallTo(() => _tenantRepository.GetCompanyAndWalletDataForBpn(Bpn))
             .Returns((true, null, null, GetWalletData()));
-        Task Act() => _sut.GetStatusList(Bpn, CancellationToken.None);
+        Task Act() => _sut.GetStatusList(Bpn, StatusListType.BitstringStatusList, CancellationToken.None);
 
         // Act
         var result = await Assert.ThrowsAsync<ConflictException>(Act);
@@ -194,7 +194,7 @@ public class DimBusinessLogicTests
         var companyId = Guid.NewGuid();
         A.CallTo(() => _tenantRepository.GetCompanyAndWalletDataForBpn(Bpn))
             .Returns((true, companyId, null, GetWalletData()));
-        Task Act() => _sut.GetStatusList(Bpn, CancellationToken.None);
+        Task Act() => _sut.GetStatusList(Bpn, StatusListType.BitstringStatusList, CancellationToken.None);
 
         // Act
         var result = await Assert.ThrowsAsync<ConflictException>(Act);
@@ -212,11 +212,11 @@ public class DimBusinessLogicTests
         var companyId = Guid.NewGuid();
         A.CallTo(() => _tenantRepository.GetCompanyAndWalletDataForBpn(Bpn))
             .Returns((true, companyId, BaseUrl, GetWalletData()));
-        A.CallTo(() => _dimClient.GetStatusList(A<BasicAuthSettings>._, BaseUrl, companyId, A<CancellationToken>._))
+        A.CallTo(() => _dimClient.GetStatusList(A<BasicAuthSettings>._, BaseUrl, companyId, StatusListType.BitstringStatusList, A<CancellationToken>._))
             .Returns("https://example.org/statuslist");
 
         // Act
-        var result = await _sut.GetStatusList(Bpn, CancellationToken.None);
+        var result = await _sut.GetStatusList(Bpn, StatusListType.BitstringStatusList, CancellationToken.None);
 
         // Assert
         result.Should().Be("https://example.org/statuslist");
@@ -233,7 +233,7 @@ public class DimBusinessLogicTests
         var bpn = "BPNL00000001TEST";
         A.CallTo(() => _tenantRepository.GetCompanyAndWalletDataForBpn(bpn))
             .Returns((false, null, null, GetWalletData()));
-        Task Act() => _sut.CreateStatusList(bpn, CancellationToken.None);
+        Task Act() => _sut.CreateStatusList(bpn, StatusListType.BitstringStatusList, CancellationToken.None);
 
         // Act
         var result = await Assert.ThrowsAsync<NotFoundException>(Act);
@@ -249,7 +249,7 @@ public class DimBusinessLogicTests
         const string Bpn = "BPNL00000001TEST";
         A.CallTo(() => _tenantRepository.GetCompanyAndWalletDataForBpn(Bpn))
             .Returns((true, null, null, GetWalletData()));
-        Task Act() => _sut.CreateStatusList(Bpn, CancellationToken.None);
+        Task Act() => _sut.CreateStatusList(Bpn, StatusListType.BitstringStatusList, CancellationToken.None);
 
         // Act
         var result = await Assert.ThrowsAsync<ConflictException>(Act);
@@ -266,7 +266,7 @@ public class DimBusinessLogicTests
         var companyId = Guid.NewGuid();
         A.CallTo(() => _tenantRepository.GetCompanyAndWalletDataForBpn(Bpn))
             .Returns((true, companyId, null, GetWalletData()));
-        Task Act() => _sut.CreateStatusList(Bpn, CancellationToken.None);
+        Task Act() => _sut.CreateStatusList(Bpn, StatusListType.BitstringStatusList, CancellationToken.None);
 
         // Act
         var result = await Assert.ThrowsAsync<ConflictException>(Act);
@@ -284,11 +284,11 @@ public class DimBusinessLogicTests
         var companyId = Guid.NewGuid();
         A.CallTo(() => _tenantRepository.GetCompanyAndWalletDataForBpn(Bpn))
             .Returns((true, companyId, BaseUrl, GetWalletData()));
-        A.CallTo(() => _dimClient.CreateStatusList(A<BasicAuthSettings>._, BaseUrl, companyId, A<CancellationToken>._))
+        A.CallTo(() => _dimClient.CreateStatusList(A<BasicAuthSettings>._, BaseUrl, companyId, A<StatusListType>._, A<CancellationToken>._))
             .Returns("https://example.org/statuslist");
 
         // Act
-        var result = await _sut.CreateStatusList(Bpn, CancellationToken.None);
+        var result = await _sut.CreateStatusList(Bpn, StatusListType.BitstringStatusList, CancellationToken.None);
 
         // Assert
         result.Should().Be("https://example.org/statuslist");
