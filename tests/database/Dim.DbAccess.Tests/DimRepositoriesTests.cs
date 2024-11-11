@@ -32,20 +32,9 @@ using Xunit.Extensions.AssemblyFixture;
 
 namespace Dim.DbAccess.Tests;
 
-public class DimRepositoriesTests : IAssemblyFixture<TestDbFixture>
+public class DimRepositoriesTests(TestDbFixture testDbFixture)
+    : IAssemblyFixture<TestDbFixture>
 {
-    private readonly TestDbFixture _dbTestDbFixture;
-
-    public DimRepositoriesTests(TestDbFixture testDbFixture)
-    {
-        var fixture = new Fixture().Customize(new AutoFakeItEasyCustomization { ConfigureMembers = true });
-        fixture.Behaviors.OfType<ThrowingRecursionBehavior>().ToList()
-            .ForEach(b => fixture.Behaviors.Remove(b));
-
-        fixture.Behaviors.Add(new OmitOnRecursionBehavior());
-        _dbTestDbFixture = testDbFixture;
-    }
-
     #region GetInstance
 
     [Fact]
@@ -139,14 +128,14 @@ public class DimRepositoriesTests : IAssemblyFixture<TestDbFixture>
 
     private async Task<(DimRepositories sut, DimDbContext dbContext)> CreateSutWithContext()
     {
-        var context = await _dbTestDbFixture.GetDbContext();
+        var context = await testDbFixture.GetDbContext();
         var sut = new DimRepositories(context);
         return (sut, context);
     }
 
     private async Task<DimRepositories> CreateSut()
     {
-        var context = await _dbTestDbFixture.GetDbContext();
+        var context = await testDbFixture.GetDbContext();
         return new DimRepositories(context);
     }
 }
