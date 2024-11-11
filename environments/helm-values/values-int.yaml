@@ -57,7 +57,7 @@ processesworker:
   provisioning:
     clientId: "<path:portal/data/dim/int/provisioning#clientId>"
     clientSecret: "<path:portal/data/dim/int/provisioning#clientSecret>"
-    tokenAddress: "https://provisioning-prod-uvm2enuw.authentication.eu10.hana.ondemand.com/oauth/token"
+    tokenAddress: "https://div-provisioning-catena-x.authentication.eu10.hana.ondemand.com/oauth/token"
     baseUrl: "https://div-provisioning-prod.eu10.div.cloud.sap"
     grantType: "client_credentials"
     encryptionConfigs:
