@@ -34,6 +34,7 @@ public static class DimController
     public static RouteGroupBuilder MapDimApi(this RouteGroupBuilder group)
     {
         var dim = group.MapGroup("/dim");
+        const string BpnDescription = "bpn of the company";
 
         dim.MapPost("setup-dim", ([FromQuery] string companyName, [FromQuery] string bpn, [FromQuery] string didDocumentLocation, IDimBusinessLogic dimBusinessLogic) => dimBusinessLogic.StartSetupDim(companyName, bpn, didDocumentLocation, false))
             .WithSwaggerDescription("Creates a holder wallet",
@@ -53,31 +54,34 @@ public static class DimController
             .RequireAuthorization(r => r.RequireRole("setup_wallet"))
             .Produces(StatusCodes.Status201Created);
 
-        dim.MapGet("status-list", ([FromQuery] string bpn, CancellationToken cancellationToken, [FromServices] IDimBusinessLogic dimBusinessLogic) => dimBusinessLogic.GetStatusList(bpn, cancellationToken))
+        dim.MapGet("status-list", ([AsParameters] GetStatusListParameters parameters, CancellationToken cancellationToken, [FromServices] IDimBusinessLogic dimBusinessLogic) => dimBusinessLogic.GetStatusList(parameters.Bpn, parameters.StatusListType, cancellationToken))
             .WithSwaggerDescription("Gets the status list for the given company",
-                "Example: GET: api/dim/status-list/{bpn}",
-                "id of the dim company")
+                "Example: GET: api/dim/status-list/{bpn}/{statusListType}",
+                "id of the dim company",
+                "The type of the statuslist to receive")
             .RequireAuthorization(r => r.RequireRole("view_status_list"))
             .Produces(StatusCodes.Status200OK, responseType: typeof(string), contentType: Constants.JsonContentType);
 
-        dim.MapPost("status-list", ([FromQuery] string bpn, CancellationToken cancellationToken, [FromServices] IDimBusinessLogic dimBusinessLogic) => dimBusinessLogic.CreateStatusList(bpn, cancellationToken))
+        dim.MapPost("status-list", ([AsParameters] CreateStatusListParameters parameters, CancellationToken cancellationToken, [FromServices] IDimBusinessLogic dimBusinessLogic) => dimBusinessLogic.CreateStatusList(parameters.Bpn, parameters.StatusListType, cancellationToken))
             .WithSwaggerDescription("Creates a status list for the given company",
                 "Example: Post: api/dim/status-list/{bpn}",
-                "bpn of the company")
+                BpnDescription,
+                "The type of the statuslist that should be created")
             .RequireAuthorization(r => r.RequireRole("create_status_list"))
+            .AllowAnonymous()
             .Produces(StatusCodes.Status200OK, responseType: typeof(string), contentType: Constants.JsonContentType);
 
         dim.MapPost("technical-user/{bpn}", ([FromRoute] string bpn, [FromBody] TechnicalUserData technicalUserData, [FromServices] IDimBusinessLogic dimBusinessLogic) => dimBusinessLogic.CreateTechnicalUser(bpn, technicalUserData))
             .WithSwaggerDescription("Creates a technical user for the dim of the given bpn",
                 "Example: Post: api/dim/technical-user/{bpn}",
-                "bpn of the company")
+                BpnDescription)
             .RequireAuthorization(r => r.RequireRole("create_technical_user"))
             .Produces(StatusCodes.Status200OK, contentType: Constants.JsonContentType);
 
         dim.MapPost("technical-user/{bpn}/delete", ([FromRoute] string bpn, [FromBody] TechnicalUserData technicalUserData, [FromServices] IDimBusinessLogic dimBusinessLogic) => dimBusinessLogic.DeleteTechnicalUser(bpn, technicalUserData))
             .WithSwaggerDescription("Deletes a technical user with the given name of the given bpn",
                 "Example: Post: api/dim/technical-user/{bpn}/delete",
-                "bpn of the company")
+                BpnDescription)
             .RequireAuthorization(r => r.RequireRole("delete_technical_user"))
             .Produces(StatusCodes.Status200OK, contentType: Constants.JsonContentType);
 
@@ -89,7 +93,7 @@ public static class DimController
             )
             .WithSwaggerDescription("Gets the wallet creation process id for the given bpn and companyName",
                 "Example: Post: api/dim/process/setup?bpn={bpn}&companyName={companyName}",
-                "bpn of the company",
+                BpnDescription,
                 "name of the company")
             .RequireAuthorization(r => r.RequireRole("get_process"))
             .Produces(StatusCodes.Status200OK, contentType: Constants.JsonContentType);
@@ -103,7 +107,7 @@ public static class DimController
             )
             .WithSwaggerDescription("Gets the technical user creation process id for the given technicalUserName",
                 "Example: Post: api/dim/process/technical-user?bpn={bpn}&companyName={companyName}&technicalUserName={technicalUserName}",
-                "bpn of the company",
+                BpnDescription,
                 "name of the company",
                 "name of the techincal user to get the process for")
             .RequireAuthorization(r => r.RequireRole("get_process"))

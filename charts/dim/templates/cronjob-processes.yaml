@@ -82,6 +82,8 @@ spec:
               value: "{{ .Values.processesworker.provisioning.encryptionConfigs.index0.cipherMode }}"
             - name: "DIM__ENCRYPTIONCONFIGS__0__PADDINGMODE"
               value: "{{ .Values.processesworker.provisioning.encryptionConfigs.index0.paddingMode }}"
+            - name: "DIM__STATUSLISTTYPE"
+              value: "{{ .Values.processesworker.dim.statusListType }}"
             - name: "PROVISIONING__CLIENTID"
               value: "{{ .Values.processesworker.provisioning.clientId }}"
             - name: "PROVISIONING__CLIENTSECRET"
