@@ -109,7 +109,7 @@ public static class DimController
             .RequireAuthorization(r => r.RequireRole("get_process"))
             .Produces(StatusCodes.Status200OK, contentType: Constants.JsonContentType);
 
-        dim.MapGet("process/wallet/{processId}/retrigger", (
+        dim.MapPost("process/wallet/{processId}/retrigger", (
                     [FromRoute] Guid processId,
                     [FromQuery] ProcessStepTypeId processStepTypeId,
                     [FromServices] IDimBusinessLogic dimBusinessLogic)
@@ -122,7 +122,7 @@ public static class DimController
             .RequireAuthorization(r => r.RequireRole("retrigger_process"))
             .Produces(StatusCodes.Status200OK, contentType: Constants.JsonContentType);
 
-        dim.MapGet("process/technicalUser/{processId}/retrigger", (
+        dim.MapPost("process/technicalUser/{processId}/retrigger", (
                     [FromRoute] Guid processId,
                     [FromQuery] ProcessStepTypeId processStepTypeId,
                     [FromServices] IDimBusinessLogic dimBusinessLogic)

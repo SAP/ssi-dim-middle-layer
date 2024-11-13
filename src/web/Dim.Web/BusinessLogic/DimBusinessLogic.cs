@@ -216,10 +216,10 @@ public class DimBusinessLogic(
             throw new NotFoundException($"process {processId} does not exist");
         }
 
-        var context = processData.CreateManualProcessData(stepToTrigger, dimRepositories, () => $"processId {processId}");
-
+        var context = processData.CreateManualProcessData(processStepTypeId, dimRepositories, () => $"processId {processId}");
         context.ScheduleProcessSteps(Enumerable.Repeat(stepToTrigger, 1));
         context.FinalizeProcessStep();
+
         await dimRepositories.SaveAsync().ConfigureAwait(ConfigureAwaitOptions.None);
     }
 }
