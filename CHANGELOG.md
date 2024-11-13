@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.1](https://github.com/SAP/ssi-dim-middle-layer/compare/v2.1.0...v2.1.1) (2024-10-24)
+
+### Bug Fixes
+
+* **processes** fix retrigger endpoint ([#124](https://github.com/SAP/ssi-dim-middle-layer/issues/124)) ([f33f664](https://github.com/SAP/ssi-dim-middle-layer/commit/f33f6645a347ed7d45e839fb848081d7f2f522af)), closes [#111](https://github.com/SAP/ssi-dim-middle-layer/issues/111)
+* **environment** adjust int configuration ([#123](https://github.com/SAP/ssi-dim-middle-layer/issues/123)) ([4be9406](https://github.com/SAP/ssi-dim-middle-layer/commit/4be9406e865a6147c01535c46fb77380d8e5db8d))
+
 ## [2.1.0](https://github.com/SAP/ssi-dim-middle-layer/compare/v2.0.0...v2.1.0) (2024-10-24)
 
 ### Features
