@@ -5,6 +5,7 @@ using Dim.Clients.Api.Dim.Models;
 using Dim.Clients.Extensions;
 using Dim.Clients.Tests.Extensions;
 using Dim.Clients.Token;
+using Dim.DbAccess.Models;
 using FluentAssertions;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using System.Net;
@@ -89,7 +90,7 @@ public class DimClientTests
         // Arrange
         _fixture.ConfigureTokenServiceFixture<DimClient>(new HttpResponseMessage(HttpStatusCode.OK));
         var sut = _fixture.Create<DimClient>();
-        Task Act() => sut.GetStatusList(_fixture.Create<BasicAuthSettings>(), "https://example.org", Guid.NewGuid(), CancellationToken.None);
+        Task Act() => sut.GetStatusList(_fixture.Create<BasicAuthSettings>(), "https://example.org", Guid.NewGuid(), StatusListType.BitstringStatusList, CancellationToken.None);
 
         // Act
         var ex = await Assert.ThrowsAsync<ServiceException>(Act);
@@ -102,10 +103,10 @@ public class DimClientTests
     public async Task GetStatusList_WithNoSpaceLeft_ThrowsConflictException()
     {
         // Arrange
-        var data = new StatusListListResponse(1, new[] { new StatusListResponse(Guid.NewGuid().ToString(), "test", "test", "test", 1024, 0) });
+        var data = new StatusListListResponse(1, new[] { new StatusListResponse(Guid.NewGuid().ToString(), "test", "BitstringStatusList", "test", 1024, 0) });
         _fixture.ConfigureTokenServiceFixture<DimClient>(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(JsonSerializer.Serialize(data, JsonSerializerExtensions.Options)) });
         var sut = _fixture.Create<DimClient>();
-        Task Act() => sut.GetStatusList(_fixture.Create<BasicAuthSettings>(), "https://example.org", Guid.NewGuid(), CancellationToken.None);
+        Task Act() => sut.GetStatusList(_fixture.Create<BasicAuthSettings>(), "https://example.org", Guid.NewGuid(), StatusListType.BitstringStatusList, CancellationToken.None);
 
         // Act
         var ex = await Assert.ThrowsAsync<ConflictException>(Act);
@@ -118,12 +119,12 @@ public class DimClientTests
     public async Task GetStatusList_WithValidData_ReturnsCompanyData()
     {
         // Arrange
-        var data = new StatusListListResponse(1, new[] { new StatusListResponse(Guid.NewGuid().ToString(), "test", "testCred", "test", 1024, 100) });
+        var data = new StatusListListResponse(1, new[] { new StatusListResponse(Guid.NewGuid().ToString(), "test", "testCred", "BitstringStatusList", 1024, 100) });
         _fixture.ConfigureTokenServiceFixture<DimClient>(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(JsonSerializer.Serialize(data, JsonSerializerExtensions.Options)) });
         var sut = _fixture.Create<DimClient>();
 
         // Act
-        var result = await sut.GetStatusList(_fixture.Create<BasicAuthSettings>(), "https://example.org", Guid.NewGuid(), CancellationToken.None);
+        var result = await sut.GetStatusList(_fixture.Create<BasicAuthSettings>(), "https://example.org", Guid.NewGuid(), StatusListType.BitstringStatusList, CancellationToken.None);
 
         // Assert
         result.Should().Be("testCred");
@@ -142,7 +143,7 @@ public class DimClientTests
             new HttpResponseMessage(HttpStatusCode.OK),
             requestMessage => request = requestMessage);
         var sut = _fixture.Create<DimClient>();
-        Task Act() => sut.CreateStatusList(_fixture.Create<BasicAuthSettings>(), "https://example.org", Guid.NewGuid(), CancellationToken.None);
+        Task Act() => sut.CreateStatusList(_fixture.Create<BasicAuthSettings>(), "https://example.org", Guid.NewGuid(), StatusListType.StatusList2021, CancellationToken.None);
 
         // Act
         var ex = await Assert.ThrowsAsync<ServiceException>(Act);
@@ -157,7 +158,7 @@ public class DimClientTests
         // Arrange
         _fixture.ConfigureTokenServiceFixture<DimClient>(new HttpResponseMessage(HttpStatusCode.BadRequest));
         var sut = _fixture.Create<DimClient>();
-        Task Act() => sut.CreateStatusList(_fixture.Create<BasicAuthSettings>(), "https://example.org", Guid.NewGuid(), CancellationToken.None);
+        Task Act() => sut.CreateStatusList(_fixture.Create<BasicAuthSettings>(), "https://example.org", Guid.NewGuid(), StatusListType.StatusList2021, CancellationToken.None);
 
         // Act
         var ex = await Assert.ThrowsAsync<ServiceException>(Act);
@@ -181,7 +182,7 @@ public class DimClientTests
         var sut = _fixture.Create<DimClient>();
 
         // Act
-        var result = await sut.CreateStatusList(_fixture.Create<BasicAuthSettings>(), "https://example.org", Guid.NewGuid(), CancellationToken.None);
+        var result = await sut.CreateStatusList(_fixture.Create<BasicAuthSettings>(), "https://example.org", Guid.NewGuid(), StatusListType.StatusList2021, CancellationToken.None);
 
         // Assert
         result.Should().Be(recovationVc);

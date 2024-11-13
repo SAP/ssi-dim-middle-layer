@@ -62,7 +62,7 @@ public class DimBusinessLogic(
         await dimRepositories.SaveAsync().ConfigureAwait(ConfigureAwaitOptions.None);
     }
 
-    public async Task<string> GetStatusList(string bpn, CancellationToken cancellationToken)
+    public async Task<string> GetStatusList(string bpn, StatusListType statusListType, CancellationToken cancellationToken)
     {
         var (exists, companyId, baseUrl, walletData) = await dimRepositories.GetInstance<ITenantRepository>().GetCompanyAndWalletDataForBpn(bpn).ConfigureAwait(ConfigureAwaitOptions.None);
         var (tokenAddress, clientId, clientSecret, initializationVector, encryptionMode) = walletData.ValidateData();
@@ -90,10 +90,10 @@ public class DimBusinessLogic(
             ClientId = clientId,
             ClientSecret = secret
         };
-        return await dimClient.GetStatusList(dimAuth, baseUrl, companyId.Value, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
+        return await dimClient.GetStatusList(dimAuth, baseUrl, companyId.Value, statusListType, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
     }
 
-    public async Task<string> CreateStatusList(string bpn, CancellationToken cancellationToken)
+    public async Task<string> CreateStatusList(string bpn, StatusListType statusListType, CancellationToken cancellationToken)
     {
         var (exists, companyId, baseUrl, walletData) = await dimRepositories.GetInstance<ITenantRepository>().GetCompanyAndWalletDataForBpn(bpn).ConfigureAwait(ConfigureAwaitOptions.None);
         var (tokenAddress, clientId, clientSecret, initializationVector, encryptionMode) = walletData.ValidateData();
@@ -121,7 +121,7 @@ public class DimBusinessLogic(
             ClientId = clientId,
             ClientSecret = secret
         };
-        return await dimClient.CreateStatusList(dimAuth, baseUrl, companyId.Value, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
+        return await dimClient.CreateStatusList(dimAuth, baseUrl, companyId.Value, statusListType, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
     }
 
     public async Task CreateTechnicalUser(string bpn, TechnicalUserData technicalUserData)

@@ -18,10 +18,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
-
 namespace Dim.Clients.Token;
 
 public interface IBasicAuthTokenService

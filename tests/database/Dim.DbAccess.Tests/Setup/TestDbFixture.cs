@@ -19,7 +19,6 @@
  ********************************************************************************/
 
 using Dim.Entities;
-using Dim.Migrations.Migrations;
 using Dim.Migrations.Seeder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

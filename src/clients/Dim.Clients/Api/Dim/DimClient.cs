@@ -21,6 +21,7 @@
 using Dim.Clients.Api.Dim.Models;
 using Dim.Clients.Extensions;
 using Dim.Clients.Token;
+using Dim.DbAccess.Models;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.HttpClientExtensions;
 using System.Net.Http.Json;
@@ -61,7 +62,7 @@ public class DimClient(IBasicAuthTokenService basicAuthTokenService)
         }
     }
 
-    public async Task<string> GetStatusList(BasicAuthSettings dimAuth, string dimBaseUrl, Guid companyId, CancellationToken cancellationToken)
+    public async Task<string> GetStatusList(BasicAuthSettings dimAuth, string dimBaseUrl, Guid companyId, StatusListType statusListType, CancellationToken cancellationToken)
     {
         var client = await basicAuthTokenService.GetBasicAuthorizedClient<DimClient>(dimAuth, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
         var result = await client.GetAsync($"{dimBaseUrl}/api/v2.0.0/companyIdentities/{companyId}/revocationLists", cancellationToken)
@@ -76,12 +77,12 @@ public class DimClient(IBasicAuthTokenService basicAuthTokenService)
             var response = await result.Content
                 .ReadFromJsonAsync<StatusListListResponse>(JsonSerializerExtensions.Options, cancellationToken)
                 .ConfigureAwait(ConfigureAwaitOptions.None);
-            if (response?.Data == null || !response.Data.Any(x => x.RemainingSpace > 0))
+            if (response?.Data == null || !response.Data.Where(x => x.Type == statusListType.ToString()).Any(x => x.RemainingSpace > 0))
             {
                 throw new ConflictException("There is no status list with remaining space, please create a new one.");
             }
 
-            return response.Data.First(x => x.RemainingSpace > 0).StatusListCredential;
+            return response.Data.First(x => x.RemainingSpace > 0 && x.Type == statusListType.ToString()).StatusListCredential;
         }
         catch (JsonException je)
         {
@@ -89,10 +90,10 @@ public class DimClient(IBasicAuthTokenService basicAuthTokenService)
         }
     }
 
-    public async Task<string> CreateStatusList(BasicAuthSettings dimAuth, string dimBaseUrl, Guid companyId, CancellationToken cancellationToken)
+    public async Task<string> CreateStatusList(BasicAuthSettings dimAuth, string dimBaseUrl, Guid companyId, StatusListType statusListType, CancellationToken cancellationToken)
     {
         var client = await basicAuthTokenService.GetBasicAuthorizedClient<DimClient>(dimAuth, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
-        var data = new CreateStatusListRequest(new CreateStatusListPaypload(new CreateStatusList("StatusList2021", DateTimeOffset.UtcNow.ToString("yyyyMMdd"), "New revocation list", 2097152)));
+        var data = new CreateStatusListRequest(new CreateStatusListPaypload(new CreateStatusList(statusListType.ToString(), DateTimeOffset.UtcNow.ToString("yyyyMMdd"), "New revocation list", 2097152)));
         var result = await client.PostAsJsonAsync($"{dimBaseUrl}/api/v2.0.0/companyIdentities/{companyId}/revocationLists", data, JsonSerializerExtensions.Options, cancellationToken)
             .CatchingIntoServiceExceptionFor("assign-application", HttpAsyncResponseMessageExtension.RecoverOptions.INFRASTRUCTURE,
                 async m =>
