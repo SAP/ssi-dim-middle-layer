@@ -24,7 +24,8 @@ using Dim.Entities.Enums;
 using Dim.Entities.Extensions;
 using DimProcess.Library;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
-using Processes.Worker.Library;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.Processes.Library.Enums;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.Processes.Worker.Library;
 using System.Collections.Immutable;
 
 namespace DimProcess.Executor;
@@ -32,7 +33,7 @@ namespace DimProcess.Executor;
 public class TechnicalUserProcessTypeExecutor(
     IDimRepositories dimRepositories,
     ITechnicalUserProcessHandler technicalUserProcessHandler)
-    : IProcessTypeExecutor
+    : IProcessTypeExecutor<ProcessTypeId, ProcessStepTypeId>
 {
     private readonly IEnumerable<ProcessStepTypeId> _executableProcessSteps = ImmutableArray.Create(
         ProcessStepTypeId.CREATE_TECHNICAL_USER,
@@ -49,7 +50,7 @@ public class TechnicalUserProcessTypeExecutor(
     public IEnumerable<ProcessStepTypeId> GetExecutableStepTypeIds() => _executableProcessSteps;
     public ValueTask<bool> IsLockRequested(ProcessStepTypeId processStepTypeId) => new(false);
 
-    public async ValueTask<IProcessTypeExecutor.InitializationResult> InitializeProcess(Guid processId, IEnumerable<ProcessStepTypeId> processStepTypeIds)
+    public async ValueTask<IProcessTypeExecutor<ProcessTypeId, ProcessStepTypeId>.InitializationResult> InitializeProcess(Guid processId, IEnumerable<ProcessStepTypeId> processStepTypeIds)
     {
         var (exists, technicalUserId) = await dimRepositories.GetInstance<ITechnicalUserRepository>().GetTenantDataForTechnicalUserProcessId(processId).ConfigureAwait(ConfigureAwaitOptions.None);
         if (!exists)
@@ -58,10 +59,10 @@ public class TechnicalUserProcessTypeExecutor(
         }
 
         _technicalUserId = technicalUserId;
-        return new IProcessTypeExecutor.InitializationResult(false, null);
+        return new IProcessTypeExecutor<ProcessTypeId, ProcessStepTypeId>.InitializationResult(false, null);
     }
 
-    public async ValueTask<IProcessTypeExecutor.StepExecutionResult> ExecuteProcessStep(ProcessStepTypeId processStepTypeId, IEnumerable<ProcessStepTypeId> processStepTypeIds, CancellationToken cancellationToken)
+    public async ValueTask<IProcessTypeExecutor<ProcessTypeId, ProcessStepTypeId>.StepExecutionResult> ExecuteProcessStep(ProcessStepTypeId processStepTypeId, IEnumerable<ProcessStepTypeId> processStepTypeIds, CancellationToken cancellationToken)
     {
         if (_technicalUserId == Guid.Empty)
         {
@@ -98,7 +99,7 @@ public class TechnicalUserProcessTypeExecutor(
             modified = true;
         }
 
-        return new IProcessTypeExecutor.StepExecutionResult(modified, stepStatusId, nextStepTypeIds, null, processMessage);
+        return new IProcessTypeExecutor<ProcessTypeId, ProcessStepTypeId>.StepExecutionResult(modified, stepStatusId, nextStepTypeIds, null, processMessage);
     }
 
     private static (ProcessStepStatusId StatusId, string? ProcessMessage, IEnumerable<ProcessStepTypeId>? nextSteps) ProcessError(Exception ex, ProcessStepTypeId processStepTypeId)

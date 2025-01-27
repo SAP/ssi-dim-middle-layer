@@ -26,12 +26,14 @@ using Dim.DbAccess.Models;
 using Dim.DbAccess.Repositories;
 using Dim.Entities.Enums;
 using Dim.Entities.Extensions;
-using Dim.Processes.Library;
 using Dim.Web.ErrorHandling;
 using Dim.Web.Models;
 using Microsoft.Extensions.Options;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Models.Configuration;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.Processes.Library.DBAccess;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.Processes.Library.Enums;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.Processes.Library.Extensions;
 using System.Text.RegularExpressions;
 
 namespace Dim.Web.BusinessLogic;
@@ -53,7 +55,7 @@ public class DimBusinessLogic(
             throw ConflictException.Create(DimErrors.TENANT_ALREADY_EXISTS, new ErrorParameter[] { new("companyName", companyName), new("bpn", bpn) });
         }
 
-        var processStepRepository = dimRepositories.GetInstance<IProcessStepRepository>();
+        var processStepRepository = dimRepositories.GetInstance<IProcessStepRepository<ProcessTypeId, ProcessStepTypeId>>();
         var processId = processStepRepository.CreateProcess(ProcessTypeId.SETUP_DIM).Id;
         processStepRepository.CreateProcessStep(ProcessStepTypeId.CREATE_WALLET, ProcessStepStatusId.TODO, processId);
 
@@ -133,7 +135,7 @@ public class DimBusinessLogic(
             throw NotFoundException.Create(DimErrors.NO_COMPANY_FOR_BPN, new ErrorParameter[] { new("bpn", bpn) });
         }
 
-        var processStepRepository = dimRepositories.GetInstance<IProcessStepRepository>();
+        var processStepRepository = dimRepositories.GetInstance<IProcessStepRepository<ProcessTypeId, ProcessStepTypeId>>();
         var processId = processStepRepository.CreateProcess(ProcessTypeId.TECHNICAL_USER).Id;
         processStepRepository.CreateProcessStep(ProcessStepTypeId.CREATE_TECHNICAL_USER, ProcessStepStatusId.TODO, processId);
 
@@ -152,7 +154,7 @@ public class DimBusinessLogic(
             throw NotFoundException.Create(DimErrors.NO_TECHNICAL_USER_FOUND, new ErrorParameter[] { new("bpn", bpn) });
         }
 
-        var processStepRepository = dimRepositories.GetInstance<IProcessStepRepository>();
+        var processStepRepository = dimRepositories.GetInstance<IProcessStepRepository<ProcessTypeId, ProcessStepTypeId>>();
         processStepRepository.CreateProcessStep(ProcessStepTypeId.DELETE_TECHNICAL_USER, ProcessStepStatusId.TODO, processId);
 
         dimRepositories.GetInstance<ITechnicalUserRepository>().AttachAndModifyTechnicalUser(technicalUserId,
@@ -210,7 +212,7 @@ public class DimBusinessLogic(
     {
         var stepToTrigger = processStepTypeId.GetStepForRetrigger(processTypeId);
 
-        var (validProcessId, processData) = await dimRepositories.GetInstance<IProcessStepRepository>().IsValidProcess(processId, processTypeId, Enumerable.Repeat(processStepTypeId, 1)).ConfigureAwait(ConfigureAwaitOptions.None);
+        var (validProcessId, processData) = await dimRepositories.GetInstance<IProcessStepRepository<ProcessTypeId, ProcessStepTypeId>>().IsValidProcess(processId, processTypeId, Enumerable.Repeat(processStepTypeId, 1)).ConfigureAwait(ConfigureAwaitOptions.None);
         if (!validProcessId)
         {
             throw new NotFoundException($"process {processId} does not exist");
