@@ -27,6 +27,7 @@ using Dim.Entities.Entities;
 using Dim.Entities.Enums;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.Processes.Library.DBAccess;
 using Xunit;
 using Xunit.Extensions.AssemblyFixture;
 
@@ -61,19 +62,6 @@ public class DimRepositoriesTests(TestDbFixture testDbFixture)
 
         // Assert
         result.Should().BeOfType<TechnicalUserRepository>();
-    }
-
-    [Fact]
-    public async Task GetInstance_ProcessStepRepository_CreatesSuccessfully()
-    {
-        // Arrange
-        var sut = await CreateSut();
-
-        // Act
-        var result = sut.GetInstance<IProcessStepRepository>();
-
-        // Assert
-        result.Should().BeOfType<ProcessStepRepository>();
     }
 
     #endregion

@@ -18,10 +18,11 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using Dim.Entities.Enums;
 using DimProcess.Library.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Processes.Worker.Library;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.Processes.Worker.Library;
 
 namespace DimProcess.Executor.DependencyInjection;
 
@@ -29,11 +30,11 @@ public static class DimProcessCollectionExtensions
 {
     public static IServiceCollection AddDimProcessExecutor(this IServiceCollection services, IConfiguration config) =>
         services
-            .AddTransient<IProcessTypeExecutor, DimProcessTypeExecutor>()
+            .AddTransient<IProcessTypeExecutor<ProcessTypeId, ProcessStepTypeId>, DimProcessTypeExecutor>()
             .AddDimProcessHandler(config);
 
     public static IServiceCollection AddTechnicalUserProcessExecutor(this IServiceCollection services, IConfiguration config) =>
         services
-            .AddTransient<IProcessTypeExecutor, TechnicalUserProcessTypeExecutor>()
+            .AddTransient<IProcessTypeExecutor<ProcessTypeId, ProcessStepTypeId>, TechnicalUserProcessTypeExecutor>()
             .AddTechnicalUserProcessHandler(config);
 }

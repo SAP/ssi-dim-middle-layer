@@ -20,53 +20,25 @@
 
 using Dim.DbAccess.Repositories;
 using Dim.Entities;
-using Microsoft.EntityFrameworkCore;
-using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
+using Dim.Entities.Entities;
+using Dim.Entities.Enums;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.DBAccess;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.Processes.Library.Concrete.Entities;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.Processes.Library.DBAccess;
 using System.Collections.Immutable;
 
 namespace Dim.DbAccess;
 
-public class DimRepositories(DimDbContext dbContext)
-    : IDimRepositories
+public class DimRepositories(DimDbContext dbContext) :
+    AbstractRepositories<DimDbContext>(dbContext),
+    IDimRepositories
 {
-    private static readonly IReadOnlyDictionary<Type, Func<DimDbContext, object>> Types = new Dictionary<Type, Func<DimDbContext, object>> {
-        { typeof(IProcessStepRepository), context => new ProcessStepRepository(context) },
-        { typeof(ITenantRepository), context => new TenantRepository(context) },
-        { typeof(ITechnicalUserRepository), context => new TechnicalUserRepository(context) }
-    }.ToImmutableDictionary();
+    protected override IReadOnlyDictionary<Type, Func<DimDbContext, object>> RepositoryTypes => Types;
 
-    public RepositoryType GetInstance<RepositoryType>()
-    {
-        object? repository = default;
-
-        if (Types.TryGetValue(typeof(RepositoryType), out var createFunc))
-        {
-            repository = createFunc(dbContext);
-        }
-
-        return (RepositoryType)(repository ?? throw new ArgumentException($"unexpected type {typeof(RepositoryType).Name}", nameof(RepositoryType)));
-    }
-
-    /// <inheritdoc />
-    public TEntity Attach<TEntity>(TEntity entity, Action<TEntity>? setOptionalParameters = null) where TEntity : class
-    {
-        var attachedEntity = dbContext.Attach(entity).Entity;
-        setOptionalParameters?.Invoke(attachedEntity);
-
-        return attachedEntity;
-    }
-
-    public Task<int> SaveAsync()
-    {
-        try
-        {
-            return dbContext.SaveChangesAsync();
-        }
-        catch (DbUpdateConcurrencyException e)
-        {
-            throw new ConflictException("while processing a concurrent update was saved to the database (reason could also be data to be deleted is no longer existing)", e);
-        }
-    }
-
-    public void Clear() => dbContext.ChangeTracker.Clear();
+    private static readonly IReadOnlyDictionary<Type, Func<DimDbContext, object>> Types = ImmutableDictionary.CreateRange(
+    [
+        CreateTypeEntry<ITenantRepository>(context => new TenantRepository(context)),
+        CreateTypeEntry<ITechnicalUserRepository>(context => new TechnicalUserRepository(context)),
+        CreateTypeEntry<IProcessStepRepository<ProcessTypeId, ProcessStepTypeId>>(context => new ProcessStepRepository<Process, ProcessType<Process, ProcessTypeId>, ProcessStep<Process, ProcessTypeId, ProcessStepTypeId>, ProcessStepType<Process, ProcessTypeId, ProcessStepTypeId>, ProcessTypeId, ProcessStepTypeId>(new DimProcessDbContextAccess(context))),
+    ]);
 }

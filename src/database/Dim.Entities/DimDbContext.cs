@@ -21,25 +21,13 @@
 using Dim.Entities.Entities;
 using Dim.Entities.Enums;
 using Microsoft.EntityFrameworkCore;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.Processes.Library.Concrete.Context;
 
 namespace Dim.Entities;
 
-public class DimDbContext : DbContext
+public class DimDbContext(DbContextOptions<DimDbContext> options) :
+    ProcessDbContext<Process, ProcessTypeId, ProcessStepTypeId>(options)
 {
-    protected DimDbContext()
-    {
-    }
-
-    public DimDbContext(DbContextOptions<DimDbContext> options)
-        : base(options)
-    {
-    }
-
-    public virtual DbSet<Process> Processes { get; set; } = default!;
-    public virtual DbSet<ProcessStep> ProcessSteps { get; set; } = default!;
-    public virtual DbSet<ProcessStepStatus> ProcessStepStatuses { get; set; } = default!;
-    public virtual DbSet<ProcessStepType> ProcessStepTypes { get; set; } = default!;
-    public virtual DbSet<ProcessType> ProcessTypes { get; set; } = default!;
     public virtual DbSet<Tenant> Tenants { get; set; } = default!;
     public virtual DbSet<TechnicalUser> TechnicalUsers { get; set; } = default!;
 
@@ -53,38 +41,7 @@ public class DimDbContext : DbContext
         modelBuilder.HasAnnotation("Relational:Collation", "en_US.utf8");
         modelBuilder.HasDefaultSchema("dim");
 
-        modelBuilder.Entity<Process>()
-            .HasOne(d => d.ProcessType)
-            .WithMany(p => p.Processes)
-            .HasForeignKey(d => d.ProcessTypeId)
-            .OnDelete(DeleteBehavior.ClientSetNull);
-
-        modelBuilder.Entity<ProcessStep>()
-            .HasOne(d => d.Process)
-            .WithMany(p => p.ProcessSteps)
-            .HasForeignKey(d => d.ProcessId)
-            .OnDelete(DeleteBehavior.ClientSetNull);
-
-        modelBuilder.Entity<ProcessType>()
-            .HasData(
-                Enum.GetValues(typeof(ProcessTypeId))
-                    .Cast<ProcessTypeId>()
-                    .Select(e => new ProcessType(e))
-            );
-
-        modelBuilder.Entity<ProcessStepStatus>()
-            .HasData(
-                Enum.GetValues(typeof(ProcessStepStatusId))
-                    .Cast<ProcessStepStatusId>()
-                    .Select(e => new ProcessStepStatus(e))
-            );
-
-        modelBuilder.Entity<ProcessStepType>()
-            .HasData(
-                Enum.GetValues(typeof(ProcessStepTypeId))
-                    .Cast<ProcessStepTypeId>()
-                    .Select(e => new ProcessStepType(e))
-            );
+        base.OnModelCreating(modelBuilder);
 
         modelBuilder.Entity<Tenant>(t =>
             {

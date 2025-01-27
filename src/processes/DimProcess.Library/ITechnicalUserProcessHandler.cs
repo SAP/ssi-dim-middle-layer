@@ -19,6 +19,7 @@
  ********************************************************************************/
 
 using Dim.Entities.Enums;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.Processes.Library.Enums;
 
 namespace DimProcess.Library;
 

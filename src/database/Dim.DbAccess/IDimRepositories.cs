@@ -18,12 +18,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
+using Org.Eclipse.TractusX.Portal.Backend.Framework.DBAccess;
+
 namespace Dim.DbAccess;
 
-public interface IDimRepositories
-{
-    RepositoryType GetInstance<RepositoryType>();
-    TEntity Attach<TEntity>(TEntity entity, Action<TEntity>? setOptionalParameters = null) where TEntity : class;
-    Task<int> SaveAsync();
-    void Clear();
-}
+public interface IDimRepositories : IRepositories;

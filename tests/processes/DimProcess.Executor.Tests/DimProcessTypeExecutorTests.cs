@@ -23,6 +23,7 @@ using Dim.DbAccess.Repositories;
 using Dim.Entities.Enums;
 using DimProcess.Library;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.Processes.Library.Enums;
 
 namespace DimProcess.Executor.Tests;
 

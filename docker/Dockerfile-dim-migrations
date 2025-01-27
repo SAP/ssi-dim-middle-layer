@@ -23,7 +23,6 @@ ARG TARGETARCH
 WORKDIR /
 COPY LICENSE /
 COPY /src/database /src/database
-COPY /src/processes/Processes.Worker.Library /src/processes/Processes.Worker.Library
 WORKDIR /src/database/Dim.Migrations
 RUN dotnet publish "Dim.Migrations.csproj" -c Release -o /migrations/publish
 

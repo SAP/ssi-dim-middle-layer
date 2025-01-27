@@ -20,38 +20,13 @@
 
 using Dim.Entities.Enums;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.DBAccess;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.Processes.Library.Concrete.Entities;
 using System.ComponentModel.DataAnnotations;
 
 namespace Dim.Entities.Entities;
 
-public class Process : ILockableEntity
+public class Process(Guid id, ProcessTypeId processTypeId, Guid version) : AbstractProcess<Process, ProcessTypeId, ProcessStepTypeId>(id, processTypeId, version)
 {
-    private Process()
-    {
-        ProcessSteps = new HashSet<ProcessStep>();
-        Tenants = new HashSet<Tenant>();
-        TechnicalUsers = new HashSet<TechnicalUser>();
-    }
-
-    public Process(Guid id, ProcessTypeId processTypeId, Guid version) : this()
-    {
-        Id = id;
-        ProcessTypeId = processTypeId;
-        Version = version;
-    }
-
-    public Guid Id { get; private set; }
-
-    public ProcessTypeId ProcessTypeId { get; set; }
-
-    public DateTimeOffset? LockExpiryDate { get; set; }
-
-    [ConcurrencyCheck]
-    public Guid Version { get; set; }
-
-    // Navigation properties
-    public virtual ProcessType? ProcessType { get; set; }
-    public virtual ICollection<ProcessStep> ProcessSteps { get; private set; }
     public virtual ICollection<Tenant> Tenants { get; private set; }
     public virtual ICollection<TechnicalUser> TechnicalUsers { get; private set; }
 }
