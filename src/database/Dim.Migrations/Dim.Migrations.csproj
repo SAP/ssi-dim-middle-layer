@@ -46,7 +46,7 @@
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
     <PackageReference Include="Org.Eclipse.TractusX.Portal.Backend.Framework.Models" Version="2.13.0" />
     <PackageReference Include="Org.Eclipse.TractusX.Portal.Backend.Framework.Logging" Version="2.13.0" />
-    <PackageReference Include="Org.Eclipse.TractusX.Portal.Backend.Framework.Seeding" Version="2.13.0" />
+    <PackageReference Include="Org.Eclipse.TractusX.Portal.Backend.Framework.Seeding" Version="2.14.0" />
   </ItemGroup>
 
   <ItemGroup>

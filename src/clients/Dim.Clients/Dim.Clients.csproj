@@ -36,9 +36,9 @@
       <PackageReference Include="Microsoft.Extensions.Options" Version="8.0.2" />
       <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="8.0.0" />
       <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" Version="8.0.0" />
-      <PackageReference Include="Org.Eclipse.TractusX.Portal.Backend.Framework.DependencyInjection" Version="2.13.0" />
-      <PackageReference Include="Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling" Version="2.13.0" />
-      <PackageReference Include="Org.Eclipse.TractusX.Portal.Backend.Framework.HttpClientExtensions" Version="2.13.0" />
+      <PackageReference Include="Org.Eclipse.TractusX.Portal.Backend.Framework.DependencyInjection" Version="2.15.0" />
+      <PackageReference Include="Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling" Version="2.15.0" />
+      <PackageReference Include="Org.Eclipse.TractusX.Portal.Backend.Framework.HttpClientExtensions" Version="2.15.0" />
     </ItemGroup>
 
 </Project>
