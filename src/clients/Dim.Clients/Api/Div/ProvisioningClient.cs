@@ -25,8 +25,12 @@ using Dim.Clients.Token;
 using Microsoft.Extensions.Options;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.HttpClientExtensions;
+using System;
+using System.Linq;
 using System.Net.Http.Json;
 using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Dim.Clients.Api.Div;
 
@@ -138,7 +142,8 @@ public class ProvisioningClient(IBasicAuthTokenService basicAuthTokenService, IO
             "create",
             new ServiceKeyCreationPayloadData(
                 walletId,
-                technicalUserName
+                technicalUserName,
+                new ServiceKeyParameter(new[] { "IatpOperations", "ReadCompanyIdentity", "ResolveDID" })
             )
         );
         var client = await basicAuthTokenService

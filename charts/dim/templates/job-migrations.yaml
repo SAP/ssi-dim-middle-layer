@@ -38,7 +38,7 @@ spec:
           allowPrivilegeEscalation: false
           capabilities:
             drop:
-            - ALL
+              - ALL
           readOnlyRootFilesystem: true
           runAsNonRoot: true
         image: "{{ .Values.migrations.image.name }}:{{ .Values.migrations.image.tag | default .Chart.AppVersion }}"
@@ -64,15 +64,31 @@ spec:
           - name: "CONNECTIONSTRINGS__DIMDB"
             value: "Server={{ .Values.externalDatabase.host }};Database={{ .Values.externalDatabase.database }};Port={{ .Values.externalDatabase.port }};User Id={{ .Values.externalDatabase.username }};Password=$(DIM_PASSWORD);Ssl Mode={{ .Values.dbConnection.sslMode }};"
           {{- end }}
-          - name: "SEEDING__TESTDATAENVIRONMENTS__0"
-            value: "{{ .Values.migrations.seeding.testDataEnvironments }}"
           - name: "SEEDING__DATAPATHS__0"
-            value: "{{ .Values.migrations.seeding.testDataPaths }}"
+            value: "Seeder/Data/"
+          - name: "SEEDING__TESTDATAENVIRONMENTS__0"
+            value: ""
+          - name: "SEEDING__DATAPATHS__1"
+            value: "Seeder/Data/overwrite"
+          - name: "SEEDING__TESTDATAENVIRONMENTS__1"
+            value: ""
           - name: "SERILOG__MINIMUMLEVEL__Default"
             value: "{{ .Values.migrations.logging.default }}"
         ports:
-        - name: http
-          containerPort: {{ .Values.portContainer }}
-          protocol: TCP
+          - name: http
+            containerPort: {{ .Values.portContainer }}
+            protocol: TCP
         resources:
           {{- toYaml .Values.migrations.resources | nindent 10 }}
+        {{- if (.Values.migrations.seeding.useInitial) }}
+        volumeMounts:
+          - name: data-initial
+            mountPath: /migrations/Seeder/Data/overwrite
+        {{- end }}
+      {{- if (.Values.migrations.seeding.useInitial) }}
+      volumes:
+        - name: data-initial
+          configMap:
+            name: "{{ include "dim.fullname" . }}-seeding-initialdata"
+            optional: true
+      {{- end }}

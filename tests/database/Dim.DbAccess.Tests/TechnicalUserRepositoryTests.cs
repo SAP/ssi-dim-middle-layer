@@ -11,20 +11,9 @@ using Xunit.Extensions.AssemblyFixture;
 
 namespace Dim.DbAccess.Tests;
 
-public class TechnicalUserRepositoryTests : IAssemblyFixture<TestDbFixture>
+public class TechnicalUserRepositoryTests(TestDbFixture testDbFixture)
+    : IAssemblyFixture<TestDbFixture>
 {
-    private readonly TestDbFixture _dbTestDbFixture;
-
-    public TechnicalUserRepositoryTests(TestDbFixture testDbFixture)
-    {
-        var fixture = new Fixture().Customize(new AutoFakeItEasyCustomization { ConfigureMembers = true });
-        fixture.Behaviors.OfType<ThrowingRecursionBehavior>().ToList()
-            .ForEach(b => fixture.Behaviors.Remove(b));
-
-        fixture.Behaviors.Add(new OmitOnRecursionBehavior());
-        _dbTestDbFixture = testDbFixture;
-    }
-
     #region CreateTechnicalUser
 
     [Fact]
@@ -278,14 +267,14 @@ public class TechnicalUserRepositoryTests : IAssemblyFixture<TestDbFixture>
 
     private async Task<(TechnicalUserRepository sut, DimDbContext dbContext)> CreateSutWithContext()
     {
-        var context = await _dbTestDbFixture.GetDbContext();
+        var context = await testDbFixture.GetDbContext();
         var sut = new TechnicalUserRepository(context);
         return (sut, context);
     }
 
     private async Task<TechnicalUserRepository> CreateSut()
     {
-        var context = await _dbTestDbFixture.GetDbContext();
+        var context = await testDbFixture.GetDbContext();
         return new TechnicalUserRepository(context);
     }
 }
