@@ -26,13 +26,13 @@ ingress:
     nginx.ingress.kubernetes.io/use-regex: "true"
     nginx.ingress.kubernetes.io/enable-cors: "true"
     nginx.ingress.kubernetes.io/proxy-body-size: "8m"
-    nginx.ingress.kubernetes.io/cors-allow-origin: "https://*.stable.catena-x.net"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "https://*.factory-x.catena-x.net"
   tls:
-    - secretName: "dim-v2.stable.catena-x.net-tls"
+    - secretName: "dim-v2.factory-x.catena-x.net-tls"
       hosts:
-        - "dim-v2.stable.catena-x.net"
+        - "dim-v2.factory-x.catena-x.net"
   hosts:
-    - host: "dim-v2.stable.catena-x.net"
+    - host: "dim-v2.factory-x.catena-x.net"
       paths:
         - path: "/api/dim"
           pathType: "Prefix"
@@ -42,8 +42,6 @@ ingress:
 dim:
   swaggerEnabled: true
   operatorId: "d6cd4e2e-1053-4ba6-888e-1cd56509958a"
-  bpn: "BPNL00000003CRHK"
-  didDocumentLocationAddress: "https://portal-backend.stable.catena-x.net/api/administration/staticdata/did/BPNL00000003CRHK/did.json"
 
 migrations:
   logging:
