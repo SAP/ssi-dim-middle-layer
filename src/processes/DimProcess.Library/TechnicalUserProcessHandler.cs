@@ -20,7 +20,6 @@
 
 using Dim.Clients.Api.Div;
 using Dim.Clients.Api.Div.Models;
-using Dim.Clients.Token;
 using Dim.DbAccess;
 using Dim.DbAccess.Extensions;
 using Dim.DbAccess.Repositories;

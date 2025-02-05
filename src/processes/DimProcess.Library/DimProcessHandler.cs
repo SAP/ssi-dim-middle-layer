@@ -215,7 +215,7 @@ public class DimProcessHandler(
             ClientId = clientId,
             ClientSecret = secret
         };
-        await dimClient.CreateStatusList(dimAuth, baseUrl, companyId.Value, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
+        await dimClient.CreateStatusList(dimAuth, baseUrl, companyId.Value, _settings.StatusListType, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
 
         return new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(
             Enumerable.Repeat(ProcessStepTypeId.SEND_CALLBACK, 1),

@@ -28,8 +28,8 @@ namespace Dim.Web.BusinessLogic;
 public interface IDimBusinessLogic : ITransient
 {
     Task StartSetupDim(string companyName, string bpn, string didDocumentLocation, bool isIssuer);
-    Task<string> GetStatusList(string bpn, CancellationToken cancellationToken);
-    Task<string> CreateStatusList(string bpn, CancellationToken cancellationToken);
+    Task<string> GetStatusList(string bpn, StatusListType statusListType, CancellationToken cancellationToken);
+    Task<string> CreateStatusList(string bpn, StatusListType statusListType, CancellationToken cancellationToken);
     Task CreateTechnicalUser(string bpn, TechnicalUserData technicalUserData);
     Task DeleteTechnicalUser(string bpn, TechnicalUserData technicalUserData);
     Task<ProcessData> GetSetupProcess(string bpn, string companyName);

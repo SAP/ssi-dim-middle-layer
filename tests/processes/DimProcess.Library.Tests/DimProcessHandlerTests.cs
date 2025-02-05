@@ -384,7 +384,7 @@ public class DimProcessHandlerTests
         var result = await _sut.CreateStatusList(_tenantId, CancellationToken.None);
 
         // Assert
-        A.CallTo(() => _dimClient.CreateStatusList(A<BasicAuthSettings>._, BaseUrl, companyId, A<CancellationToken>._))
+        A.CallTo(() => _dimClient.CreateStatusList(A<BasicAuthSettings>._, BaseUrl, companyId, A<StatusListType>._, A<CancellationToken>._))
             .MustHaveHappenedOnceExactly();
 
         result.modified.Should().BeFalse();
