@@ -20,9 +20,11 @@
 
 using Dim.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.DBAccess;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Logging;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Seeding.DependencyInjection;
 using Serilog;
@@ -40,7 +42,8 @@ try
                 .AddDbContext<DimDbContext>(o =>
                     o.UseNpgsql(hostContext.Configuration.GetConnectionString("DimDb"),
                         x => x.MigrationsAssembly(Assembly.GetExecutingAssembly().GetName().Name)
-                            .MigrationsHistoryTable("__efmigrations_history_dim")));
+                            .MigrationsHistoryTable("__efmigrations_history_dim", "public"))
+                        .ReplaceService<IHistoryRepository, CustomNpgsqlHistoryRepository>());
         })
         .AddLogging()
         .Build();
