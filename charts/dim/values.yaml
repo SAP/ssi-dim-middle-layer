@@ -87,7 +87,7 @@ processesworker:
     applicationName: ""
     # -- Sets the type of the status list which will be created for the issuer wallet
     # -- valid types are:  StatusList2021, BitstringStatusList
-    statusListType: "BitstringStatusList"
+    statusListType: "StatusList2021"
   provisioning:
     clientId: ""
     clientSecret: ""
