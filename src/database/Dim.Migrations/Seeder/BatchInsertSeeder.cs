@@ -20,8 +20,10 @@
 
 using Dim.Entities;
 using Dim.Entities.Entities;
+using Dim.Entities.Enums;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.Processes.Library.Concrete.Entities;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Seeding;
 
 namespace Dim.Migrations.Seeder;
@@ -48,7 +50,7 @@ public class BatchInsertSeeder(DimDbContext context, ILogger<BatchInsertSeeder> 
 
         logger.LogInformation("Start BaseEntityBatch Seeder");
         await SeedTable<Tenant>("tenants", x => x.Id, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
-        await SeedTable<ProcessStep>("process_steps", x => x.Id, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
+        await SeedTable<ProcessStep<Process, ProcessTypeId, ProcessStepTypeId>>("process_steps", x => x.Id, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
         await SeedTable<Process>("processes", x => x.Id, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
         await SeedTable<TechnicalUser>("technical_users", x => x.Id, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
 

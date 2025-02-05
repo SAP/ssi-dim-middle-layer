@@ -19,12 +19,13 @@
  ********************************************************************************/
 
 using Dim.DbAccess.DependencyInjection;
+using Dim.Entities.Enums;
 using DimProcess.Executor.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Logging;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.Processes.Worker.Library;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Token;
-using Processes.Worker.Library;
 using Serilog;
 
 LoggingExtensions.EnsureInitialized();
@@ -38,7 +39,7 @@ try
             services
                 .AddTransient<ITokenService, TokenService>()
                 .AddDatabase(hostContext.Configuration)
-                .AddProcessExecutionService(hostContext.Configuration.GetSection("Processes"))
+                .AddProcessExecutionService<ProcessTypeId, ProcessStepTypeId>(hostContext.Configuration.GetSection("Processes"))
                 .AddDimProcessExecutor(hostContext.Configuration)
                 .AddTechnicalUserProcessExecutor(hostContext.Configuration);
         })
@@ -55,7 +56,7 @@ try
     };
 
     Log.Information("Start processing");
-    var workerInstance = host.Services.GetRequiredService<ProcessExecutionService>();
+    var workerInstance = host.Services.GetRequiredService<ProcessExecutionService<ProcessTypeId, ProcessStepTypeId>>();
     await workerInstance.ExecuteAsync(tokenSource.Token).ConfigureAwait(ConfigureAwaitOptions.None);
     Log.Information("Execution finished shutting down");
 }
