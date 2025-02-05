@@ -59,7 +59,7 @@ jobs:
           helm dependency update
 
       - name: Run chart-releaser
-        uses: helm/chart-releaser-action@v1.6.0
+        uses: helm/chart-releaser-action@v1.7.0
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
           CR_SKIP_EXISTING: "true"
@@ -130,7 +130,7 @@ jobs:
             type=semver,pattern={{major}}.{{minor}},value=${{ needs.release-helm-chart.outputs.app-version }}
 
       - name: Build and push Docker images
-        uses: docker/build-push-action@48aba3b46d1b1fec4febb7c5d0c644b249a11355 # v6.10.0
+        uses: docker/build-push-action@ca877d9245402d1537745e0e356eab47c3520991 # v6.13.0
         with:
           context: .
           file: ${{ matrix.dockerfile }}
