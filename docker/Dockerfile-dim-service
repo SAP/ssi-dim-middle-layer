@@ -18,7 +18,7 @@
 # SPDX-License-Identifier: Apache-2.0
 ###############################################################
 
-FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS publish
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:9.0-alpine AS publish
 ARG TARGETARCH
 WORKDIR /
 COPY LICENSE /
@@ -26,7 +26,7 @@ COPY src/ src/
 WORKDIR /src/web/Dim.Web
 RUN dotnet publish "Dim.Web.csproj" -c Release -o /app/publish
 
-FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine
+FROM mcr.microsoft.com/dotnet/aspnet:9.0-alpine
 ENV \
     COMPlus_EnableDiagnostics=0 \
     ASPNETCORE_URLS=http://+:8080

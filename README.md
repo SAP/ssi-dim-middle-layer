@@ -12,7 +12,7 @@ For **installation** details and further information, please refer to the chart 
 
 ## Requirements and Setup
 
-Install the [.NET 8.0 SDK](https://www.microsoft.com/net/download).
+Install the [.NET 9.0 SDK](https://www.microsoft.com/net/download).
 
 Run the following command from the CLI:
 
