@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.2.1](https://github.com/SAP/ssi-dim-middle-layer/compare/v2.2.0...v2.2.1) (2025-02-07)
+
+### Bug Fixes
+
+* **processWorker:** add registration for process identity ([#158](https://github.com/SAP/ssi-dim-middle-layer/issues/158)) ([c644b2b](https://github.com/SAP/ssi-dim-middle-layer/commit/c644b2bc06477a5cc5a657de93127493e0171b56))
+
 ## [2.2.0](https://github.com/SAP/ssi-dim-middle-layer/compare/v2.1.0...v2.2.0) (2025-02-07)
 
 ### Features
