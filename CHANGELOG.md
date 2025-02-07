@@ -6,7 +6,7 @@
 
 * **processes:** use process package ([#145](https://github.com/SAP/ssi-dim-middle-layer/issues/145)) ([17eb127](https://github.com/SAP/ssi-dim-middle-layer/commit/17eb1271cb018eb448ef91e119ad86353440fab1)), closes [#3](https://github.com/SAP/ssi-dim-middle-layer/issues/3)
 * add support for bitstring statuslist ([#125](https://github.com/SAP/ssi-dim-middle-layer/issues/125)) ([3c96cbc](https://github.com/SAP/ssi-dim-middle-layer/commit/3c96cbcfceb74e76c98f421574d028ca2486a7d1)), closes [#80](https://github.com/SAP/ssi-dim-middle-layer/issues/80)
-* feat: upgrade .NET to v9 ([#150](https://github.com/SAP/ssi-dim-middle-layer/issues/150)) ([8720943](https://github.com/SAP/ssi-dim-middle-layer/commit/87209434beb94cc11ab2abf4f8a48e78caae3a19))
+* upgrade .NET to v9 ([#150](https://github.com/SAP/ssi-dim-middle-layer/issues/150)) ([8720943](https://github.com/SAP/ssi-dim-middle-layer/commit/87209434beb94cc11ab2abf4f8a48e78caae3a19))
 
 ## [2.1.1](https://github.com/SAP/ssi-dim-middle-layer/compare/v2.1.0...v2.1.1) (2024-10-24)
 
