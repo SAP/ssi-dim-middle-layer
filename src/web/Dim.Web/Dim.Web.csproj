@@ -13,8 +13,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.11"/>
-        <PackageReference Include="Org.Eclipse.TractusX.Portal.Backend.Framework.Web" Version="2.14.0" />
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.12"/>
+        <PackageReference Include="Org.Eclipse.TractusX.Portal.Backend.Framework.Web" Version="2.15.0" />
         <PackageReference Include="System.Json" Version="4.8.0" />
     </ItemGroup>
 
