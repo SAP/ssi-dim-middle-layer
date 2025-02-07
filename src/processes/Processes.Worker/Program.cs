@@ -24,8 +24,10 @@ using DimProcess.Executor.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Logging;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.Processes.ProcessIdentity;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Processes.Worker.Library;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Token;
+using Processes.Worker;
 using Serilog;
 
 LoggingExtensions.EnsureInitialized();
@@ -38,6 +40,7 @@ try
         {
             services
                 .AddTransient<ITokenService, TokenService>()
+                .AddTransient<IProcessIdentityDataDetermination, ProcessIdentityDataDetermination>()
                 .AddDatabase(hostContext.Configuration)
                 .AddProcessExecutionService<ProcessTypeId, ProcessStepTypeId>(hostContext.Configuration.GetSection("Processes"))
                 .AddDimProcessExecutor(hostContext.Configuration)

@@ -22,6 +22,7 @@ using Dim.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.DBAccess;
 
 namespace Dim.DbAccess.DependencyInjection;
 
@@ -30,6 +31,7 @@ public static class DimRepositoriesServiceExtensions
     public static IServiceCollection AddDatabase(this IServiceCollection services, IConfiguration configuration)
     {
         services
+            .AddScoped<IRepositories, DimRepositories>()
             .AddScoped<IDimRepositories, DimRepositories>()
             .AddDbContext<DimDbContext>(o => o
                 .UseNpgsql(configuration.GetConnectionString("DimDb")))
