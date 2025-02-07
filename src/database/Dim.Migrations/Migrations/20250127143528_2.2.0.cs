@@ -26,7 +26,7 @@ using System;
 namespace Dim.Migrations.Migrations
 {
     /// <inheritdoc />
-    public partial class _3UseProcessWorkerPackage : Migration
+    public partial class _220 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
