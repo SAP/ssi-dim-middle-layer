@@ -27,7 +27,7 @@ To use the helm chart as a dependency:
 dependencies:
   - name: dim
     repository: https://sap.github.io/ssi-dim-middle-layer
-    version: 2.1.1
+    version: 2.2.0
 ```
 
 ## Requirements
@@ -66,6 +66,7 @@ dependencies:
 | processesworker.imagePullPolicy | string | `"IfNotPresent"` |  |
 | processesworker.resources | object | `{"limits":{"cpu":"45m","memory":"300M"},"requests":{"cpu":"15m","memory":"300M"}}` | We recommend to review the default resource limits as this should a conscious choice. |
 | processesworker.dim.applicationName | string | `""` |  |
+| processesworker.dim.statusListType | string | `"StatusList2021"` | valid types are:  StatusList2021, BitstringStatusList |
 | processesworker.provisioning.clientId | string | `""` |  |
 | processesworker.provisioning.clientSecret | string | `""` |  |
 | processesworker.provisioning.tokenAddress | string | `""` |  |
