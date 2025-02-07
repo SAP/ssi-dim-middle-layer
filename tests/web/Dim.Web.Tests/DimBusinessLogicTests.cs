@@ -31,6 +31,9 @@ using Dim.Web.Models;
 using Microsoft.Extensions.Options;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Models.Configuration;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.Processes.Library.Concrete.Entities;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.Processes.Library.DBAccess;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.Processes.Library.Enums;
 using System.Security.Cryptography;
 
 namespace Dim.Web.Tests;
@@ -42,7 +45,7 @@ public class DimBusinessLogicTests
     private readonly IDimClient _dimClient;
     private readonly ITenantRepository _tenantRepository;
     private readonly ITechnicalUserRepository _technicalUserRepository;
-    private readonly IProcessStepRepository _processStepRepository;
+    private readonly IProcessStepRepository<ProcessTypeId, ProcessStepTypeId> _processStepRepository;
     private readonly DimSettings _settings;
     private readonly IFixture _fixture;
 
@@ -58,11 +61,11 @@ public class DimBusinessLogicTests
 
         _tenantRepository = A.Fake<ITenantRepository>();
         _technicalUserRepository = A.Fake<ITechnicalUserRepository>();
-        _processStepRepository = A.Fake<IProcessStepRepository>();
+        _processStepRepository = A.Fake<IProcessStepRepository<ProcessTypeId, ProcessStepTypeId>>();
 
         A.CallTo(() => repositories.GetInstance<ITenantRepository>()).Returns(_tenantRepository);
         A.CallTo(() => repositories.GetInstance<ITechnicalUserRepository>()).Returns(_technicalUserRepository);
-        A.CallTo(() => repositories.GetInstance<IProcessStepRepository>()).Returns(_processStepRepository);
+        A.CallTo(() => repositories.GetInstance<IProcessStepRepository<ProcessTypeId, ProcessStepTypeId>>()).Returns(_processStepRepository);
 
         _settings = new DimSettings
         {
@@ -112,7 +115,7 @@ public class DimBusinessLogicTests
         // Arrange
         var processId = Guid.NewGuid();
         var processes = new List<Process>();
-        var processSteps = new List<ProcessStep>();
+        var processSteps = new List<ProcessStep<Process, ProcessTypeId, ProcessStepTypeId>>();
         var tenants = new List<Tenant>();
         A.CallTo(() => _tenantRepository.IsTenantExisting(A<string>._, A<string>._))
             .Returns(false);
@@ -125,7 +128,7 @@ public class DimBusinessLogicTests
         A.CallTo(() => _processStepRepository.CreateProcessStep(A<ProcessStepTypeId>._, A<ProcessStepStatusId>._, A<Guid>._))
             .Invokes((ProcessStepTypeId processStepTypeId, ProcessStepStatusId processStepStatusId, Guid pId) =>
             {
-                processSteps.Add(new ProcessStep(Guid.NewGuid(), processStepTypeId, processStepStatusId, pId, DateTimeOffset.UtcNow));
+                processSteps.Add(new ProcessStep<Process, ProcessTypeId, ProcessStepTypeId>(Guid.NewGuid(), processStepTypeId, processStepStatusId, pId, DateTimeOffset.UtcNow));
             });
         A.CallTo(() =>
                 _tenantRepository.CreateTenant(A<string>._, A<string>._, A<string>._, A<bool>._, A<Guid>._, A<Guid>._))
@@ -158,7 +161,7 @@ public class DimBusinessLogicTests
         var bpn = "BPNL00000001TEST";
         A.CallTo(() => _tenantRepository.GetCompanyAndWalletDataForBpn(bpn))
             .Returns((false, null, null, GetWalletData()));
-        Task Act() => _sut.GetStatusList(bpn, CancellationToken.None);
+        Task Act() => _sut.GetStatusList(bpn, StatusListType.BitstringStatusList, CancellationToken.None);
 
         // Act
         var result = await Assert.ThrowsAsync<NotFoundException>(Act);
@@ -174,7 +177,7 @@ public class DimBusinessLogicTests
         const string Bpn = "BPNL00000001TEST";
         A.CallTo(() => _tenantRepository.GetCompanyAndWalletDataForBpn(Bpn))
             .Returns((true, null, null, GetWalletData()));
-        Task Act() => _sut.GetStatusList(Bpn, CancellationToken.None);
+        Task Act() => _sut.GetStatusList(Bpn, StatusListType.BitstringStatusList, CancellationToken.None);
 
         // Act
         var result = await Assert.ThrowsAsync<ConflictException>(Act);
@@ -191,7 +194,7 @@ public class DimBusinessLogicTests
         var companyId = Guid.NewGuid();
         A.CallTo(() => _tenantRepository.GetCompanyAndWalletDataForBpn(Bpn))
             .Returns((true, companyId, null, GetWalletData()));
-        Task Act() => _sut.GetStatusList(Bpn, CancellationToken.None);
+        Task Act() => _sut.GetStatusList(Bpn, StatusListType.BitstringStatusList, CancellationToken.None);
 
         // Act
         var result = await Assert.ThrowsAsync<ConflictException>(Act);
@@ -209,11 +212,11 @@ public class DimBusinessLogicTests
         var companyId = Guid.NewGuid();
         A.CallTo(() => _tenantRepository.GetCompanyAndWalletDataForBpn(Bpn))
             .Returns((true, companyId, BaseUrl, GetWalletData()));
-        A.CallTo(() => _dimClient.GetStatusList(A<BasicAuthSettings>._, BaseUrl, companyId, A<CancellationToken>._))
+        A.CallTo(() => _dimClient.GetStatusList(A<BasicAuthSettings>._, BaseUrl, companyId, StatusListType.BitstringStatusList, A<CancellationToken>._))
             .Returns("https://example.org/statuslist");
 
         // Act
-        var result = await _sut.GetStatusList(Bpn, CancellationToken.None);
+        var result = await _sut.GetStatusList(Bpn, StatusListType.BitstringStatusList, CancellationToken.None);
 
         // Assert
         result.Should().Be("https://example.org/statuslist");
@@ -230,7 +233,7 @@ public class DimBusinessLogicTests
         var bpn = "BPNL00000001TEST";
         A.CallTo(() => _tenantRepository.GetCompanyAndWalletDataForBpn(bpn))
             .Returns((false, null, null, GetWalletData()));
-        Task Act() => _sut.CreateStatusList(bpn, CancellationToken.None);
+        Task Act() => _sut.CreateStatusList(bpn, StatusListType.BitstringStatusList, CancellationToken.None);
 
         // Act
         var result = await Assert.ThrowsAsync<NotFoundException>(Act);
@@ -246,7 +249,7 @@ public class DimBusinessLogicTests
         const string Bpn = "BPNL00000001TEST";
         A.CallTo(() => _tenantRepository.GetCompanyAndWalletDataForBpn(Bpn))
             .Returns((true, null, null, GetWalletData()));
-        Task Act() => _sut.CreateStatusList(Bpn, CancellationToken.None);
+        Task Act() => _sut.CreateStatusList(Bpn, StatusListType.BitstringStatusList, CancellationToken.None);
 
         // Act
         var result = await Assert.ThrowsAsync<ConflictException>(Act);
@@ -263,7 +266,7 @@ public class DimBusinessLogicTests
         var companyId = Guid.NewGuid();
         A.CallTo(() => _tenantRepository.GetCompanyAndWalletDataForBpn(Bpn))
             .Returns((true, companyId, null, GetWalletData()));
-        Task Act() => _sut.CreateStatusList(Bpn, CancellationToken.None);
+        Task Act() => _sut.CreateStatusList(Bpn, StatusListType.BitstringStatusList, CancellationToken.None);
 
         // Act
         var result = await Assert.ThrowsAsync<ConflictException>(Act);
@@ -281,11 +284,11 @@ public class DimBusinessLogicTests
         var companyId = Guid.NewGuid();
         A.CallTo(() => _tenantRepository.GetCompanyAndWalletDataForBpn(Bpn))
             .Returns((true, companyId, BaseUrl, GetWalletData()));
-        A.CallTo(() => _dimClient.CreateStatusList(A<BasicAuthSettings>._, BaseUrl, companyId, A<CancellationToken>._))
+        A.CallTo(() => _dimClient.CreateStatusList(A<BasicAuthSettings>._, BaseUrl, companyId, A<StatusListType>._, A<CancellationToken>._))
             .Returns("https://example.org/statuslist");
 
         // Act
-        var result = await _sut.CreateStatusList(Bpn, CancellationToken.None);
+        var result = await _sut.CreateStatusList(Bpn, StatusListType.BitstringStatusList, CancellationToken.None);
 
         // Assert
         result.Should().Be("https://example.org/statuslist");
@@ -326,7 +329,7 @@ public class DimBusinessLogicTests
         const string Bpn = "BPNL00001Test";
         var processId = Guid.NewGuid();
         var processes = new List<Process>();
-        var processSteps = new List<ProcessStep>();
+        var processSteps = new List<ProcessStep<Process, ProcessTypeId, ProcessStepTypeId>>();
         var technicalUsers = new List<TechnicalUser>();
         A.CallTo(() => _tenantRepository.GetTenantForBpn(Bpn))
             .Returns((true, Guid.NewGuid()));
@@ -339,7 +342,7 @@ public class DimBusinessLogicTests
         A.CallTo(() => _processStepRepository.CreateProcessStep(A<ProcessStepTypeId>._, A<ProcessStepStatusId>._, A<Guid>._))
             .Invokes((ProcessStepTypeId processStepTypeId, ProcessStepStatusId processStepStatusId, Guid pId) =>
             {
-                processSteps.Add(new ProcessStep(Guid.NewGuid(), processStepTypeId, processStepStatusId, pId, DateTimeOffset.UtcNow));
+                processSteps.Add(new ProcessStep<Process, ProcessTypeId, ProcessStepTypeId>(Guid.NewGuid(), processStepTypeId, processStepStatusId, pId, DateTimeOffset.UtcNow));
             });
         A.CallTo(() =>
                 _technicalUserRepository.CreateTenantTechnicalUser(A<Guid>._, A<string>._, A<Guid>._, A<Guid>._))
@@ -386,7 +389,7 @@ public class DimBusinessLogicTests
         // Arrange
         const string Bpn = "BPNL00001Test";
         var processId = Guid.NewGuid();
-        var processSteps = new List<ProcessStep>();
+        var processSteps = new List<ProcessStep<Process, ProcessTypeId, ProcessStepTypeId>>();
         var technicalUserData = new TechnicalUserData(Guid.NewGuid(), "test");
         var technicalUser = new TechnicalUser(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), "test", processId);
         A.CallTo(() => _technicalUserRepository.GetTechnicalUserForBpn(Bpn, technicalUserData.Name))
@@ -394,7 +397,7 @@ public class DimBusinessLogicTests
         A.CallTo(() => _processStepRepository.CreateProcessStep(A<ProcessStepTypeId>._, A<ProcessStepStatusId>._, A<Guid>._))
             .Invokes((ProcessStepTypeId processStepTypeId, ProcessStepStatusId processStepStatusId, Guid pId) =>
             {
-                processSteps.Add(new ProcessStep(Guid.NewGuid(), processStepTypeId, processStepStatusId, pId, DateTimeOffset.UtcNow));
+                processSteps.Add(new ProcessStep<Process, ProcessTypeId, ProcessStepTypeId>(Guid.NewGuid(), processStepTypeId, processStepStatusId, pId, DateTimeOffset.UtcNow));
             });
         A.CallTo(() => _technicalUserRepository.AttachAndModifyTechnicalUser(A<Guid>._, A<Action<TechnicalUser>>._, A<Action<TechnicalUser>>._))
             .Invokes((Guid _, Action<TechnicalUser>? initialize, Action<TechnicalUser> modify) =>

@@ -31,6 +31,7 @@ using DimProcess.Library.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Models.Configuration;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.Processes.Library.Enums;
 using System.Text.Json;
 
 namespace DimProcess.Library;
@@ -214,7 +215,7 @@ public class DimProcessHandler(
             ClientId = clientId,
             ClientSecret = secret
         };
-        await dimClient.CreateStatusList(dimAuth, baseUrl, companyId.Value, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
+        await dimClient.CreateStatusList(dimAuth, baseUrl, companyId.Value, _settings.StatusListType, cancellationToken).ConfigureAwait(ConfigureAwaitOptions.None);
 
         return new ValueTuple<IEnumerable<ProcessStepTypeId>?, ProcessStepStatusId, bool, string?>(
             Enumerable.Repeat(ProcessStepTypeId.SEND_CALLBACK, 1),

@@ -20,7 +20,6 @@
 
 using Dim.Clients.Api.Div;
 using Dim.Clients.Api.Div.Models;
-using Dim.Clients.Token;
 using Dim.DbAccess;
 using Dim.DbAccess.Extensions;
 using Dim.DbAccess.Repositories;
@@ -30,6 +29,7 @@ using DimProcess.Library.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Models.Configuration;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.Processes.Library.Enums;
 
 namespace DimProcess.Library;
 

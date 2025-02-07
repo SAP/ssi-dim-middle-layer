@@ -18,19 +18,10 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using Dim.Entities.Enums;
+namespace Dim.DbAccess.Models;
 
-namespace Processes.Worker.Library;
-
-public interface IProcessExecutor
+public enum StatusListType
 {
-    enum ProcessExecutionResult
-    {
-        SaveRequested = 1,
-        LockRequested = 2,
-        Unmodified = 3
-    }
-    IAsyncEnumerable<ProcessExecutionResult> ExecuteProcess(Guid processId, ProcessTypeId processTypeId, CancellationToken cancellationToken);
-    IEnumerable<ProcessTypeId> GetRegisteredProcessTypeIds();
-    IEnumerable<ProcessStepTypeId> GetExecutableStepTypeIds();
+    StatusList2021 = 1,
+    BitstringStatusList = 2,
 }

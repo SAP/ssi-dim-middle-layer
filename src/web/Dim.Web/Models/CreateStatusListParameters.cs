@@ -18,13 +18,16 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-namespace Dim.Entities.Enums;
+using Dim.DbAccess.Models;
+using Microsoft.AspNetCore.Mvc;
 
-public enum ProcessStepStatusId
+namespace Dim.Web.Models;
+
+public struct CreateStatusListParameters
 {
-    TODO = 1,
-    DONE = 2,
-    SKIPPED = 3,
-    FAILED = 4,
-    DUPLICATE = 5
+    [FromQuery]
+    public string Bpn { get; set; }
+
+    [FromQuery]
+    public StatusListType StatusListType { get; set; }
 }

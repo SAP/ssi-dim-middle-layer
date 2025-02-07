@@ -19,7 +19,6 @@
  ********************************************************************************/
 
 using Dim.Clients.Api.Div.Models;
-using Dim.Clients.Token;
 
 namespace Dim.Clients.Api.Div;
 

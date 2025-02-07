@@ -18,12 +18,16 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using System.ComponentModel.DataAnnotations;
+using Dim.DbAccess.Models;
+using Microsoft.AspNetCore.Mvc;
 
-namespace Processes.Worker.Library;
+namespace Dim.Web.Models;
 
-public class ProcessExecutionServiceSettings
+public struct GetStatusListParameters
 {
-    [Required]
-    public int LockExpirySeconds { get; set; }
+    [FromQuery]
+    public string Bpn { get; set; }
+
+    [FromQuery]
+    public StatusListType StatusListType { get; set; }
 }
