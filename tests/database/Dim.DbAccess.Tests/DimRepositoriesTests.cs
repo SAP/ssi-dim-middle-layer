@@ -18,8 +18,6 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-using AutoFixture;
-using AutoFixture.AutoFakeItEasy;
 using Dim.DbAccess.Repositories;
 using Dim.DbAccess.Tests.Setup;
 using Dim.Entities;

@@ -41,4 +41,8 @@
       <PackageReference Include="Org.Eclipse.TractusX.Portal.Backend.Framework.HttpClientExtensions" Version="2.14.0" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\..\database\Dim.DbAccess\Dim.DbAccess.csproj" />
+    </ItemGroup>
+
 </Project>

@@ -4,7 +4,6 @@ using Dim.Clients.Api.Div;
 using Dim.Clients.Api.Div.Models;
 using Dim.Clients.Extensions;
 using Dim.Clients.Tests.Extensions;
-using Dim.Clients.Token;
 using FluentAssertions;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using System.Net;
