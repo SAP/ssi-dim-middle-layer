@@ -34,7 +34,7 @@
         <PrivateAssets>all</PrivateAssets>
       </PackageReference>
       <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.3" />
-      <PackageReference Include="Org.Eclipse.TractusX.Portal.Backend.Framework.DBAccess" Version="3.3.0" />
-      <PackageReference Include="Org.Eclipse.TractusX.Portal.Backend.Framework.Processes.Library.Concrete" Version="3.3.0" />
+      <PackageReference Include="Org.Eclipse.TractusX.Portal.Backend.Framework.DBAccess" Version="3.7.0" />
+      <PackageReference Include="Org.Eclipse.TractusX.Portal.Backend.Framework.Processes.Library.Concrete" Version="3.7.0" />
     </ItemGroup>
 </Project>

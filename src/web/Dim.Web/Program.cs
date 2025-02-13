@@ -23,8 +23,11 @@ using Dim.Clients.Token;
 using Dim.DbAccess.DependencyInjection;
 using Dim.Web.Authentication;
 using Dim.Web.Controllers;
+using Dim.Web.ErrorHandling;
 using Dim.Web.Extensions;
 using Microsoft.AspNetCore.Authentication;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling.Service;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling.Web;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Web;
 using System.Text.Json.Serialization;
 
@@ -35,6 +38,9 @@ await WebApplicationBuildRunner
         builder =>
         {
             builder.Services
+                .AddTransient<GeneralHttpExceptionMiddleware>()
+                .AddSingleton<IErrorMessageService, ErrorMessageService>()
+                .AddSingleton<IErrorMessageContainer, DimErrorMessageContainer>()
                 .AddTransient<IBasicAuthTokenService, BasicAuthTokenService>()
                 .AddTransient<IClaimsTransformation, KeycloakClaimsTransformation>()
                 .AddDimClient()
@@ -52,6 +58,7 @@ await WebApplicationBuildRunner
         },
         (app, env) =>
         {
+            app.UseMiddleware<GeneralHttpExceptionMiddleware>();
             app.MapGroup("/api")
                 .WithOpenApi()
                 .MapDimApi();

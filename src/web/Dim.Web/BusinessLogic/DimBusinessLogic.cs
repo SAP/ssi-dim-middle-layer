@@ -190,7 +190,7 @@ public class DimBusinessLogic(
             .ConfigureAwait(ConfigureAwaitOptions.None);
         if (processData == null)
         {
-            throw new NotFoundException($"No process data found for BPN {bpn} and company name {companyName}");
+            throw NotFoundException.Create(DimErrors.NO_PROCESS_FOR_COMPANY, new ErrorParameter[] { new("bpn", bpn), new("companyName", companyName) });
         }
 
         return processData;
@@ -202,7 +202,7 @@ public class DimBusinessLogic(
             .ConfigureAwait(ConfigureAwaitOptions.None);
         if (processData == null)
         {
-            throw new NotFoundException($"No process data found for technical user {technicalUserName}");
+            throw NotFoundException.Create(DimErrors.NO_PROCESS_FOR_TECHNICAL_USER, new ErrorParameter[] { new("technicalUserName", technicalUserName) });
         }
 
         return processData;
@@ -215,7 +215,7 @@ public class DimBusinessLogic(
         var (validProcessId, processData) = await dimRepositories.GetInstance<IProcessStepRepository<ProcessTypeId, ProcessStepTypeId>>().IsValidProcess(processId, processTypeId, Enumerable.Repeat(processStepTypeId, 1)).ConfigureAwait(ConfigureAwaitOptions.None);
         if (!validProcessId)
         {
-            throw new NotFoundException($"process {processId} does not exist");
+            throw NotFoundException.Create(DimErrors.NO_PROCESS, new ErrorParameter[] { new("processId", processId.ToString()) });
         }
 
         var context = processData.CreateManualProcessData(processStepTypeId, dimRepositories, () => $"processId {processId}");
