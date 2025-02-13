@@ -27,17 +27,20 @@ namespace Dim.Web.ErrorHandling;
 [ExcludeFromCodeCoverage]
 public class DimErrorMessageContainer : IErrorMessageContainer
 {
-    private static readonly IReadOnlyDictionary<int, string> _messageContainer = new Dictionary<DimErrors, string> {
+    private static readonly IReadOnlyDictionary<int, string> Messages = new Dictionary<DimErrors, string> {
         { DimErrors.TENANT_ALREADY_EXISTS, "Tenant {companyName} with Bpn {bpn} already exists" },
         { DimErrors.NO_COMPANY_FOR_BPN, "No Tenant found for Bpn {bpn}" },
         { DimErrors.NO_COMPANY_ID_SET, "No Company Id set" },
         { DimErrors.NO_INSTANCE_ID_SET, "No Instnace Id set" },
         { DimErrors.NO_TECHNICAL_USER_FOUND, "No Technical User found" },
         { DimErrors.NO_BASE_URL_SET, "No BaseUrl for the wallet set" },
+        { DimErrors.NO_PROCESS_FOR_COMPANY, "No process data found for BPN {bpn} and company name {companyName}" },
+        { DimErrors.NO_PROCESS_FOR_TECHNICAL_USER, "No process data found for technical user {technicalUserName}" },
+        { DimErrors.NO_PROCESS, "process {processId} does not exist" }
     }.ToImmutableDictionary(x => (int)x.Key, x => x.Value);
 
     public Type Type { get => typeof(DimErrors); }
-    public IReadOnlyDictionary<int, string> MessageContainer { get => _messageContainer; }
+    public IReadOnlyDictionary<int, string> MessageContainer { get => Messages; }
 }
 
 public enum DimErrors
@@ -48,4 +51,7 @@ public enum DimErrors
     NO_INSTANCE_ID_SET,
     NO_TECHNICAL_USER_FOUND,
     NO_BASE_URL_SET,
+    NO_PROCESS_FOR_COMPANY,
+    NO_PROCESS_FOR_TECHNICAL_USER,
+    NO_PROCESS
 }

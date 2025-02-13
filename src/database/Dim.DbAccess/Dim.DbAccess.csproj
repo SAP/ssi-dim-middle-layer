@@ -30,8 +30,8 @@
 
     <ItemGroup>
       <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="9.0.1" />
-      <PackageReference Include="Org.Eclipse.TractusX.Portal.Backend.Framework.DependencyInjection" Version="3.3.0" />
-      <PackageReference Include="Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling" Version="3.3.0" />
+      <PackageReference Include="Org.Eclipse.TractusX.Portal.Backend.Framework.DependencyInjection" Version="3.7.0" />
+      <PackageReference Include="Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling" Version="3.7.0" />
     </ItemGroup>
 
     <ItemGroup>
