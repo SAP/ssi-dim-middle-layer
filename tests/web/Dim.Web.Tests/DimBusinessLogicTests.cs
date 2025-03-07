@@ -34,6 +34,7 @@ using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Models.Configuration;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Processes.Library.Concrete.Entities;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Processes.Library.DBAccess;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.Processes.Library.Entities;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Processes.Library.Enums;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Processes.Library.Models;
 using System.Security.Cryptography;
@@ -616,24 +617,50 @@ public class DimBusinessLogicTests
     {
         // Arrange
         var processId = _fixture.Create<Guid>();
-        var processData = new VerifyProcessData<ProcessTypeId,ProcessStepTypeId>(
+        var stepToTrigger = processStepTypeId.GetStepForRetrigger(processTypeId);
+        var processSteps = new List<ProcessStep<Process, ProcessTypeId, ProcessStepTypeId>>();
+        var processStep = new ProcessStep<Process, ProcessTypeId, ProcessStepTypeId>(Guid.NewGuid(), processStepTypeId, ProcessStepStatusId.TODO, processId, DateTimeOffset.UtcNow);
+        SetupFakesForRetrigger(processSteps, processStep);
+        var verifyProcessData = new VerifyProcessData<ProcessTypeId, ProcessStepTypeId>(
             new Process(processId, processTypeId, Guid.NewGuid()),
             new[]
             {
-            new ProcessStep<Process, ProcessTypeId, ProcessStepTypeId>(Guid.NewGuid(), processStepTypeId, ProcessStepStatusId.TODO, processId, DateTimeOffset.UtcNow)
+            processStep
             }
         );
 
         A.CallTo(() => _processStepRepository.IsValidProcess(processId, processTypeId, A<IEnumerable<ProcessStepTypeId>>._))
-            .Returns((true, processData));
+            .Returns((true, verifyProcessData));
 
         // Act
         await _sut.RetriggerProcess(processTypeId, processId, processStepTypeId);
 
         // Assert
+        processSteps.Should().ContainSingle().And.Satisfy(x => x.ProcessStepTypeId == stepToTrigger && x.ProcessStepStatusId == ProcessStepStatusId.TODO);
+        processStep.ProcessStepStatusId.Should().Be(ProcessStepStatusId.DONE);
         A.CallTo(() => _dimRepositories.SaveAsync()).MustHaveHappenedOnceExactly();
         A.CallTo(() => _processStepRepository.IsValidProcess(processId, processTypeId, A<IEnumerable<ProcessStepTypeId>>.That.Contains(processStepTypeId)))
             .MustHaveHappenedOnceExactly();
+    }
+
+    private void SetupFakesForRetrigger(List<ProcessStep<Process, ProcessTypeId, ProcessStepTypeId>> processSteps, ProcessStep<Process, ProcessTypeId, ProcessStepTypeId> processStep)
+    {
+        A.CallTo(() => _processStepRepository.CreateProcessStepRange(A<IEnumerable<(ProcessStepTypeId ProcessStepTypeId, ProcessStepStatusId ProcessStepStatusId, Guid ProcessId)>>._))
+            .Invokes((IEnumerable<(ProcessStepTypeId ProcessStepTypeId, ProcessStepStatusId ProcessStepStatusId, Guid ProcessId)> processStepTypeStatus) =>
+                {
+                    processSteps.AddRange(processStepTypeStatus.Select(x => new ProcessStep<Process, ProcessTypeId, ProcessStepTypeId>(Guid.NewGuid(), x.ProcessStepTypeId, x.ProcessStepStatusId, x.ProcessId, DateTimeOffset.UtcNow)).ToList());
+                });
+
+        A.CallTo(() => _processStepRepository.AttachAndModifyProcessSteps(A<IEnumerable<ValueTuple<Guid, Action<IProcessStep<ProcessStepTypeId>>?, Action<IProcessStep<ProcessStepTypeId>>>>>._))
+            .Invokes((IEnumerable<(Guid ProcessStepId, Action<IProcessStep<ProcessStepTypeId>>? Initialize, Action<IProcessStep<ProcessStepTypeId>> Modify)> processStepIdsInitializeModifyData) =>
+                {
+                    var modify = processStepIdsInitializeModifyData.SingleOrDefault(x => processStep.Id == x.ProcessStepId);
+                    if (modify == default)
+                        return;
+
+                    modify.Initialize?.Invoke(processStep);
+                    modify.Modify.Invoke(processStep);
+                });
     }
 
     [Theory]
@@ -645,7 +672,7 @@ public class DimBusinessLogicTests
         var processId = _fixture.Create<Guid>();
 
         A.CallTo(() => _processStepRepository.IsValidProcess(processId, processTypeId, A<IEnumerable<ProcessStepTypeId>>._))
-            .Returns(Task.FromResult<(bool, VerifyProcessData<ProcessTypeId,ProcessStepTypeId>)>((false, new VerifyProcessData<ProcessTypeId, ProcessStepTypeId>(null, new List<ProcessStep<Process, ProcessTypeId, ProcessStepTypeId>>()))));
+            .Returns(Task.FromResult<(bool, VerifyProcessData<ProcessTypeId, ProcessStepTypeId>)>((false, new VerifyProcessData<ProcessTypeId, ProcessStepTypeId>(null, new List<ProcessStep<Process, ProcessTypeId, ProcessStepTypeId>>()))));
 
         // Act
         var act = () => _sut.RetriggerProcess(processTypeId, processId, processStepTypeId);
@@ -664,7 +691,7 @@ public class DimBusinessLogicTests
         // Arrange
         var processId = _fixture.Create<Guid>();
 
-        var processData = new VerifyProcessData<ProcessTypeId,ProcessStepTypeId>(
+        var processData = new VerifyProcessData<ProcessTypeId, ProcessStepTypeId>(
             new Process(processId, processTypeId, Guid.NewGuid()),
             new[] { new ProcessStep<Process, ProcessTypeId, ProcessStepTypeId>(Guid.NewGuid(), processStepTypeId, ProcessStepStatusId.TODO, processId, DateTimeOffset.UtcNow) });
 
@@ -686,7 +713,7 @@ public class DimBusinessLogicTests
     {
         // Arrange
         var processId = _fixture.Create<Guid>();
-        var processData = new VerifyProcessData<ProcessTypeId,ProcessStepTypeId>(
+        var processData = new VerifyProcessData<ProcessTypeId, ProcessStepTypeId>(
             new Process(processId, processTypeId, Guid.NewGuid()),
             new[]
             {
