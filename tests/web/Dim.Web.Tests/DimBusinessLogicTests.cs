@@ -25,6 +25,7 @@ using Dim.DbAccess.Models;
 using Dim.DbAccess.Repositories;
 using Dim.Entities.Entities;
 using Dim.Entities.Enums;
+using Dim.Entities.Extensions;
 using Dim.Web.BusinessLogic;
 using Dim.Web.ErrorHandling;
 using Dim.Web.Models;
@@ -33,7 +34,9 @@ using Org.Eclipse.TractusX.Portal.Backend.Framework.ErrorHandling;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Models.Configuration;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Processes.Library.Concrete.Entities;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Processes.Library.DBAccess;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.Processes.Library.Entities;
 using Org.Eclipse.TractusX.Portal.Backend.Framework.Processes.Library.Enums;
+using Org.Eclipse.TractusX.Portal.Backend.Framework.Processes.Library.Models;
 using System.Security.Cryptography;
 
 namespace Dim.Web.Tests;
@@ -48,6 +51,7 @@ public class DimBusinessLogicTests
     private readonly IProcessStepRepository<ProcessTypeId, ProcessStepTypeId> _processStepRepository;
     private readonly DimSettings _settings;
     private readonly IFixture _fixture;
+    private readonly IDimRepositories _dimRepositories;
 
     public DimBusinessLogicTests()
     {
@@ -56,16 +60,16 @@ public class DimBusinessLogicTests
             .ForEach(b => _fixture.Behaviors.Remove(b));
         _fixture.Behaviors.Add(new OmitOnRecursionBehavior());
 
-        var repositories = A.Fake<IDimRepositories>();
+        _dimRepositories = A.Fake<IDimRepositories>();
         _dimClient = A.Fake<IDimClient>();
 
         _tenantRepository = A.Fake<ITenantRepository>();
         _technicalUserRepository = A.Fake<ITechnicalUserRepository>();
         _processStepRepository = A.Fake<IProcessStepRepository<ProcessTypeId, ProcessStepTypeId>>();
 
-        A.CallTo(() => repositories.GetInstance<ITenantRepository>()).Returns(_tenantRepository);
-        A.CallTo(() => repositories.GetInstance<ITechnicalUserRepository>()).Returns(_technicalUserRepository);
-        A.CallTo(() => repositories.GetInstance<IProcessStepRepository<ProcessTypeId, ProcessStepTypeId>>()).Returns(_processStepRepository);
+        A.CallTo(() => _dimRepositories.GetInstance<ITenantRepository>()).Returns(_tenantRepository);
+        A.CallTo(() => _dimRepositories.GetInstance<ITechnicalUserRepository>()).Returns(_technicalUserRepository);
+        A.CallTo(() => _dimRepositories.GetInstance<IProcessStepRepository<ProcessTypeId, ProcessStepTypeId>>()).Returns(_processStepRepository);
 
         _settings = new DimSettings
         {
@@ -81,7 +85,7 @@ public class DimBusinessLogicTests
                 }
             }
         };
-        _sut = new DimBusinessLogic(repositories, _dimClient, Options.Create(_settings));
+        _sut = new DimBusinessLogic(_dimRepositories, _dimClient, Options.Create(_settings));
     }
 
     #region StartSetupDim
@@ -425,4 +429,329 @@ public class DimBusinessLogicTests
 
         return new WalletData("https://example.org/token", "cl1", secret, initializationVector, 0);
     }
+
+    #region GetSetupProcess
+
+    [Fact]
+    public async Task GetSetupProcess_WithValidBpnAndCompanyName_ReturnsExpectedProcessData()
+    {
+        // Arrange
+        const string Bpn = "BPNL00000001TEST";
+        const string CompanyName = "testCompany";
+        var expectedProcessData = _fixture.Create<ProcessData>();
+
+        A.CallTo(() => _tenantRepository.GetWalletProcessForTenant(Bpn, CompanyName))
+            .Returns(expectedProcessData);
+
+        // Act
+        var result = await _sut.GetSetupProcess(Bpn, CompanyName);
+
+        // Assert
+        result.Should().BeEquivalentTo(expectedProcessData);
+        A.CallTo(() => _tenantRepository.GetWalletProcessForTenant(Bpn, CompanyName))
+            .MustHaveHappenedOnceExactly();
+    }
+
+    [Theory]
+    [InlineData("BPNL00000001TEST", "")]  // Empty company name
+    [InlineData("", "testCompany")]        // Empty BPN
+    [InlineData("BPNL00000001TEST", " ")] // Whitespace company name
+    [InlineData(" ", "testCompany")]      // Whitespace BPN
+    public async Task GetSetupProcess_WithInvalidInput_ThrowsNotFoundException(string bpn, string companyName)
+    {
+        // Arrange
+        A.CallTo(() => _tenantRepository.GetWalletProcessForTenant(bpn, companyName))
+            .Returns(Task.FromResult<ProcessData?>(null));
+
+        // Act
+        async Task Act() => await _sut.GetSetupProcess(bpn, companyName);
+
+        // Assert
+        var exception = await Assert.ThrowsAsync<NotFoundException>(Act);
+        exception.Message.Should().Be($"No process data found for BPN {bpn} and company name {companyName}");
+        A.CallTo(() => _tenantRepository.GetWalletProcessForTenant(bpn, companyName))
+            .MustHaveHappenedOnceExactly();
+    }
+
+    [Fact]
+    public async Task GetSetupProcess_WithNonExistingProcess_ThrowsNotFoundException()
+    {
+        // Arrange
+        const string Bpn = "BPNL00000001TEST";
+        const string CompanyName = "nonExistingCompany";
+
+        A.CallTo(() => _tenantRepository.GetWalletProcessForTenant(Bpn, CompanyName))
+            .Returns(Task.FromResult<ProcessData?>(null));
+
+        // Act
+        async Task Act() => await _sut.GetSetupProcess(Bpn, CompanyName);
+
+        // Assert
+        var exception = await Assert.ThrowsAsync<NotFoundException>(Act);
+        exception.Message.Should().Be($"No process data found for BPN {Bpn} and company name {CompanyName}");
+        A.CallTo(() => _tenantRepository.GetWalletProcessForTenant(Bpn, CompanyName))
+            .MustHaveHappenedOnceExactly();
+    }
+
+    [Theory]
+    [InlineData("BPNL00000001TEST", "testCompany1")]
+    [InlineData("BPNL00000002TEST", "testCompany2")]
+    [InlineData("BPNL00000003TEST", "testCompany3")]
+    public async Task GetSetupProcess_WithDifferentValidInputs_ReturnsCorrectProcessData(string bpn, string companyName)
+    {
+        // Arrange
+        var expectedProcessData = _fixture.Create<ProcessData>();
+
+        A.CallTo(() => _tenantRepository.GetWalletProcessForTenant(bpn, companyName))
+            .Returns(expectedProcessData);
+
+        // Act
+        var result = await _sut.GetSetupProcess(bpn, companyName);
+
+        // Assert
+        result.Should().BeEquivalentTo(expectedProcessData);
+        A.CallTo(() => _tenantRepository.GetWalletProcessForTenant(bpn, companyName))
+            .MustHaveHappenedOnceExactly();
+    }
+
+    #endregion
+
+    #region GetTechnicalUserProcess
+
+    [Fact]
+    public async Task GetTechnicalUserProcess_WithValidBpnAndCompanyName_ReturnsExpectedProcessData()
+    {
+        // Arrange
+        const string Bpn = "BPNL00000001TEST";
+        const string CompanyName = "testCompany";
+        const string TechnicalUserName = "testUser";
+        var expectedProcessData = _fixture.Create<ProcessData>();
+
+        A.CallTo(() => _technicalUserRepository.GetTechnicalUserProcess(Bpn, CompanyName, TechnicalUserName))
+            .Returns(expectedProcessData);
+
+        // Act
+        var result = await _sut.GetTechnicalUserProcess(Bpn, CompanyName, TechnicalUserName);
+
+        // Assert
+        result.Should().BeEquivalentTo(expectedProcessData);
+        A.CallTo(() => _technicalUserRepository.GetTechnicalUserProcess(Bpn, CompanyName, TechnicalUserName))
+            .MustHaveHappenedOnceExactly();
+    }
+
+    [Theory]
+    [InlineData("BPNL00000001TEST", "", "testUser")]  // Empty company name
+    [InlineData("", "testCompany", "testUser")]        // Empty BPN
+    [InlineData("BPNL00000001TEST", "testCompany", "")]      // Empty tech user name
+    [InlineData("BPNL00000001TEST", " ", "testUser")] // Whitespace company name
+    [InlineData(" ", "testCompany", "testUser")]      // Whitespace BPN
+    [InlineData("BPNL00000001TEST", "testCompany", " ")]      // Whitespace tech user name
+    public async Task GetTechnicalUserProcess_WithInvalidInput_ThrowsNotFoundException(string bpn, string companyName, string technicalUserName)
+    {
+        // Arrange
+        A.CallTo(() => _technicalUserRepository.GetTechnicalUserProcess(bpn, companyName, technicalUserName))
+            .Returns(Task.FromResult<ProcessData?>(null));
+
+        // Act
+        async Task Act() => await _sut.GetTechnicalUserProcess(bpn, companyName, technicalUserName);
+
+        // Assert
+        var exception = await Assert.ThrowsAsync<NotFoundException>(Act);
+        exception.Message.Should().Be($"No process data found for technical user {technicalUserName}");
+        A.CallTo(() => _technicalUserRepository.GetTechnicalUserProcess(bpn, companyName, technicalUserName))
+            .MustHaveHappenedOnceExactly();
+    }
+
+    [Fact]
+    public async Task GetTechnicalUserProcess_WithNonExistingProcess_ThrowsNotFoundException()
+    {
+        // Arrange
+        const string Bpn = "BPNL00000001TEST";
+        const string CompanyName = "testCompany";
+        const string TechnicalUserName = "nonExistingTechUser";
+
+        A.CallTo(() => _technicalUserRepository.GetTechnicalUserProcess(Bpn, CompanyName, TechnicalUserName))
+            .Returns(Task.FromResult<ProcessData?>(null));
+
+        // Act
+        async Task Act() => await _sut.GetTechnicalUserProcess(Bpn, CompanyName, TechnicalUserName);
+
+        // Assert
+        var exception = await Assert.ThrowsAsync<NotFoundException>(Act);
+        exception.Message.Should().Be($"No process data found for technical user {TechnicalUserName}");
+        A.CallTo(() => _technicalUserRepository.GetTechnicalUserProcess(Bpn, CompanyName, TechnicalUserName))
+            .MustHaveHappenedOnceExactly();
+    }
+
+    [Theory]
+    [InlineData("BPNL00000001TEST", "testCompany1", "testUser1")]
+    [InlineData("BPNL00000002TEST", "testCompany2", "testUser2")]
+    [InlineData("BPNL00000003TEST", "testCompany3", "testUser3")]
+    public async Task GetTechnicalUserProcess_WithDifferentValidInputs_ReturnsCorrectProcessData(string bpn, string companyName, string technicalUserName)
+    {
+        // Arrange
+        var expectedProcessData = _fixture.Create<ProcessData>();
+
+        A.CallTo(() => _technicalUserRepository.GetTechnicalUserProcess(bpn, companyName, technicalUserName))
+            .Returns(expectedProcessData);
+
+        // Act
+        var result = await _sut.GetTechnicalUserProcess(bpn, companyName, technicalUserName);
+
+        // Assert
+        result.Should().BeEquivalentTo(expectedProcessData);
+        A.CallTo(() => _technicalUserRepository.GetTechnicalUserProcess(bpn, companyName, technicalUserName))
+            .MustHaveHappenedOnceExactly();
+    }
+
+    #endregion
+
+    #region RetriggerProcess
+
+    [Theory]
+    [InlineData(ProcessTypeId.SETUP_DIM, ProcessStepTypeId.RETRIGGER_CREATE_WALLET)]
+    [InlineData(ProcessTypeId.SETUP_DIM, ProcessStepTypeId.RETRIGGER_CHECK_OPERATION)]
+    [InlineData(ProcessTypeId.TECHNICAL_USER, ProcessStepTypeId.RETRIGGER_CREATE_TECHNICAL_USER)]
+    [InlineData(ProcessTypeId.TECHNICAL_USER, ProcessStepTypeId.RETRIGGER_DELETE_TECHNICAL_USER)]
+    public async Task RetriggerProcess_WithValidData_ExecutesSuccessfully(ProcessTypeId processTypeId, ProcessStepTypeId processStepTypeId)
+    {
+        // Arrange
+        var processId = _fixture.Create<Guid>();
+        var stepToTrigger = processStepTypeId.GetStepForRetrigger(processTypeId);
+        var processSteps = new List<ProcessStep<Process, ProcessTypeId, ProcessStepTypeId>>();
+        var processStep = new ProcessStep<Process, ProcessTypeId, ProcessStepTypeId>(Guid.NewGuid(), processStepTypeId, ProcessStepStatusId.TODO, processId, DateTimeOffset.UtcNow);
+        SetupFakesForRetrigger(processSteps, processStep);
+        var verifyProcessData = new VerifyProcessData<ProcessTypeId, ProcessStepTypeId>(
+            new Process(processId, processTypeId, Guid.NewGuid()),
+            new[]
+            {
+            processStep
+            }
+        );
+
+        A.CallTo(() => _processStepRepository.IsValidProcess(processId, processTypeId, A<IEnumerable<ProcessStepTypeId>>._))
+            .Returns((true, verifyProcessData));
+
+        // Act
+        await _sut.RetriggerProcess(processTypeId, processId, processStepTypeId);
+
+        // Assert
+        processSteps.Should().ContainSingle().And.Satisfy(x => x.ProcessStepTypeId == stepToTrigger && x.ProcessStepStatusId == ProcessStepStatusId.TODO);
+        processStep.ProcessStepStatusId.Should().Be(ProcessStepStatusId.DONE);
+        A.CallTo(() => _dimRepositories.SaveAsync()).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _processStepRepository.IsValidProcess(processId, processTypeId, A<IEnumerable<ProcessStepTypeId>>.That.Contains(processStepTypeId)))
+            .MustHaveHappenedOnceExactly();
+    }
+
+    private void SetupFakesForRetrigger(List<ProcessStep<Process, ProcessTypeId, ProcessStepTypeId>> processSteps, ProcessStep<Process, ProcessTypeId, ProcessStepTypeId> processStep)
+    {
+        A.CallTo(() => _processStepRepository.CreateProcessStepRange(A<IEnumerable<(ProcessStepTypeId ProcessStepTypeId, ProcessStepStatusId ProcessStepStatusId, Guid ProcessId)>>._))
+            .Invokes((IEnumerable<(ProcessStepTypeId ProcessStepTypeId, ProcessStepStatusId ProcessStepStatusId, Guid ProcessId)> processStepTypeStatus) =>
+                {
+                    processSteps.AddRange(processStepTypeStatus.Select(x => new ProcessStep<Process, ProcessTypeId, ProcessStepTypeId>(Guid.NewGuid(), x.ProcessStepTypeId, x.ProcessStepStatusId, x.ProcessId, DateTimeOffset.UtcNow)).ToList());
+                });
+
+        A.CallTo(() => _processStepRepository.AttachAndModifyProcessSteps(A<IEnumerable<ValueTuple<Guid, Action<IProcessStep<ProcessStepTypeId>>?, Action<IProcessStep<ProcessStepTypeId>>>>>._))
+            .Invokes((IEnumerable<(Guid ProcessStepId, Action<IProcessStep<ProcessStepTypeId>>? Initialize, Action<IProcessStep<ProcessStepTypeId>> Modify)> processStepIdsInitializeModifyData) =>
+                {
+                    var modify = processStepIdsInitializeModifyData.SingleOrDefault(x => processStep.Id == x.ProcessStepId);
+                    if (modify == default)
+                        return;
+
+                    modify.Initialize?.Invoke(processStep);
+                    modify.Modify.Invoke(processStep);
+                });
+    }
+
+    [Theory]
+    [InlineData(ProcessTypeId.SETUP_DIM, ProcessStepTypeId.RETRIGGER_CREATE_WALLET)]
+    [InlineData(ProcessTypeId.TECHNICAL_USER, ProcessStepTypeId.RETRIGGER_CREATE_TECHNICAL_USER)]
+    public async Task RetriggerProcess_WithInvalidProcessId_ThrowsNotFoundException(ProcessTypeId processTypeId, ProcessStepTypeId processStepTypeId)
+    {
+        // Arrange
+        var processId = _fixture.Create<Guid>();
+
+        A.CallTo(() => _processStepRepository.IsValidProcess(processId, processTypeId, A<IEnumerable<ProcessStepTypeId>>._))
+            .Returns(Task.FromResult<(bool, VerifyProcessData<ProcessTypeId, ProcessStepTypeId>)>((false, new VerifyProcessData<ProcessTypeId, ProcessStepTypeId>(null, new List<ProcessStep<Process, ProcessTypeId, ProcessStepTypeId>>()))));
+
+        // Act
+        var act = () => _sut.RetriggerProcess(processTypeId, processId, processStepTypeId);
+
+        // Assert
+        await act.Should().ThrowAsync<NotFoundException>()
+            .WithMessage($"process {processId} does not exist");
+        A.CallTo(() => _dimRepositories.SaveAsync()).MustNotHaveHappened();
+    }
+
+    [Theory]
+    [InlineData(ProcessTypeId.TECHNICAL_USER, ProcessStepTypeId.RETRIGGER_CREATE_WALLET)]
+    [InlineData(ProcessTypeId.SETUP_DIM, ProcessStepTypeId.RETRIGGER_CREATE_TECHNICAL_USER)]
+    public async Task RetriggerProcess_WithMismatchedProcessTypeAndStep_ThrowsInvalidOperationException(ProcessTypeId processTypeId, ProcessStepTypeId processStepTypeId)
+    {
+        // Arrange
+        var processId = _fixture.Create<Guid>();
+
+        var processData = new VerifyProcessData<ProcessTypeId, ProcessStepTypeId>(
+            new Process(processId, processTypeId, Guid.NewGuid()),
+            new[] { new ProcessStep<Process, ProcessTypeId, ProcessStepTypeId>(Guid.NewGuid(), processStepTypeId, ProcessStepStatusId.TODO, processId, DateTimeOffset.UtcNow) });
+
+        A.CallTo(() => _processStepRepository.IsValidProcess(processId, processTypeId, A<IEnumerable<ProcessStepTypeId>>._))
+            .Returns((true, processData));
+
+        // Act
+        var act = () => _sut.RetriggerProcess(processTypeId, processId, processStepTypeId);
+
+        // Assert
+        await act.Should().ThrowAsync<ArgumentOutOfRangeException>();
+        A.CallTo(() => _dimRepositories.SaveAsync()).MustNotHaveHappened();
+    }
+
+    [Theory]
+    [InlineData(ProcessTypeId.SETUP_DIM, ProcessStepTypeId.RETRIGGER_CREATE_WALLET)]
+    [InlineData(ProcessTypeId.TECHNICAL_USER, ProcessStepTypeId.RETRIGGER_CREATE_TECHNICAL_USER)]
+    public async Task RetriggerProcess_WithNonTodoStatus_ThrowsUnexpectedConditionException(ProcessTypeId processTypeId, ProcessStepTypeId processStepTypeId)
+    {
+        // Arrange
+        var processId = _fixture.Create<Guid>();
+        var processData = new VerifyProcessData<ProcessTypeId, ProcessStepTypeId>(
+            new Process(processId, processTypeId, Guid.NewGuid()),
+            new[]
+            {
+            new ProcessStep<Process, ProcessTypeId, ProcessStepTypeId>(Guid.NewGuid(), processStepTypeId, ProcessStepStatusId.DONE, processId, DateTimeOffset.UtcNow)
+            }
+        );
+
+        A.CallTo(() => _processStepRepository.IsValidProcess(processId, processTypeId, A<IEnumerable<ProcessStepTypeId>>._))
+            .Returns((true, processData));
+
+        // Act
+        var act = () => _sut.RetriggerProcess(processTypeId, processId, processStepTypeId);
+
+        // Assert
+        await act.Should().ThrowAsync<UnexpectedConditionException>()
+            .WithMessage($"processSteps should never have any other status than {ProcessStepStatusId.TODO} here");
+        A.CallTo(() => _dimRepositories.SaveAsync()).MustNotHaveHappened();
+    }
+
+    [Fact]
+    public async Task RetriggerProcess_WithNullProcessData_ThrowsConflictException()
+    {
+        // Arrange
+        var processId = _fixture.Create<Guid>();
+        var processTypeId = ProcessTypeId.SETUP_DIM;
+        var processStepTypeId = ProcessStepTypeId.RETRIGGER_CREATE_WALLET;
+
+        A.CallTo(() => _processStepRepository.IsValidProcess(processId, processTypeId, A<IEnumerable<ProcessStepTypeId>>._))
+            .Returns(Task.FromResult<(bool, VerifyProcessData<ProcessTypeId, ProcessStepTypeId>)>((true, new VerifyProcessData<ProcessTypeId, ProcessStepTypeId>(null, new List<ProcessStep<Process, ProcessTypeId, ProcessStepTypeId>>()))));
+
+        // Act
+        var act = () => _sut.RetriggerProcess(processTypeId, processId, processStepTypeId);
+
+        // Assert
+        await act.Should().ThrowAsync<ConflictException>()
+            .WithMessage($"processId {processId} is not associated with any process");
+        A.CallTo(() => _dimRepositories.SaveAsync()).MustNotHaveHappened();
+    }
+
+    #endregion
 }
