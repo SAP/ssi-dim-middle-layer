@@ -468,7 +468,7 @@ public class DimBusinessLogicTests
 
         // Assert
         var exception = await Assert.ThrowsAsync<NotFoundException>(Act);
-        exception.Message.Should().Be($"No process data found for BPN {bpn} and company name {companyName}");
+        exception.Message.Should().Be(nameof(DimErrors.NO_PROCESS_FOR_COMPANY));
         A.CallTo(() => _tenantRepository.GetWalletProcessForTenant(bpn, companyName))
             .MustHaveHappenedOnceExactly();
     }
@@ -488,7 +488,7 @@ public class DimBusinessLogicTests
 
         // Assert
         var exception = await Assert.ThrowsAsync<NotFoundException>(Act);
-        exception.Message.Should().Be($"No process data found for BPN {Bpn} and company name {CompanyName}");
+        exception.Message.Should().Be(nameof(DimErrors.NO_PROCESS_FOR_COMPANY));
         A.CallTo(() => _tenantRepository.GetWalletProcessForTenant(Bpn, CompanyName))
             .MustHaveHappenedOnceExactly();
     }
@@ -557,7 +557,7 @@ public class DimBusinessLogicTests
 
         // Assert
         var exception = await Assert.ThrowsAsync<NotFoundException>(Act);
-        exception.Message.Should().Be($"No process data found for technical user {technicalUserName}");
+        exception.Message.Should().Be(nameof(DimErrors.NO_PROCESS_FOR_TECHNICAL_USER));
         A.CallTo(() => _technicalUserRepository.GetTechnicalUserProcess(bpn, companyName, technicalUserName))
             .MustHaveHappenedOnceExactly();
     }
@@ -578,7 +578,7 @@ public class DimBusinessLogicTests
 
         // Assert
         var exception = await Assert.ThrowsAsync<NotFoundException>(Act);
-        exception.Message.Should().Be($"No process data found for technical user {TechnicalUserName}");
+        exception.Message.Should().Be(nameof(DimErrors.NO_PROCESS_FOR_TECHNICAL_USER));
         A.CallTo(() => _technicalUserRepository.GetTechnicalUserProcess(Bpn, CompanyName, TechnicalUserName))
             .MustHaveHappenedOnceExactly();
     }
@@ -679,7 +679,7 @@ public class DimBusinessLogicTests
 
         // Assert
         await act.Should().ThrowAsync<NotFoundException>()
-            .WithMessage($"process {processId} does not exist");
+            .WithMessage(nameof(DimErrors.NO_PROCESS));
         A.CallTo(() => _dimRepositories.SaveAsync()).MustNotHaveHappened();
     }
 
