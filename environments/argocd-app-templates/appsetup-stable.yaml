@@ -1,6 +1,6 @@
 ###############################################################
-# Copyright (c) 2024 BMW Group AG
-# Copyright 2024 SAP SE or an SAP affiliate company and ssi-dim-middle-layer contributors.
+# Copyright (c) 2025 BMW Group AG
+# Copyright 2025 SAP SE or an SAP affiliate company and ssi-dim-middle-layer contributors.
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -35,5 +35,5 @@ spec:
         - name: AVP_SECRET
           value: vault-secret
         - name: helm_args
-          value: '-f values.yaml -f ../../environments/helm-values/values-int.yaml'
+          value: '-f values.yaml -f ../../environments/helm-values/values-stable.yaml'
   project: project-portal

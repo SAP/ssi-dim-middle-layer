@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.2.2](https://github.com/SAP/ssi-dim-middle-layer/compare/v2.1.1...v2.2.2) (2025-05-08)
+
+### Bug Fixes
+
+* **errorHandling:** adjust general error handler ([#165](https://github.com/SAP/ssi-dim-middle-layer/issues/165)) ([1c32a68](https://github.com/SAP/ssi-dim-middle-layer/commit/1c32a68aa0654fe4c0b3f95a9cedfc413477102d))
+
 ## [2.2.1](https://github.com/SAP/ssi-dim-middle-layer/compare/v2.2.0...v2.2.1) (2025-02-07)
 
 ### Bug Fixes
