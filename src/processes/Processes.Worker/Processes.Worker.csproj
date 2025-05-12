@@ -40,8 +40,8 @@
 
     <ItemGroup>
       <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.4" />
-      <PackageReference Include="Org.Eclipse.TractusX.Portal.Backend.Framework.Logging" Version="3.13.0" />
-      <PackageReference Include="Org.Eclipse.TractusX.Portal.Backend.Framework.Processes.Worker.Library" Version="3.13.0" />
+      <PackageReference Include="Org.Eclipse.TractusX.Portal.Backend.Framework.Logging" Version="3.14.0" />
+      <PackageReference Include="Org.Eclipse.TractusX.Portal.Backend.Framework.Processes.Worker.Library" Version="3.14.0" />
     </ItemGroup>
 
     <ItemGroup>

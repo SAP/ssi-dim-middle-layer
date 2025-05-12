@@ -44,9 +44,9 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.4" />
     <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="9.0.4" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.4" />
-    <PackageReference Include="Org.Eclipse.TractusX.Portal.Backend.Framework.Models" Version="3.13.0" />
-    <PackageReference Include="Org.Eclipse.TractusX.Portal.Backend.Framework.Logging" Version="3.13.0" />
-    <PackageReference Include="Org.Eclipse.TractusX.Portal.Backend.Framework.Seeding" Version="3.13.0" />
+    <PackageReference Include="Org.Eclipse.TractusX.Portal.Backend.Framework.Models" Version="3.14.0" />
+    <PackageReference Include="Org.Eclipse.TractusX.Portal.Backend.Framework.Logging" Version="3.14.0" />
+    <PackageReference Include="Org.Eclipse.TractusX.Portal.Backend.Framework.Seeding" Version="3.14.0" />
   </ItemGroup>
 
   <ItemGroup>
