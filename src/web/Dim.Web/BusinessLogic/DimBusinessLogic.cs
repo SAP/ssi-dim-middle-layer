@@ -50,7 +50,7 @@ public class DimBusinessLogic(
     public async Task StartSetupDim(string companyName, string bpn, string didDocumentLocation, bool isIssuer)
     {
         var tenant = GetName(companyName, bpn);
-        if (await dimRepositories.GetInstance<ITenantRepository>().IsTenantExisting(companyName, bpn).ConfigureAwait(ConfigureAwaitOptions.None))
+        if (await dimRepositories.GetInstance<ITenantRepository>().IsTenantExisting(tenant, bpn).ConfigureAwait(ConfigureAwaitOptions.None))
         {
             throw ConflictException.Create(DimErrors.TENANT_ALREADY_EXISTS, new ErrorParameter[] { new("companyName", companyName), new("bpn", bpn) });
         }
