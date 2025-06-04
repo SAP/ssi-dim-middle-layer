@@ -14,7 +14,7 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.4" />
-        <PackageReference Include="Org.Eclipse.TractusX.Portal.Backend.Framework.Web" Version="3.13.0" />
+        <PackageReference Include="Org.Eclipse.TractusX.Portal.Backend.Framework.Web" Version="3.14.0" />
         <PackageReference Include="System.Json" Version="4.8.0" />
     </ItemGroup>
 
