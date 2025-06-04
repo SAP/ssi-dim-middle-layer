@@ -186,7 +186,8 @@ public class DimBusinessLogic(
 
     public async Task<ProcessData> GetSetupProcess(string bpn, string companyName)
     {
-        var processData = await dimRepositories.GetInstance<ITenantRepository>().GetWalletProcessForTenant(bpn, companyName)
+        var tenant = GetName(companyName, bpn);
+        var processData = await dimRepositories.GetInstance<ITenantRepository>().GetWalletProcessForTenant(bpn, tenant)
             .ConfigureAwait(ConfigureAwaitOptions.None);
         if (processData == null)
         {
@@ -198,7 +199,9 @@ public class DimBusinessLogic(
 
     public async Task<ProcessData> GetTechnicalUserProcess(string bpn, string companyName, string technicalUserName)
     {
-        var processData = await dimRepositories.GetInstance<ITechnicalUserRepository>().GetTechnicalUserProcess(bpn, companyName, technicalUserName)
+        var tenant = GetName(companyName, bpn);
+        var techUserName = GetName(technicalUserName, bpn);
+        var processData = await dimRepositories.GetInstance<ITechnicalUserRepository>().GetTechnicalUserProcess(bpn, tenant, techUserName)
             .ConfigureAwait(ConfigureAwaitOptions.None);
         if (processData == null)
         {

@@ -430,6 +430,21 @@ public class DimBusinessLogicTests
         return new WalletData("https://example.org/token", "cl1", secret, initializationVector, 0);
     }
 
+    private static string GetName(string name, string additionalName)
+    {
+        // Use reflection to call the private GetName method
+        var getNameMethod = typeof(DimBusinessLogic)
+            .GetMethod("GetName", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+
+        if (getNameMethod == null)
+            throw new InvalidOperationException("GetName method not found on DimBusinessLogic.");
+
+        var normalizedTenantObj = getNameMethod.Invoke(null, new object[] { name, additionalName });
+        if (normalizedTenantObj is not string normalizedName)
+            throw new InvalidOperationException("GetName method did not return a string.");
+        return normalizedName;
+    }
+
     #region GetSetupProcess
 
     [Fact]
@@ -439,8 +454,8 @@ public class DimBusinessLogicTests
         const string Bpn = "BPNL00000001TEST";
         const string CompanyName = "testCompany";
         var expectedProcessData = _fixture.Create<ProcessData>();
-
-        A.CallTo(() => _tenantRepository.GetWalletProcessForTenant(Bpn, CompanyName))
+        var normalizedName = GetName(CompanyName, Bpn);
+        A.CallTo(() => _tenantRepository.GetWalletProcessForTenant(Bpn, normalizedName))
             .Returns(expectedProcessData);
 
         // Act
@@ -448,7 +463,7 @@ public class DimBusinessLogicTests
 
         // Assert
         result.Should().BeEquivalentTo(expectedProcessData);
-        A.CallTo(() => _tenantRepository.GetWalletProcessForTenant(Bpn, CompanyName))
+        A.CallTo(() => _tenantRepository.GetWalletProcessForTenant(Bpn, normalizedName))
             .MustHaveHappenedOnceExactly();
     }
 
@@ -460,7 +475,8 @@ public class DimBusinessLogicTests
     public async Task GetSetupProcess_WithInvalidInput_ThrowsNotFoundException(string bpn, string companyName)
     {
         // Arrange
-        A.CallTo(() => _tenantRepository.GetWalletProcessForTenant(bpn, companyName))
+        var normalizedName = GetName(companyName, bpn);
+        A.CallTo(() => _tenantRepository.GetWalletProcessForTenant(bpn, normalizedName))
             .Returns(Task.FromResult<ProcessData?>(null));
 
         // Act
@@ -469,7 +485,7 @@ public class DimBusinessLogicTests
         // Assert
         var exception = await Assert.ThrowsAsync<NotFoundException>(Act);
         exception.Message.Should().Be(nameof(DimErrors.NO_PROCESS_FOR_COMPANY));
-        A.CallTo(() => _tenantRepository.GetWalletProcessForTenant(bpn, companyName))
+        A.CallTo(() => _tenantRepository.GetWalletProcessForTenant(bpn, normalizedName))
             .MustHaveHappenedOnceExactly();
     }
 
@@ -479,8 +495,8 @@ public class DimBusinessLogicTests
         // Arrange
         const string Bpn = "BPNL00000001TEST";
         const string CompanyName = "nonExistingCompany";
-
-        A.CallTo(() => _tenantRepository.GetWalletProcessForTenant(Bpn, CompanyName))
+        var normalizedName = GetName(CompanyName, Bpn);
+        A.CallTo(() => _tenantRepository.GetWalletProcessForTenant(Bpn, normalizedName))
             .Returns(Task.FromResult<ProcessData?>(null));
 
         // Act
@@ -489,7 +505,7 @@ public class DimBusinessLogicTests
         // Assert
         var exception = await Assert.ThrowsAsync<NotFoundException>(Act);
         exception.Message.Should().Be(nameof(DimErrors.NO_PROCESS_FOR_COMPANY));
-        A.CallTo(() => _tenantRepository.GetWalletProcessForTenant(Bpn, CompanyName))
+        A.CallTo(() => _tenantRepository.GetWalletProcessForTenant(Bpn, normalizedName))
             .MustHaveHappenedOnceExactly();
     }
 
@@ -501,8 +517,8 @@ public class DimBusinessLogicTests
     {
         // Arrange
         var expectedProcessData = _fixture.Create<ProcessData>();
-
-        A.CallTo(() => _tenantRepository.GetWalletProcessForTenant(bpn, companyName))
+        var normalizedName = GetName(companyName, bpn);
+        A.CallTo(() => _tenantRepository.GetWalletProcessForTenant(bpn, normalizedName))
             .Returns(expectedProcessData);
 
         // Act
@@ -510,7 +526,7 @@ public class DimBusinessLogicTests
 
         // Assert
         result.Should().BeEquivalentTo(expectedProcessData);
-        A.CallTo(() => _tenantRepository.GetWalletProcessForTenant(bpn, companyName))
+        A.CallTo(() => _tenantRepository.GetWalletProcessForTenant(bpn, normalizedName))
             .MustHaveHappenedOnceExactly();
     }
 
@@ -525,9 +541,11 @@ public class DimBusinessLogicTests
         const string Bpn = "BPNL00000001TEST";
         const string CompanyName = "testCompany";
         const string TechnicalUserName = "testUser";
+        var normalizedName = GetName(CompanyName, Bpn);
+        var normalizedTechName = GetName(TechnicalUserName, Bpn);
         var expectedProcessData = _fixture.Create<ProcessData>();
 
-        A.CallTo(() => _technicalUserRepository.GetTechnicalUserProcess(Bpn, CompanyName, TechnicalUserName))
+        A.CallTo(() => _technicalUserRepository.GetTechnicalUserProcess(Bpn, normalizedName, normalizedTechName))
             .Returns(expectedProcessData);
 
         // Act
@@ -535,7 +553,7 @@ public class DimBusinessLogicTests
 
         // Assert
         result.Should().BeEquivalentTo(expectedProcessData);
-        A.CallTo(() => _technicalUserRepository.GetTechnicalUserProcess(Bpn, CompanyName, TechnicalUserName))
+        A.CallTo(() => _technicalUserRepository.GetTechnicalUserProcess(Bpn, normalizedName, normalizedTechName))
             .MustHaveHappenedOnceExactly();
     }
 
@@ -549,7 +567,9 @@ public class DimBusinessLogicTests
     public async Task GetTechnicalUserProcess_WithInvalidInput_ThrowsNotFoundException(string bpn, string companyName, string technicalUserName)
     {
         // Arrange
-        A.CallTo(() => _technicalUserRepository.GetTechnicalUserProcess(bpn, companyName, technicalUserName))
+        var normalizedName = GetName(companyName, bpn);
+        var normalizedTechName = GetName(technicalUserName, bpn);
+        A.CallTo(() => _technicalUserRepository.GetTechnicalUserProcess(bpn, normalizedName, normalizedTechName))
             .Returns(Task.FromResult<ProcessData?>(null));
 
         // Act
@@ -558,7 +578,7 @@ public class DimBusinessLogicTests
         // Assert
         var exception = await Assert.ThrowsAsync<NotFoundException>(Act);
         exception.Message.Should().Be(nameof(DimErrors.NO_PROCESS_FOR_TECHNICAL_USER));
-        A.CallTo(() => _technicalUserRepository.GetTechnicalUserProcess(bpn, companyName, technicalUserName))
+        A.CallTo(() => _technicalUserRepository.GetTechnicalUserProcess(bpn, normalizedName, normalizedTechName))
             .MustHaveHappenedOnceExactly();
     }
 
@@ -569,8 +589,9 @@ public class DimBusinessLogicTests
         const string Bpn = "BPNL00000001TEST";
         const string CompanyName = "testCompany";
         const string TechnicalUserName = "nonExistingTechUser";
-
-        A.CallTo(() => _technicalUserRepository.GetTechnicalUserProcess(Bpn, CompanyName, TechnicalUserName))
+        var normalizedName = GetName(CompanyName, Bpn);
+        var normalizedTechName = GetName(TechnicalUserName, Bpn);
+        A.CallTo(() => _technicalUserRepository.GetTechnicalUserProcess(Bpn, normalizedName, normalizedTechName))
             .Returns(Task.FromResult<ProcessData?>(null));
 
         // Act
@@ -579,7 +600,7 @@ public class DimBusinessLogicTests
         // Assert
         var exception = await Assert.ThrowsAsync<NotFoundException>(Act);
         exception.Message.Should().Be(nameof(DimErrors.NO_PROCESS_FOR_TECHNICAL_USER));
-        A.CallTo(() => _technicalUserRepository.GetTechnicalUserProcess(Bpn, CompanyName, TechnicalUserName))
+        A.CallTo(() => _technicalUserRepository.GetTechnicalUserProcess(Bpn, normalizedName, normalizedTechName))
             .MustHaveHappenedOnceExactly();
     }
 
@@ -590,9 +611,11 @@ public class DimBusinessLogicTests
     public async Task GetTechnicalUserProcess_WithDifferentValidInputs_ReturnsCorrectProcessData(string bpn, string companyName, string technicalUserName)
     {
         // Arrange
+        var normalizedName = GetName(companyName, bpn);
+        var normalizedTechName = GetName(technicalUserName, bpn);
         var expectedProcessData = _fixture.Create<ProcessData>();
 
-        A.CallTo(() => _technicalUserRepository.GetTechnicalUserProcess(bpn, companyName, technicalUserName))
+        A.CallTo(() => _technicalUserRepository.GetTechnicalUserProcess(bpn, normalizedName, normalizedTechName))
             .Returns(expectedProcessData);
 
         // Act
@@ -600,7 +623,7 @@ public class DimBusinessLogicTests
 
         // Assert
         result.Should().BeEquivalentTo(expectedProcessData);
-        A.CallTo(() => _technicalUserRepository.GetTechnicalUserProcess(bpn, companyName, technicalUserName))
+        A.CallTo(() => _technicalUserRepository.GetTechnicalUserProcess(bpn, normalizedName, normalizedTechName))
             .MustHaveHappenedOnceExactly();
     }
 
