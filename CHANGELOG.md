@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.2.3](https://github.com/SAP/ssi-dim-middle-layer/compare/v2.2.2...v2.2.3) (2025-06-04)
+
+### Bug Fixes
+
+* normalize tenant and technical user names in process retrieval methods ([#188](https://github.com/SAP/ssi-dim-middle-layer/issues/188)) ([e35e1f4](https://github.com/SAP/ssi-dim-middle-layer/commit/e35e1f4b376219d45e8ed92076e4b0cfd8c7e81b)), closes [#187](https://github.com/SAP/ssi-dim-middle-layer/issues/187)
+* tenant already exist ([#186](https://github.com/SAP/ssi-dim-middle-layer/issues/186)) ([c9f6277](https://github.com/SAP/ssi-dim-middle-layer/commit/c9f62770ef60a9b768c15e4561eb58f7b0e18e11))
+
 ## [2.2.2](https://github.com/SAP/ssi-dim-middle-layer/compare/v2.1.1...v2.2.2) (2025-05-08)
 
 ### Bug Fixes
