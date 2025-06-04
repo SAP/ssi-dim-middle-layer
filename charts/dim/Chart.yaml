@@ -21,8 +21,8 @@
 apiVersion: v2
 name: dim
 type: application
-version: 2.2.2
-appVersion: 2.2.2
+version: 2.2.3
+appVersion: 2.2.3
 description: Helm chart for DIM Middle Layer
 home: https://github.com/catenax-ng/dim-repo
 dependencies:
