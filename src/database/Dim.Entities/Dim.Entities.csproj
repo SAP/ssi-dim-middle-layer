@@ -33,6 +33,8 @@
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         <PrivateAssets>all</PrivateAssets>
       </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.12" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.12" />
       <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
       <PackageReference Include="Org.Eclipse.TractusX.Portal.Backend.Framework.DBAccess" Version="3.13.0" />
       <PackageReference Include="Org.Eclipse.TractusX.Portal.Backend.Framework.Processes.Library.Concrete" Version="3.13.0" />
